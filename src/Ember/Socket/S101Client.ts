@@ -105,12 +105,12 @@ export default class S101Client extends S101Socket {
 		return super.disconnect(timeout)
 	}
 
-	handleClose(): void {
+	protected handleClose(): void {
 		if (this.keepaliveIntervalTimer) clearInterval(this.keepaliveIntervalTimer)
 		this.socket?.destroy()
 	}
 
-	_autoReconnectionAttempt(): void {
+	private _autoReconnectionAttempt(): void {
 		if (this._autoReconnect) {
 			if (this._reconnectAttempts > 0) {
 				// no reconnection if no valid reconnectionAttemps is set

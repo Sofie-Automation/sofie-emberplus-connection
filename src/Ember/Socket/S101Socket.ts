@@ -5,35 +5,34 @@ import { S101Codec } from '../../S101'
 import { berDecode } from '../..'
 import { ConnectionStatus } from '../Client'
 import { normalizeError } from '../Lib/util'
+import { Root } from '../../types'
+import { DecodeResult } from '../../encodings/ber/decoder/DecodeResult'
 
 export type Request = any
 
 export type S101SocketEvents = {
 	error: [Error]
 	emberPacket: [packet: Buffer]
-	emberTree: [root: any]
+	emberTree: [root: DecodeResult<Root>]
 	connecting: []
 	connected: []
 	disconnected: []
 }
 
 export default class S101Socket extends EventEmitter<S101SocketEvents> {
-	socket: Socket | undefined
-	keepaliveInterval = 10
-	keepaliveMaxResponseTime = 500
-	keepaliveIntervalTimer: NodeJS.Timeout | undefined
-	keepaliveResponseWindowTimer: NodeJS.Timer | null
-	pendingRequests: Array<Request> = []
-	activeRequest: Request | undefined
+	protected socket: Socket | undefined
+	private readonly keepaliveInterval = 10
+	private readonly keepaliveMaxResponseTime = 500
+	protected keepaliveIntervalTimer: NodeJS.Timeout | undefined
+	private keepaliveResponseWindowTimer: NodeJS.Timer | null
 	status: ConnectionStatus
-	codec = new S101Codec()
+	protected readonly codec = new S101Codec()
 
 	constructor(socket?: Socket) {
 		super()
 		this.socket = socket
 		this.keepaliveIntervalTimer = undefined
 		this.keepaliveResponseWindowTimer = null
-		this.activeRequest = undefined
 		this.status = this.isConnected() ? ConnectionStatus.Connected : ConnectionStatus.Disconnected
 
 		this.codec.on('keepaliveReq', () => {
@@ -59,7 +58,7 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 		this._initSocket()
 	}
 
-	_initSocket(): void {
+	private _initSocket(): void {
 		if (this.socket != null) {
 			this.socket.on('data', (data) => {
 				try {
@@ -80,16 +79,6 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 				this.emit('error', e)
 			})
 		}
-	}
-
-	/**
-	 * @returns {string} - ie: "10.1.1.1:9000"
-	 */
-	remoteAddress(): string {
-		if (this.socket === undefined) {
-			return 'not connected'
-		}
-		return `${this.socket.remoteAddress}:${this.socket.remotePort}`
 	}
 
 	/**
@@ -130,14 +119,14 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 	/**
 	 *
 	 */
-	handleClose(): void {
+	protected handleClose(): void {
 		this.socket = undefined
 		if (this.keepaliveIntervalTimer) clearInterval(this.keepaliveIntervalTimer)
 		this.status = ConnectionStatus.Disconnected
 		this.emit('disconnected')
 	}
 
-	isConnected(): boolean {
+	private isConnected(): boolean {
 		return this.socket !== undefined && !!this.socket
 	}
 
@@ -161,7 +150,7 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 	/**
 	 *
 	 */
-	sendKeepaliveRequest(): void {
+	private sendKeepaliveRequest(): void {
 		if (this.isConnected() && this.socket) {
 			try {
 				this.socket.write(this.codec.keepAliveRequest())
@@ -177,7 +166,7 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 	/**
 	 *
 	 */
-	sendKeepaliveResponse(): void {
+	private sendKeepaliveResponse(): void {
 		if (this.isConnected() && this.socket) {
 			try {
 				this.socket.write(this.codec.keepAliveResponse())
@@ -193,7 +182,7 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 	// 	this.sendBER(ber)
 	// }
 
-	startKeepAlive(): void {
+	protected startKeepAlive(): void {
 		this.keepaliveIntervalTimer = setInterval(() => {
 			try {
 				this.sendKeepaliveRequest()

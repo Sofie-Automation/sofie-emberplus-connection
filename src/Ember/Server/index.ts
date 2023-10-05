@@ -60,7 +60,7 @@ export class EmberServer extends EventEmitter<EmberServerEvents> {
 		this._server.on('connection', (client: S101Socket) => {
 			this._clients.add(client)
 
-			client.on('emberTree', (tree: DecodeResult<Collection<RootElement>>) => this._handleIncoming(tree, client))
+			client.on('emberTree', (tree) => this._handleIncoming(tree as DecodeResult<Collection<RootElement>>, client))
 
 			client.on('error', (e) => {
 				this.emit('clientError', client, e)
