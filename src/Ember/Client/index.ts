@@ -43,9 +43,17 @@ export interface RequestPromiseArguments<T> {
 	response?: Promise<T>
 }
 
+export enum ExpectResponse {
+	None = 'none',
+	Any = 'any',
+	HasChildren = 'has-children',
+}
+
 export interface Request {
 	reqId: string
 	node: RootElement
+	// Basic validation of the response change
+	nodeResponse: ExpectResponse
 	resolve: (res: any) => void
 	reject: (err: Error) => void
 	cb?: (EmberNode: TreeElement<EmberElement>) => void
@@ -192,7 +200,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 					cb,
 				})
 
-			return this._sendRequest<Root>(new NumberedTreeNodeImpl(0, command))
+			return this._sendRequest<Root>(new NumberedTreeNodeImpl(0, command), ExpectResponse.Any)
 		}
 
 		if (cb)
@@ -201,7 +209,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 				cb,
 			})
 
-		return this._sendCommand<RootElement>(node, command)
+		return this._sendCommand<RootElement>(node, command, ExpectResponse.HasChildren)
 	}
 	async subscribe(
 		node: RootElement | Array<RootElement>,
@@ -220,7 +228,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 					cb,
 				})
 
-			return this._sendRequest<Root>(new NumberedTreeNodeImpl(0, command))
+			return this._sendRequest<Root>(new NumberedTreeNodeImpl(0, command), ExpectResponse.Any)
 		}
 
 		if (cb)
@@ -229,7 +237,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 				cb,
 			})
 
-		return this._sendCommand<void>(node, command, false)
+		return this._sendCommand<void>(node, command, ExpectResponse.None)
 	}
 	async unsubscribe(node: NumberedTreeNode<EmberElement> | Array<RootElement>): RequestPromise<Root | void> {
 		if (!node) {
@@ -246,10 +254,10 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		}
 
 		if (Array.isArray(node)) {
-			return this._sendRequest<Root>(new NumberedTreeNodeImpl(0, command))
+			return this._sendRequest<Root>(new NumberedTreeNodeImpl(0, command), ExpectResponse.Any)
 		}
 
-		return this._sendCommand<void>(node, command, false)
+		return this._sendCommand<void>(node, command, ExpectResponse.None)
 	}
 	async invoke(
 		node: NumberedTreeNode<EmberFunction> | QualifiedElement<EmberFunction>,
@@ -268,7 +276,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 				args,
 			},
 		}
-		return this._sendCommand<InvocationResult>(node, command)
+		return this._sendCommand<InvocationResult>(node, command, ExpectResponse.Any)
 	}
 
 	/** Sending ember+ values */
@@ -287,7 +295,10 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		// TODO - should other properties be scrapped?
 		qualifiedParam.contents.value = value
 
-		return this._sendRequest<TreeElement<Parameter>>(qualifiedParam, awaitResponse)
+		return this._sendRequest<TreeElement<Parameter>>(
+			qualifiedParam,
+			awaitResponse ? ExpectResponse.Any : ExpectResponse.None
+		)
 	}
 	async matrixConnect(
 		matrix: QualifiedElement<Matrix> | NumberedTreeNode<Matrix>,
@@ -355,24 +366,27 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		cb?: (EmberNode: TreeElement<EmberElement>) => void,
 		delimiter = '.'
 	): Promise<TreeElement<EmberElement> | undefined> {
-		const getNext = (elements: Collection<NumberedTreeNode<EmberElement>>, i?: string) =>
+		const getNodeInCollection = (elements: Collection<NumberedTreeNode<EmberElement>>, identifier: string) =>
 			Object.values<NumberedTreeNode<EmberElement>>(elements || {}).find(
 				(r) =>
-					r.number === Number(i) ||
-					(r.contents as EmberNode).identifier === i ||
-					(r.contents as EmberNode).description === i
+					r.number === Number(identifier) ||
+					(r.contents as EmberNode).identifier === identifier ||
+					(r.contents as EmberNode).description === identifier
 			)
-		const getNextChild = (node: TreeElement<EmberElement>, i: string) => node.children && getNext(node.children, i)
+		const getNextChild = (node: TreeElement<EmberElement>, identifier: string) =>
+			node.children && getNodeInCollection(node.children, identifier)
 
 		const numberedPath: Array<number> = []
 		const pathArr = path.split(delimiter)
-		const i = pathArr.shift()
-		let tree: NumberedTreeNode<EmberElement> | undefined = getNext(this.tree, i)
-		if (tree?.number) numberedPath.push(tree?.number)
+		const firstIdentifier = pathArr.shift()
+		if (!firstIdentifier) throw new Error('Expected at least one segment in the path')
+
+		let tree: NumberedTreeNode<EmberElement> | undefined = getNodeInCollection(this.tree, firstIdentifier)
+		if (tree?.number !== undefined) numberedPath.push(tree.number)
 
 		while (pathArr.length) {
 			const i = pathArr.shift()
-			if (!i) break
+			if (!i) break // TODO - this will break the loop if the path was `1..0`
 			if (!tree) break
 			let next = getNextChild(tree, i)
 			if (!next) {
@@ -382,7 +396,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 			}
 			tree = next
 			if (!tree) throw new Error(`Could not find node ${i} on given path ${numberedPath.join()}`)
-			if (tree?.number) numberedPath.push(tree?.number)
+			if (tree?.number !== undefined) numberedPath.push(tree.number)
 		}
 
 		if (cb && numberedPath) {
@@ -415,19 +429,19 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 
 		qualifiedMatrix.contents.connections = [connection]
 
-		return this._sendRequest<TreeElement<Matrix>>(qualifiedMatrix)
+		return this._sendRequest<TreeElement<Matrix>>(qualifiedMatrix, ExpectResponse.Any)
 	}
 
-	private async _sendCommand<T>(EmberNode: RootElement, command: Command, hasResponse?: boolean) {
+	private async _sendCommand<T>(node: RootElement, command: Command, hasResponse: ExpectResponse) {
 		// assert a qualified EmberNode
-		const qualifiedEmberNode = assertQualifiedEmberNode(EmberNode)
+		const qualifiedEmberNode = assertQualifiedEmberNode(node)
 		// insert command
 		const commandEmberNode = insertCommand(qualifiedEmberNode, command)
 		// send request
 		return this._sendRequest<T>(commandEmberNode, hasResponse)
 	}
 
-	private async _sendRequest<T>(node: RootElement, hasResponse = true): RequestPromise<T> {
+	private async _sendRequest<T>(node: RootElement, hasResponse: ExpectResponse): RequestPromise<T> {
 		const reqId = Math.random().toString(24).substr(-4)
 		const requestPromise: RequestPromiseArguments<T> = {
 			reqId,
@@ -436,11 +450,12 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 
 		const message = berEncode([node], RootType.Elements)
 
-		if (hasResponse) {
+		if (hasResponse !== ExpectResponse.None) {
 			const p = new Promise<T>((resolve, reject) => {
 				const request: Request = {
 					reqId,
 					node,
+					nodeResponse: hasResponse,
 					resolve,
 					reject,
 					message,
@@ -489,6 +504,9 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 				(s) => (!('path' in s.node) && !change.path) || ('path' in s.node && s.node.path === change.path)
 			)
 			for (const req of reqs) {
+				// Don't complete the response, if the call was expecting the children to be loaded
+				if (req.nodeResponse === ExpectResponse.HasChildren && !change.node.children) continue
+
 				if (req.cb) req.cb(change.node)
 				if (req.resolve) {
 					req.resolve(change.node)
