@@ -438,7 +438,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		// insert command
 		const commandEmberNode = insertCommand(qualifiedEmberNode, command)
 		// send request
-		return this._sendRequest<T>(commandEmberNode, hasResponse)
+		return this._sendRequest<T>(commandEmberNode, expectResponse)
 	}
 
 	private async _sendRequest<T>(node: RootElement, expectResponse: ExpectResponse): RequestPromise<T> {
@@ -450,12 +450,12 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 
 		const message = berEncode([node], RootType.Elements)
 
-		if (hasResponse !== ExpectResponse.None) {
+		if (expectResponse !== ExpectResponse.None) {
 			const p = new Promise<T>((resolve, reject) => {
 				const request: Request = {
 					reqId,
 					node,
-					nodeResponse: hasResponse,
+					nodeResponse: expectResponse,
 					resolve,
 					reject,
 					message,
