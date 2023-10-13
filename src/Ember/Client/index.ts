@@ -432,7 +432,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		return this._sendRequest<TreeElement<Matrix>>(qualifiedMatrix, ExpectResponse.Any)
 	}
 
-	private async _sendCommand<T>(node: RootElement, command: Command, hasResponse: ExpectResponse) {
+	private async _sendCommand<T>(node: RootElement, command: Command, expectResponse: ExpectResponse) {
 		// assert a qualified EmberNode
 		const qualifiedEmberNode = assertQualifiedEmberNode(node)
 		// insert command
@@ -441,7 +441,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		return this._sendRequest<T>(commandEmberNode, hasResponse)
 	}
 
-	private async _sendRequest<T>(node: RootElement, hasResponse: ExpectResponse): RequestPromise<T> {
+	private async _sendRequest<T>(node: RootElement, expectResponse: ExpectResponse): RequestPromise<T> {
 		const reqId = Math.random().toString(24).substr(-4)
 		const requestPromise: RequestPromiseArguments<T> = {
 			reqId,
