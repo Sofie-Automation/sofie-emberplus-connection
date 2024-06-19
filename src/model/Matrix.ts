@@ -26,7 +26,7 @@ enum MatrixType {
 enum MatrixAddressingMode {
 	/** Signal numbers are row/column indices. */
 	Linear = 'LINEAR',
-	/** Signle numbers are random. */
+	/** Signal numbers are random. */
 	NonLinear = 'NON_LINEAR',
 }
 
@@ -59,7 +59,7 @@ interface Matrix extends EmberBaseElement {
 	addressingMode?: MatrixAddressingMode
 	/** Linear matrix: number of columns. Nonlinear matrix: number of targets. */
 	targetCount?: number
-	/** Linea matirx: number of rows. Nonlinear matrix: number of sources. */
+	/** Linear matirx: number of rows. Nonlinear matrix: number of sources. */
 	sourceCount?: number
 	/** For n-to-n matrices, the maximum number of total connections. */
 	maximumTotalConnects?: number
@@ -72,7 +72,7 @@ interface Matrix extends EmberBaseElement {
 	gainParameterNumber?: number
 	/** Labels for signals. */
 	labels?: Array<Label>
-	/** List of schemas that the matrid complies with. `\n` separators. */
+	/** List of schemas that the matrix complies with. `\n` separators. */
 	schemaIdentifiers?: string
 	/** Path of a template containing structure and defaults of this element. */
 	templateReference?: RelativeOID
