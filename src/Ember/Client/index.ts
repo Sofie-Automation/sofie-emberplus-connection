@@ -171,9 +171,9 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		// @ts-expect-error: after using this method, properties are no longer expected to always exist
 		delete this._client
 		this._client.on('disconnected', () => {
-            this._requests.clear();  // Just clean up the requests
-            this.emit('disconnected')  // Notify listeners about the disconnection
-        })
+			this._requests.clear() // Just clean up the requests
+			this.emit('disconnected') // Notify listeners about the disconnection
+		})
 		clearInterval(this._timer)
 	}
 
