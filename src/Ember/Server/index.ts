@@ -122,7 +122,12 @@ export class EmberServer extends EventEmitter<EmberServerEvents> {
 		const data = berEncode([el], RootType.Elements)
 		let elPath = el.path
 		if (el.contents.type !== ElementType.Node && !('targets' in update || 'sources' in update)) {
-			elPath = elPath.slice(0, -2) // remove the last element number
+			const lastDotIndex = elPath.lastIndexOf('.')
+			if (lastDotIndex > -1) {
+				elPath = elPath.slice(0, lastDotIndex)
+			} else {
+				elPath = ''
+			}
 		}
 
 		for (const [path, clients] of Object.entries<S101Socket[]>(this._subscriptions)) {
