@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [Convential Commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) for commit guidelines.
 
+## [0.3.1](https://github.com/nrkno/sofie-emberplus-connection/compare/v0.3.0...v0.3.1) (Tue Oct 14 2025)
+
+
+### Fixes
+
+* fixed length for slicing when handling updates [3722d65](https://github.com/nrkno/sofie-emberplus-connection/commit/3722d65b480b7efc8ffad0cd4eb58984125d2160)
+
+
 ## [0.3.0](https://github.com/nrkno/sofie-emberplus-connection/compare/v0.2.2...v0.3.0) (Mon Feb 17 2025)
 
 
