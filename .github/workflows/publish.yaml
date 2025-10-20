@@ -161,6 +161,9 @@ jobs:
           corepack enable
           yarn install
 
+          # npm publish doen't like the yarn format "prepare" script
+          jq 'del(.scripts.prepare)' package.json  > tmp.$$.json && mv tmp.$$.json package.json
+
           # Publish from the extracted release (build output present)
           npm publish --access=public --provenance --tag ${{ needs.prepare.outputs.tag }}
 
