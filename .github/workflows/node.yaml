@@ -66,12 +66,6 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         if: matrix.node-version == '18.x'
-      - name: Check docs generation
-        if: matrix.node-version == '18.x'
-        run: |
-          yarn docs:test
-        env:
-          CI: true
 
   validate-dependencies:
     name: Validate production dependencies
