@@ -42,7 +42,7 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/nrkno/sofie-emberplus-connection"
+		"url": "git+https://github.com/Sofie-Automation/sofie-emberplus-connection"
 	},
 	"license": "MIT",
 	"dependencies": {
@@ -64,9 +64,9 @@
 		"typescript": "~4.9"
 	},
 	"bugs": {
-		"url": "https://github.com/nrkno/sofie-emberplus-connection/issues"
+		"url": "https://github.com/Sofie-Automation/sofie-emberplus-connection/issues"
 	},
-	"homepage": "https://github.com/nrkno/sofie-emberplus-connection#readme",
+	"homepage": "https://github.com/Sofie-Automation/sofie-emberplus-connection#readme",
 	"keywords": [
 		"emberplus",
 		"lawo"
