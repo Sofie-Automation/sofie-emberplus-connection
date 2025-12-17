@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [Convential Commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) for commit guidelines.
 
+## [0.2.4](https://github.com/Sofie-Automation/sofie-emberplus-connection/compare/v0.3.1...v0.2.4) (Wed Dec 17 2025)
+
+
+### Fixes
+
+* publish [7b6111e](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/7b6111e6a590418f8ea3bf5aa6e6e9296bf5b867)
+
 ## [0.2.3](https://github.com/nrkno/sofie-emberplus-connection/compare/v0.2.2...v0.2.3) (Wed Dec 17 2025)
 
 * fixed length for slicing when handling updates [bf93fdd](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/bf93fdde10eaceb36e87f45bf9462ebc7abb3fb0)

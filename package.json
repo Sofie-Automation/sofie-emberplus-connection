@@ -1,6 +1,6 @@
 {
 	"name": "emberplus-connection",
-	"version": "0.2.3",
+	"version": "0.2.4",
 	"description": "Javascript implementation of the Ember+ automation protocol",
 	"engines": {
 		"node": ">=14.18"
