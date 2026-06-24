@@ -5,6 +5,7 @@ import { S101Codec } from '../../S101'
 import { berDecode } from '../..'
 import { ConnectionStatus } from '../Client'
 import { normalizeError } from '../Lib/util'
+import { S101OversizedFrameError } from '../../Errors'
 import { Root } from '../../types'
 import { DecodeResult } from '../../encodings/ber/decoder/DecodeResult'
 
@@ -74,6 +75,10 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 					this.codec.dataIn(data)
 				} catch (e) {
 					this.emit('error', normalizeError(e))
+					if (e instanceof S101OversizedFrameError) {
+						// Abusive/broken peer - drop the connection instead of continuing to buffer.
+						this.socket?.destroy()
+					}
 				}
 			})
 

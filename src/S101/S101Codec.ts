@@ -3,6 +3,7 @@ import { SmartBuffer } from 'smart-buffer'
 import Debug from 'debug'
 import { format } from 'util'
 import { berDecode } from '../encodings/ber'
+import { S101OversizedFrameError } from '../Errors'
 
 const debug = Debug('emberplus-connection:S101Codec')
 
@@ -104,7 +105,9 @@ export default class S101Codec extends EventEmitter<S101CodecEvents> {
 					this.frameBuffer = undefined
 					this.escaped = false
 					this.resetMultiPacketBuffer()
-					throw new Error(format('dropping oversized S101 frame: %d bytes buffered without EOF', pending.length))
+					throw new S101OversizedFrameError(
+						format('dropping oversized S101 frame: %d bytes buffered without EOF', pending.length)
+					)
 				}
 				this.frameBuffer = pending
 				break
@@ -253,7 +256,9 @@ export default class S101Codec extends EventEmitter<S101CodecEvents> {
 
 				if (this.multiPacketBuffer.length > MAX_MULTI_PACKET_SIZE) {
 					this.resetMultiPacketBuffer()
-					throw new Error(format('dropping oversized multi-packet message: exceeded %d bytes', MAX_MULTI_PACKET_SIZE))
+					throw new S101OversizedFrameError(
+						format('dropping oversized multi-packet message: exceeded %d bytes', MAX_MULTI_PACKET_SIZE)
+					)
 				}
 
 				if ((flags & FLAG_LAST_MULTI_PACKET) === FLAG_LAST_MULTI_PACKET) {
