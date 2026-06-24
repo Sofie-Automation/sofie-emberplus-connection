@@ -251,6 +251,13 @@ export default class S101Codec extends EventEmitter<S101CodecEvents> {
 				this.multiPacketBuffer = new SmartBuffer()
 				this.isMultiPacket = true
 				this.multiPacketBuffer.writeBuffer(payload)
+
+				if (this.multiPacketBuffer.length > MAX_MULTI_PACKET_SIZE) {
+					this.resetMultiPacketBuffer()
+					throw new S101OversizedFrameError(
+						format('dropping oversized multi-packet message: exceeded %d bytes', MAX_MULTI_PACKET_SIZE)
+					)
+				}
 			} else if (this.isMultiPacket && this.multiPacketBuffer) {
 				this.multiPacketBuffer.writeBuffer(payload)
 
