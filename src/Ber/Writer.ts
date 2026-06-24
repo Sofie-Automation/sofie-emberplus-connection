@@ -1,5 +1,5 @@
 import Long from 'long'
-import { Writer, WriterOptions } from 'asn1'
+import { Writer, WriterOptions } from '../ASN1/ber/writer'
 
 import { CONTEXT, UNIVERSAL } from './functions'
 import { BERDataTypes } from './BERDataTypes'

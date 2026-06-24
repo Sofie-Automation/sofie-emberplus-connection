@@ -46,7 +46,6 @@
 	},
 	"license": "MIT",
 	"dependencies": {
-		"asn1": "evs-broadcast/node-asn1",
 		"debug": "^4.3.4",
 		"eventemitter3": "^4.0.7",
 		"long": "^3.2.0",
