@@ -19,10 +19,10 @@ function decodeNode(reader: Ber.Reader, options: DecodeOptions = defaultDecode):
 		const tag = reader.readSequence()
 		switch (tag) {
 			case Ber.CONTEXT(0):
-				identifier = reader.readString(Ber.BERDataTypes.STRING)
+				identifier = reader.readString(Ber.BERDataTypes.STRING) ?? identifier
 				break
 			case Ber.CONTEXT(1):
-				description = reader.readString(Ber.BERDataTypes.STRING)
+				description = reader.readString(Ber.BERDataTypes.STRING) ?? description
 				break
 			case Ber.CONTEXT(2):
 				isRoot = reader.readBoolean()
@@ -31,10 +31,10 @@ function decodeNode(reader: Ber.Reader, options: DecodeOptions = defaultDecode):
 				isOnline = reader.readBoolean()
 				break
 			case Ber.CONTEXT(4):
-				schemaIdentifiers = reader.readString(Ber.BERDataTypes.STRING)
+				schemaIdentifiers = reader.readString(Ber.BERDataTypes.STRING) ?? schemaIdentifiers
 				break
 			case Ber.CONTEXT(5):
-				templateReference = reader.readRelativeOID(Ber.BERDataTypes.RELATIVE_OID)
+				templateReference = reader.readRelativeOID(Ber.BERDataTypes.RELATIVE_OID) ?? templateReference
 				break
 			case 0:
 				break // indefinite length

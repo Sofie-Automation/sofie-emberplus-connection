@@ -122,10 +122,10 @@ function decodeMatrixContents(reader: Ber.Reader, options: DecodeOptions = defau
 		const tag = reader.readSequence()
 		switch (tag) {
 			case Ber.CONTEXT(0):
-				identifier = reader.readString(Ber.BERDataTypes.STRING)
+				identifier = reader.readString(Ber.BERDataTypes.STRING) ?? identifier
 				break
 			case Ber.CONTEXT(1):
-				description = reader.readString(Ber.BERDataTypes.STRING)
+				description = reader.readString(Ber.BERDataTypes.STRING) ?? description
 				break
 			case Ber.CONTEXT(2):
 				matrixType = appendErrors(readMatrixType(reader.readInt(), options), errors)
@@ -134,27 +134,27 @@ function decodeMatrixContents(reader: Ber.Reader, options: DecodeOptions = defau
 				addressingMode = appendErrors(readAddressingMode(reader.readInt(), options), errors)
 				break
 			case Ber.CONTEXT(4):
-				targetCount = reader.readInt()
+				targetCount = reader.readInt() ?? targetCount
 				break
 			case Ber.CONTEXT(5):
-				sourceCount = reader.readInt()
+				sourceCount = reader.readInt() ?? sourceCount
 				break
 			case Ber.CONTEXT(6):
-				maximumTotalConnects = reader.readInt()
+				maximumTotalConnects = reader.readInt() ?? maximumTotalConnects
 				break
 			case Ber.CONTEXT(7):
-				maximumConnectsPerTarget = reader.readInt()
+				maximumConnectsPerTarget = reader.readInt() ?? maximumConnectsPerTarget
 				break
 			case Ber.CONTEXT(8):
 				plTag = reader.peek()
 				if (plTag === Ber.BERDataTypes.RELATIVE_OID) {
-					parametersLocation = reader.readRelativeOID(Ber.BERDataTypes.RELATIVE_OID)
+					parametersLocation = reader.readRelativeOID(Ber.BERDataTypes.RELATIVE_OID) ?? parametersLocation
 				} else {
-					parametersLocation = reader.readInt()
+					parametersLocation = reader.readInt() ?? parametersLocation
 				}
 				break
 			case Ber.CONTEXT(9):
-				gainParameterNumber = reader.readInt()
+				gainParameterNumber = reader.readInt() ?? gainParameterNumber
 				break
 			case Ber.CONTEXT(10):
 				labels = []
@@ -167,10 +167,10 @@ function decodeMatrixContents(reader: Ber.Reader, options: DecodeOptions = defau
 				}
 				break
 			case Ber.CONTEXT(11):
-				schemaIdentifiers = reader.readString(Ber.BERDataTypes.STRING)
+				schemaIdentifiers = reader.readString(Ber.BERDataTypes.STRING) ?? schemaIdentifiers
 				break
 			case Ber.CONTEXT(12):
-				templateReference = reader.readRelativeOID(Ber.BERDataTypes.RELATIVE_OID)
+				templateReference = reader.readRelativeOID(Ber.BERDataTypes.RELATIVE_OID) ?? templateReference
 				break
 			case 0:
 				break // indefinite length
@@ -215,7 +215,7 @@ function decodeTargets(
 		reader.readSequence(Ber.CONTEXT(0))
 		reader.readSequence(TargetBERID)
 		reader.readSequence(Ber.CONTEXT(0))
-		targets.push(reader.readInt())
+		targets.push(reader.readInt() as number)
 	}
 	return makeResult(targets)
 }
@@ -231,7 +231,7 @@ function decodeSources(
 		reader.readSequence(Ber.CONTEXT(0))
 		reader.readSequence(SourceBERID)
 		reader.readSequence(Ber.CONTEXT(0))
-		sources.push(reader.readInt())
+		sources.push(reader.readInt() as number)
 	}
 	return makeResult(sources)
 }
@@ -253,7 +253,7 @@ function decodeConnections(reader: Ber.Reader, options: DecodeOptions = defaultD
 	return connections
 }
 
-function readMatrixType(value: number, options: DecodeOptions = defaultDecode): DecodeResult<MatrixType> {
+function readMatrixType(value: number | null, options: DecodeOptions = defaultDecode): DecodeResult<MatrixType> {
 	switch (value) {
 		case 0:
 			return makeResult(MatrixType.OneToN)
@@ -266,7 +266,10 @@ function readMatrixType(value: number, options: DecodeOptions = defaultDecode): 
 	}
 }
 
-function readAddressingMode(value: number, options: DecodeOptions = defaultDecode): DecodeResult<MatrixAddressingMode> {
+function readAddressingMode(
+	value: number | null,
+	options: DecodeOptions = defaultDecode
+): DecodeResult<MatrixAddressingMode> {
 	switch (value) {
 		case 0:
 			return makeResult(MatrixAddressingMode.Linear)

@@ -9,7 +9,7 @@ import { newInvalidAsn1Error } from './errors'
 export class Reader {
 	private _buf: Buffer
 	private _size: number
-	private _blocklevel: number
+	protected _blocklevel: number
 	private _blockInfo: Record<number, number | undefined>
 	private _len: number
 	private _offset: number
@@ -61,7 +61,7 @@ export class Reader {
 			offset = this._offset
 		}
 		let currOffset = offset
-		let b, lenB
+		let b: number, lenB: number
 
 		const blockInf = this._blockInfo[offset]
 		if (blockInf !== undefined) {
@@ -81,7 +81,7 @@ export class Reader {
 
 				if (lenB == 0) {
 					this._blocklevel++
-					lenB = this.readBlock(currOffset)
+					lenB = this.readBlock(currOffset) ?? 0
 					this._blocklevel--
 				} else {
 					if (lenB > 4) throw newInvalidAsn1Error('encoding too long')
@@ -134,7 +134,7 @@ export class Reader {
 			lenB &= 0x7f
 
 			if (lenB === 0) {
-				this._len = this.readBlock(offset)
+				this._len = this.readBlock(offset) ?? 0
 			} else {
 				if (lenB > 4) throw newInvalidAsn1Error('encoding too long')
 
@@ -248,7 +248,7 @@ export class Reader {
 		const b = this.readStringAsBuffer(tag)
 		if (b === null) return null
 
-		const values = []
+		const values: number[] = []
 		let value = 0
 
 		for (let i = 0; i < b.length; i++) {
@@ -262,7 +262,7 @@ export class Reader {
 			}
 		}
 
-		value = values.shift()
+		value = values.shift() ?? 0
 		values.unshift(value % 40)
 		values.unshift((value / 40) >> 0)
 
