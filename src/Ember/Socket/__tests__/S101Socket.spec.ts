@@ -37,6 +37,32 @@ describe('S101Socket lifecycle', () => {
 		expect(s101Socket.status).toBe(ConnectionStatus.Disconnected)
 	})
 
+	it('notifies disconnected listeners after close teardown state is finalized', () => {
+		const socket = new FakeSocket()
+		const s101Socket = new S101Socket(socket as any)
+		const observedStates: Array<{ status: ConnectionStatus; keepaliveIntervalTimer: unknown; keepaliveResponseWindowTimer: unknown }> = []
+
+		;(s101Socket as any).keepaliveIntervalTimer = setInterval(() => null, 1000)
+		;(s101Socket as any).keepaliveResponseWindowTimer = setTimeout(() => null, 1000)
+
+		s101Socket.on('disconnected', () => {
+			observedStates.push({
+				status: s101Socket.status,
+				keepaliveIntervalTimer: (s101Socket as any).keepaliveIntervalTimer,
+				keepaliveResponseWindowTimer: (s101Socket as any).keepaliveResponseWindowTimer,
+			})
+		})
+
+		socket.emit('close')
+
+		expect(observedStates).toHaveLength(1)
+		expect(observedStates[0]).toMatchObject({
+			status: ConnectionStatus.Disconnected,
+			keepaliveIntervalTimer: undefined,
+			keepaliveResponseWindowTimer: null,
+		})
+	})
+
 	it('handleClose tears down socket and marks disconnected', () => {
 		const socket = new FakeSocket()
 		const s101Socket = new S101Socket(socket as any)

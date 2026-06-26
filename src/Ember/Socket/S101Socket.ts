@@ -81,7 +81,6 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 			})
 
 			this.socket.on('close', () => {
-				this.emit('disconnected')
 				this.status = ConnectionStatus.Disconnected
 				if (this.keepaliveIntervalTimer) {
 					clearInterval(this.keepaliveIntervalTimer)
@@ -93,6 +92,7 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 				}
 				this.socket?.removeAllListeners()
 				this.socket = undefined
+				this.emit('disconnected')
 			})
 
 			this.socket.on('error', (e) => {

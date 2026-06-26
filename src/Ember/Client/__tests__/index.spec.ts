@@ -491,6 +491,30 @@ describe('client', () => {
 				expect(client.tree[1].children?.[2]).toBeDefined()
 			})
 		})
+
+		it('queues one parent-path change when several missing children are inserted', async () => {
+			await runWithConnection(async (client) => {
+				const root = new NumberedTreeNodeImpl(1, new EmberNodeImpl('Root', undefined, undefined, true), {
+					1: new NumberedTreeNodeImpl(1, new EmberNodeImpl('Existing', undefined, undefined, true)),
+				})
+				if (!root.children?.[1]) throw new Error('Expected seeded child')
+				root.children[1].parent = root
+				client.tree[1] = root
+
+				const update = createQualifiedNodeResponse('1', new EmberNodeImpl('Root', undefined, undefined, true), {
+					1: new NumberedTreeNodeImpl(1, new EmberNodeImpl('Existing', undefined, undefined, true)),
+					2: new NumberedTreeNodeImpl(2, new EmberNodeImpl('Inserted A', undefined, undefined, true)),
+					3: new NumberedTreeNodeImpl(3, new EmberNodeImpl('Inserted B', undefined, undefined, true)),
+				})
+
+				//@ts-expect-error - private method under regression test
+				const changes = client._applyRootToTree(update.value)
+
+				expect(changes.filter((change) => change.path === '1')).toHaveLength(1)
+				expect(client.tree[1].children?.[2]?.parent).toBe(client.tree[1])
+				expect(client.tree[1].children?.[3]?.parent).toBe(client.tree[1])
+			})
+		})
 	})
 
 	describe('StreamManager Integration', () => {

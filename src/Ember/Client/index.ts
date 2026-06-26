@@ -707,14 +707,16 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 			}
 		}
 		if (update.children) {
+			const treePath = getPath(tree)
 			if (!tree.children) {
-				changes.push({ path: getPath(tree), node: tree })
+				changes.push({ path: treePath, node: tree })
 				tree.children = update.children
 				for (const c of Object.values<NumberedTreeNode<EmberElement>>(update.children)) {
 					c.parent = tree
 				}
 			} else {
 				// Update existing children and insert missing children without recursing into undefined nodes.
+				let insertedChild = false
 				for (const child of Object.values<NumberedTreeNode<EmberElement>>(update.children)) {
 					const i = child.number
 					const oldChild = tree.children[i]
@@ -723,8 +725,11 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 					} else {
 						child.parent = tree
 						tree.children[i] = child
-						changes.push({ path: getPath(tree), node: tree })
+						insertedChild = true
 					}
+				}
+				if (insertedChild && !changes.some((change) => change.path === treePath && change.node === tree)) {
+					changes.push({ path: treePath, node: tree })
 				}
 			}
 		}
