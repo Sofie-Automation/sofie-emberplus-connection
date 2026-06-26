@@ -40,7 +40,11 @@ describe('S101Socket lifecycle', () => {
 	it('notifies disconnected listeners after close teardown state is finalized', () => {
 		const socket = new FakeSocket()
 		const s101Socket = new S101Socket(socket as any)
-		const observedStates: Array<{ status: ConnectionStatus; keepaliveIntervalTimer: unknown; keepaliveResponseWindowTimer: unknown }> = []
+		const observedStates: Array<{
+			status: ConnectionStatus
+			keepaliveIntervalTimer: unknown
+			keepaliveResponseWindowTimer: unknown
+		}> = []
 
 		;(s101Socket as any).keepaliveIntervalTimer = setInterval(() => null, 1000)
 		;(s101Socket as any).keepaliveResponseWindowTimer = setTimeout(() => null, 1000)
