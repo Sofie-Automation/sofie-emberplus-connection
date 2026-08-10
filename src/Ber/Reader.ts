@@ -101,6 +101,13 @@ class ExtendedReader extends Reader {
 
 		significand = significand.shl(significandShift)
 
+		// A zero significand represents the value zero and cannot be normalised;
+		// the loops below would spin forever on it. Non-canonical / crafted REALs
+		// can reach this point, so guard explicitly.
+		if (significand.isZero()) {
+			return sign < 0 ? -0 : 0
+		}
+
 		while (significand.and(Long.fromBits(0x00000000, 0x7ffff000, true)).eq(0)) {
 			significand = significand.shl(8)
 		}

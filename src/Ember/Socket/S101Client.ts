@@ -1,7 +1,8 @@
 import net from 'net'
 import S101Socket from './S101Socket'
-import { ConnectionStatus } from '../Client'
+import { ConnectionStatus } from '../Client/ConnectionStatus'
 import { normalizeError } from '../Lib/util'
+import { S101OversizedFrameError } from '../../Errors'
 
 import Debug from 'debug'
 const debug = Debug('emberplus-connection:S101Client')
@@ -72,6 +73,10 @@ export default class S101Client extends S101Socket {
 							this.codec.dataIn(data)
 						} catch (e) {
 							this.emit('error', normalizeError(e))
+							if (e instanceof S101OversizedFrameError) {
+								// Abusive/broken peer - drop the connection instead of continuing to buffer.
+								this.handleClose()
+							}
 						}
 					})
 					this.socket.on('error', (error) => this._onError(error))
