@@ -316,17 +316,19 @@ export class Reader {
 		if (this.length > this._size - o) return null
 		this._offset = o
 
-		const fb = this._buf[this._offset]
+		// Decode as two's-complement using Number arithmetic rather than 32-bit bitwise
+		// ops. The old code used `<<`/`>>`, which silently produced wrong values for any
+		// INTEGER longer than 4 bytes (e.g. a 5-byte 0x0100000000 decoded to 0). This is
+		// exact up to 2^53; beyond that Number cannot represent the value precisely, but
+		// it is never arbitrary garbage.
+		const negative = this.length > 0 && (this._buf[this._offset] & 0x80) === 0x80
 		let value = 0
-
-		let i: number
-		for (i = 0; i < this.length; i++) {
-			value <<= 8
-			value |= this._buf[this._offset++] & 0xff
+		for (let i = 0; i < this.length; i++) {
+			value = value * 0x100 + (this._buf[this._offset++] & 0xff)
 		}
 
-		if ((fb & 0x80) === 0x80 && i !== 4) value -= 1 << (i * 8)
+		if (negative) value -= 2 ** (this.length * 8)
 
-		return value >> 0
+		return value
 	}
 }

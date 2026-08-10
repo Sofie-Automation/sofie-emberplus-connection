@@ -64,6 +64,19 @@ test('read 4 byte negative int', () => {
 	expect(reader.length).toEqual(0x04) // wrong length
 })
 
+test('read 5 byte int (Integer64 range)', () => {
+	// 0x0100000000 = 2^32 - the old 32-bit logic decoded this as 0
+	const reader = new Reader(Buffer.from([0x02, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00]))
+	expect(reader.readInt()).toEqual(0x100000000)
+	expect(reader.length).toEqual(0x05)
+})
+
+test('read 6 byte negative int', () => {
+	// -2 encoded in 6 bytes: 0xff ff ff ff ff fe
+	const reader = new Reader(Buffer.from([0x02, 0x06, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe]))
+	expect(reader.readInt()).toEqual(-2)
+})
+
 test('read boolean true', () => {
 	const reader = new Reader(Buffer.from([0x01, 0x01, 0xff]))
 	expect(reader).toBeTruthy()

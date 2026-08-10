@@ -312,7 +312,7 @@ export class EmberServer extends EventEmitter<EmberServerEvents> {
 		const pathArr = path.split(delimiter)
 		const i = pathArr.shift()
 		let tree: NumberedTreeNode<EmberElement> | undefined = getNext(this.tree, i)
-		if (tree?.number) numberedPath.push(tree?.number)
+		if (tree?.number !== undefined) numberedPath.push(tree.number)
 
 		while (pathArr.length) {
 			const i = pathArr.shift()
@@ -325,7 +325,7 @@ export class EmberServer extends EventEmitter<EmberServerEvents> {
 			}
 			tree = next
 			if (!tree) return
-			if (tree?.number) numberedPath.push(tree?.number)
+			if (tree?.number !== undefined) numberedPath.push(tree.number)
 		}
 
 		return tree

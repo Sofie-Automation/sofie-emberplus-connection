@@ -59,7 +59,14 @@ export function decodeChildren(
 		if (tag === 0) continue
 		const kidEl = decodeGenericElement(reader, options, depth + 1) as DecodeResult<NumberedTreeNode<EmberElement>>
 		safeSet(kidEl, kids, (x, y) => {
-			y[x.number] = x
+			const num = (x as { number?: number }).number
+			if (num !== undefined) {
+				y[num] = x
+			} else {
+				// A qualified element inside an ElementCollection has no number; keep it at
+				// a fresh index rather than collapsing every such child onto key "undefined".
+				y[Object.keys(y).length] = x
+			}
 			return y
 		})
 	}
@@ -216,8 +223,11 @@ export function decodeRootElements(
 		}
 		const rootEl = decodeGenericElement(reader, options) as DecodeResult<NumberedTreeNode<EmberElement>>
 		safeSet(rootEl, rootEls, (x, y) => {
-			if (x.number) {
-				y[x.number] = x
+			const num = (x as { number?: number }).number
+			// `!== undefined`, not a truthiness test: element number 0 is valid and must
+			// not be filed at a fallback index (which would collide with real elements).
+			if (num !== undefined) {
+				y[num] = x
 			} else {
 				y[Object.values<RootElement>(y).length] = x
 			}

@@ -97,7 +97,9 @@ export function encodeParameter(parameter: Parameter, writer: Ber.Writer): void 
 
 	writer.writeIfDefined(parameter.schemaIdentifiers, writer.writeString, 17, Ber.BERDataTypes.STRING)
 
-	writer.writeIfDefined(parameter.templateReference, writer.writeString, 18, Ber.BERDataTypes.STRING)
+	// templateReference is a RELATIVE_OID per the Glow schema, not a STRING (kept in
+	// sync with the decoder and the other element encoders).
+	writer.writeIfDefined(parameter.templateReference, writer.writeRelativeOID, 18, Ber.BERDataTypes.RELATIVE_OID)
 
 	writer.endSequence()
 }

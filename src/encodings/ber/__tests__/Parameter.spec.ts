@@ -37,6 +37,15 @@ describe('encodings/ber/Parameter', () => {
 		roundtripParameter(param)
 	})
 
+	test('write and read a parameter - templateReference (RELATIVE_OID)', () => {
+		const param: Parameter = {
+			...prm,
+			templateReference: '1.2.3',
+		}
+
+		roundtripParameter(param)
+	})
+
 	test('write and read a parameter - description', () => {
 		const param: Parameter = {
 			...prm,
