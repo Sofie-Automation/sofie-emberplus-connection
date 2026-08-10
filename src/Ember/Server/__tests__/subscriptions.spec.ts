@@ -2,7 +2,10 @@ import '../../..'
 import { EmberServer } from '../'
 import { NumberedTreeNodeImpl } from '../../../model/Tree'
 import { EmberNodeImpl } from '../../../model/EmberNode'
-import { GetDirectoryImpl } from '../../../model/Command'
+import { ParameterImpl, ParameterType } from '../../../model/Parameter'
+import { GetDirectoryImpl, InvokeImpl } from '../../../model/Command'
+import { EmberFunctionImpl } from '../../../model/EmberFunction'
+import { berDecode } from '../../../encodings/ber'
 
 // Opaque stand-in for an S101Socket connection - only identity and sendBER matter here.
 function fakeClient() {
@@ -21,6 +24,43 @@ describe('EmberServer subscriptions', () => {
 			;(server as any)._unsubscribe('1.2', client)
 			// Key removed entirely, no dead reference left behind.
 			expect((server as any)._subscriptions['1.2']).toBeUndefined()
+		} finally {
+			server.discard()
+		}
+	})
+
+	it('rejects Invoke targeted at a non-Function element instead of crashing', async () => {
+		const server = new EmberServer(0)
+		try {
+			// A Parameter (not a Function) at path "1".
+			const param = new NumberedTreeNodeImpl(1, new ParameterImpl(ParameterType.Integer, 'Vol'))
+			server.tree = { 1: param }
+
+			const client = fakeClient()
+			const invoke = new NumberedTreeNodeImpl(0, new InvokeImpl({ id: 7 } as any))
+
+			await expect((server as any)._handleCommand('1', invoke, client)).resolves.toBeUndefined()
+
+			// A single InvocationResult (success=false) is sent back, nothing crashes.
+			expect(client.sendBER).toHaveBeenCalledTimes(1)
+		} finally {
+			server.discard()
+		}
+	})
+
+	it('answers an unhandled Invoke with its own id, including id 0', async () => {
+		const server = new EmberServer(0)
+		try {
+			server.tree = { 1: new NumberedTreeNodeImpl(1, new EmberFunctionImpl('Fn')) }
+
+			const client = fakeClient()
+			const invoke = new NumberedTreeNodeImpl(0, new InvokeImpl({ id: 0 } as any))
+			await (server as any)._handleCommand('1', invoke, client)
+
+			// No onInvocation handler: a failed result, but for the invocation that was asked for (not -1).
+			expect(client.sendBER).toHaveBeenCalledTimes(1)
+			const sent = (client.sendBER as jest.Mock).mock.calls[0][0] as Buffer
+			expect(berDecode(sent).value).toMatchObject({ id: 0, success: false })
 		} finally {
 			server.discard()
 		}

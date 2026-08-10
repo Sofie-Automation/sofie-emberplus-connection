@@ -183,6 +183,26 @@ describe('client', () => {
 		}
 	})
 
+	it('assigns distinct request ids so concurrent requests never collide (C6)', async () => {
+		const client = new EmberClient('test')
+		try {
+			await client.connect()
+			await new Promise(setImmediate)
+
+			const a = await client.getDirectory(client.tree)
+			const b = await client.getDirectory(client.tree)
+			a.response?.catch(() => null)
+			b.response?.catch(() => null)
+
+			expect(a.reqId).not.toEqual(b.reqId)
+			// Both are tracked; a collision would have dropped one from the map.
+			expect((client as any)._requests.size).toBe(2)
+		} finally {
+			client.discard()
+			await new Promise(setImmediate)
+		}
+	})
+
 	it('an ignored response that times out does not cause an unhandled rejection (C3)', async () => {
 		const unhandled: unknown[] = []
 		const onUnhandled = (e: unknown) => unhandled.push(e)

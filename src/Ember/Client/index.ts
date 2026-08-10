@@ -97,6 +97,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 
 	private _streamManager: StreamManager
 	private _requests = new Map<string, Request>()
+	private _nextReqId = 0
 	private _lastInvocation = 0
 	private _client: S101Client
 	private _subscriptions: Array<Subscription> = []
@@ -528,7 +529,10 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 	}
 
 	private async _sendRequest<T>(node: RootElement, expectResponse: ExpectResponse): RequestPromise<T> {
-		const reqId = Math.random().toString(24).substr(-4)
+		// Monotonic id, not Math.random().toString(24).substr(-4) (~few x10^5 values):
+		// a collision there silently overwrote an in-flight request in the map, so its
+		// promise never settled and never timed out (an await-forever leak).
+		const reqId = String(this._nextReqId++)
 		const requestPromise: RequestPromiseArguments<T> = {
 			reqId,
 			sentOk: false,

@@ -288,10 +288,17 @@ export class EmberServer extends EventEmitter<EmberServerEvents> {
 			this._handleGetDirectory(tree, (el.contents as GetDirectory).dirFieldMask || FieldFlags.Default, client)
 		} else if (el.contents.number === CommandType.Invoke) {
 			let result: InvocationResult
-			if (this.onInvocation) {
+			const invokeId = (el as NumberedTreeNode<Invoke>).contents.invocation?.id ?? -1
+			// A consumer can point an Invoke at any path; only a Function is invocable.
+			// Reject anything else (including the root collection) instead of blindly
+			// casting a Parameter/Matrix/Node.
+			const target = tree as NumberedTreeNode<EmberElement>
+			if (!('contents' in target) || target.contents.type !== ElementType.Function) {
+				result = new InvocationResultImpl(invokeId, false)
+			} else if (this.onInvocation) {
 				result = await this.onInvocation(tree as NumberedTreeNode<EmberFunction>, el as NumberedTreeNode<Invoke>)
 			} else {
-				result = new InvocationResultImpl((el as NumberedTreeNode<Invoke>).contents.invocation?.id || -1, false)
+				result = new InvocationResultImpl(invokeId, false)
 			}
 			const encoded = berEncode(result, RootType.InvocationResult)
 			client.sendBER(encoded)
