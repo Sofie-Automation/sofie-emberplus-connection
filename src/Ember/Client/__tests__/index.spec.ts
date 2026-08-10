@@ -165,6 +165,48 @@ describe('client', () => {
 		})
 	})
 
+	it('disconnect() rejects pending requests instead of hanging (C2)', async () => {
+		const client = new EmberClient('test')
+		try {
+			await client.connect()
+			await new Promise(setImmediate)
+
+			const req = await client.getDirectory(client.tree)
+			expect(req.sentOk).toBe(true)
+
+			const responsePromise = req.response
+			await client.disconnect()
+			await expect(responsePromise).rejects.toThrow(/disconnect/i)
+		} finally {
+			client.discard()
+			await new Promise(setImmediate)
+		}
+	})
+
+	it('an ignored response that times out does not cause an unhandled rejection (C3)', async () => {
+		const unhandled: unknown[] = []
+		const onUnhandled = (e: unknown) => unhandled.push(e)
+		process.on('unhandledRejection', onUnhandled)
+		const client = new EmberClient('test', 9000, 50) // short request timeout
+		try {
+			await client.connect()
+			await new Promise(setImmediate)
+
+			// Issue a request but never read `.response` - the provider never answers.
+			await client.getDirectory(client.tree)
+
+			// Wait past the timeout so the internal response promise rejects.
+			await new Promise((r) => setTimeout(r, 150))
+			await new Promise((r) => setTimeout(r, 10)) // let unhandledRejection detection flush
+
+			expect(unhandled).toHaveLength(0)
+		} finally {
+			client.discard()
+			await new Promise(setImmediate)
+			process.off('unhandledRejection', onUnhandled)
+		}
+	})
+
 	it('getElementByPath', async () => {
 		await runWithConnection(async (client, socket) => {
 			// Do initial load

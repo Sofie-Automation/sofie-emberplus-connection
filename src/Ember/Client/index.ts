@@ -128,7 +128,12 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 			}
 			return a
 		}
-		this._timer = setInterval(() => this._resendTimer(), findGcd(this._timeout, this._resendTimeout))
+		// Floor the period so a gcd of 0 or 1 (e.g. timeout=3000, resendTimeout=1001)
+		// cannot turn this into a 1ms/0ms busy loop over every pending request.
+		const resendPeriod = Math.max(50, findGcd(this._timeout, this._resendTimeout))
+		this._timer = setInterval(() => this._resendTimer(), resendPeriod)
+		// Don't let the sweeper keep the process alive on its own.
+		this._timer.unref?.()
 
 		this._client = new S101Client(this.host, this.port)
 		this._client.on('emberTree', (tree: DecodeResult<Root>) => {
@@ -144,12 +149,17 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		this._client.on('error', (e) => this.emit('error', e))
 		this._client.on('connected', () => this.emit('connected'))
 		this._client.on('disconnected', () => {
-			this._requests.forEach((req) => {
-				req.reject(new Error('Socket was disconnected'))
-				this._requests.delete(req.reqId)
-			})
+			this._failAllRequests(new Error('Socket was disconnected'))
 			this.emit('disconnected')
 		})
+	}
+
+	/** Reject and drop every outstanding request. Safe to call more than once. */
+	private _failAllRequests(reason: Error): void {
+		for (const req of this._requests.values()) {
+			req.reject(reason)
+		}
+		this._requests.clear()
 	}
 
 	/**
@@ -173,6 +183,10 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 	 * Closes the s101 socket to the provider
 	 */
 	async disconnect(): Promise<void> {
+		// A clean disconnect() does not necessarily emit 'disconnected' (the status is
+		// already set), so fail pending requests here too - otherwise their promises
+		// never settle and callers await forever.
+		this._failAllRequests(new Error('Client disconnected'))
 		return this._client.disconnect()
 	}
 
@@ -186,10 +200,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		this._client.removeAllListeners()
 		// @ts-expect-error: after using this method, properties are no longer expected to always exist
 		delete this._client
-		this._requests.forEach((req) => {
-			req.reject(new Error('Socket was disconnected'))
-			this._requests.delete(req.reqId)
-		})
+		this._failAllRequests(new Error('Socket was disconnected'))
 		clearInterval(this._timer)
 	}
 
@@ -535,6 +546,11 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 				}
 			})
 			requestPromise.response = p
+			// The documented usage is `const { sentOk } = await client.getDirectory(...)`,
+			// which never reads `response`. Attach a no-op handler so a later timeout
+			// rejection cannot surface as an unhandled rejection (process exit on Node
+			// >=15). A caller that does await `response` still receives the rejection.
+			p.catch(() => undefined)
 		}
 
 		const sentOk = this._client.sendBER(message) // TODO - if sending multiple values to same path, should we do synchronous requests?
@@ -796,7 +812,11 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 					if (sent) {
 						req.lastSent = Date.now()
 					} else {
+						// Send failed: reject and drop the request. Leaving it in the map
+						// (with a stale lastSent) made it retry on every subsequent tick.
 						req.reject(new Error('Request was not sent correctly'))
+						this._requests.delete(req.reqId)
+						return
 					}
 				}
 				if (sinceFirstSent >= this._timeout) {
