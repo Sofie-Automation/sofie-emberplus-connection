@@ -208,3 +208,60 @@ test('read boolean with no value', () => {
 	expect(new Reader(Buffer.from([0x01, 0x01, 0x00])).readBoolean()).toEqual(false)
 	expect(new Reader(Buffer.from([0x01, 0x01, 0xff])).readBoolean()).toEqual(true)
 })
+
+test('definite length exceeding buffer is rejected', () => {
+	// sequence claims length 5 but the buffer has no content bytes
+	const reader = new Reader(Buffer.from([0x30, 0x05]))
+	expect(reader.readSequence()).toBeNull()
+})
+
+test('4-byte length with top bit set does not produce a negative length', () => {
+	// 0x84 => 4 length octets, 0xffffff f8 would assemble to -8 with signed shifts
+	const reader = new Reader(Buffer.from([0x0c, 0x84, 0xff, 0xff, 0xff, 0xf8]))
+	// huge declared length cannot fit the buffer -> rejected, offset must not move backwards
+	expect(reader.readString(0x0c)).toBeNull()
+	expect(reader.offset).toBeGreaterThanOrEqual(0)
+})
+
+test('negative-length node does not spin or rewind the cursor', () => {
+	// Node{ number=1, contents=SET{ CONTEXT(0){ STRING len=-8 } } } from the review PoC
+	const reader = new Reader(
+		Buffer.from([
+			0x60, 0x17, 0x6b, 0x15, 0xa0, 0x13, 0x63, 0x11, 0xa0, 0x03, 0x02, 0x01, 0x01, 0xa1, 0x0a, 0x31, 0x08, 0xa0, 0x06,
+			0x0c, 0x84, 0xff, 0xff, 0xff, 0xf8,
+		])
+	)
+	expect(() => {
+		reader.readSequence()
+		reader.readSequence()
+	}).not.toThrow(RangeError)
+	expect(reader.offset).toBeGreaterThanOrEqual(0)
+})
+
+test('realistically deep indefinite-length nesting is accepted', () => {
+	// ~4 BER levels per Ember+ tree level, so 256 levels is a ~64 deep tree
+	const depth = 256
+	const parts: number[] = []
+	for (let i = 0; i < depth; i++) parts.push(0x30, 0x80)
+	for (let i = 0; i < depth; i++) parts.push(0x00, 0x00)
+	const reader = new Reader(Buffer.from(parts))
+	expect(reader.readSequence()).toEqual(0x30)
+	expect(reader.length).toEqual(parts.length - 2)
+})
+
+test('deeply nested indefinite-length blocks are rejected, not stack-overflowed', () => {
+	// [0x63 0x80] repeated -> one recursion level per 2 bytes
+	const parts: number[] = []
+	for (let i = 0; i < 100000; i++) parts.push(0x63, 0x80)
+	parts.push(0x00, 0x00)
+	const reader = new Reader(Buffer.from(parts))
+	// must throw a controlled error rather than RangeError: Maximum call stack size exceeded
+	let err: Error | undefined
+	try {
+		reader.readSequence()
+	} catch (e) {
+		err = e as Error
+	}
+	expect(err).toBeInstanceOf(Error)
+	expect(err).not.toBeInstanceOf(RangeError)
+})
