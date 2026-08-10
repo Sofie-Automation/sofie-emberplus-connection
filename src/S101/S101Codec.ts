@@ -336,6 +336,16 @@ export default class S101Codec extends EventEmitter<S101CodecEvents> {
 		this.isMultiPacket = false
 	}
 
+	/**
+	 * Drop everything partially received. Call this when the connection the data came from closes: the codec
+	 * outlives the connection (S101Client reuses it on reconnect), and a stale partial frame would otherwise be
+	 * merged with the first frame of the next connection, corrupting it.
+	 */
+	reset(): void {
+		this.resetFramingState()
+		this.resetMultiPacketBuffer()
+	}
+
 	encodeBER(data: Buffer): Buffer[] {
 		const frames = []
 		const encbuf = new SmartBuffer()

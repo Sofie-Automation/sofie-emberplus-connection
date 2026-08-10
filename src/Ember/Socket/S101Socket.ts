@@ -71,6 +71,17 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 		this._initSocket()
 	}
 
+	protected clearKeepaliveTimers(): void {
+		if (this.keepaliveIntervalTimer) {
+			clearInterval(this.keepaliveIntervalTimer)
+			this.keepaliveIntervalTimer = undefined
+		}
+		if (this.keepaliveResponseWindowTimer) {
+			clearTimeout(this.keepaliveResponseWindowTimer)
+			this.keepaliveResponseWindowTimer = null
+		}
+	}
+
 	private _initSocket(): void {
 		if (this.socket != null) {
 			this.socket.on('data', (data) => {
@@ -87,14 +98,8 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 
 			this.socket.on('close', () => {
 				this.status = ConnectionStatus.Disconnected
-				if (this.keepaliveIntervalTimer) {
-					clearInterval(this.keepaliveIntervalTimer)
-					this.keepaliveIntervalTimer = undefined
-				}
-				if (this.keepaliveResponseWindowTimer) {
-					clearTimeout(this.keepaliveResponseWindowTimer)
-					this.keepaliveResponseWindowTimer = null
-				}
+				this.clearKeepaliveTimers()
+				this.codec.reset()
 				this.socket?.removeAllListeners()
 				this.socket = undefined
 				this.emit('disconnected')
@@ -114,14 +119,7 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 			return Promise.resolve()
 		}
 		return new Promise((resolve) => {
-			if (this.keepaliveIntervalTimer != null) {
-				clearInterval(this.keepaliveIntervalTimer)
-				this.keepaliveIntervalTimer = undefined
-			}
-			if (this.keepaliveResponseWindowTimer != null) {
-				clearTimeout(this.keepaliveResponseWindowTimer)
-				this.keepaliveResponseWindowTimer = null
-			}
+			this.clearKeepaliveTimers()
 			if (this.socket) {
 				let done = false
 				const cb = () => {
@@ -152,14 +150,7 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 		this.socket?.removeAllListeners()
 		this.socket?.destroy()
 		this.socket = undefined
-		if (this.keepaliveIntervalTimer) {
-			clearInterval(this.keepaliveIntervalTimer)
-			this.keepaliveIntervalTimer = undefined
-		}
-		if (this.keepaliveResponseWindowTimer) {
-			clearTimeout(this.keepaliveResponseWindowTimer)
-			this.keepaliveResponseWindowTimer = null
-		}
+		this.clearKeepaliveTimers()
 		this.status = ConnectionStatus.Disconnected
 		this.emit('disconnected')
 	}
@@ -221,6 +212,10 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 	// }
 
 	protected startKeepAlive(): void {
+		// Clear any prior interval first: on reconnect this would otherwise leak the
+		// previous timer, and two intervals racing produces an orphaned response-window
+		// timer that fires handleClose() and tears down the healthy socket.
+		if (this.keepaliveIntervalTimer) clearInterval(this.keepaliveIntervalTimer)
 		this.keepaliveIntervalTimer = setInterval(() => {
 			try {
 				this.sendKeepaliveRequest()

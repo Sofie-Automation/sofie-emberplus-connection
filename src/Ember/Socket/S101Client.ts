@@ -59,8 +59,9 @@ export default class S101Client extends S101Socket {
 
 				// (re)creates client, either on first run or new attempt
 				if (!this.socket) {
-					this.socket = new net.Socket()
-					this.socket.on('close', (hadError) => this._onClose(hadError))
+					const socket = new net.Socket()
+					this.socket = socket
+					this.socket.on('close', (hadError) => this._onClose(socket, hadError))
 					this.socket.on('connect', () => this._onConnect())
 					this.socket.on('data', (data) => {
 						debug('Data from Ember connection received:', {
@@ -100,11 +101,16 @@ export default class S101Client extends S101Socket {
 				const timer = setTimeout(() => connectTimeoutListener(), timeout * 1000)
 				this.socket.connect(this.port, this.address)
 				this.socket.once('connect', () => {
-					clearInterval(timer)
+					clearTimeout(timer)
 					resolve()
 				})
 				this._shouldBeConnected = true
 				this._lastConnectionAttempt = Date.now()
+			} else {
+				// Throttled: a very recent attempt is still cooling down. Don't stack
+				// another socket - the auto-reconnect interval below will retry. Resolve
+				// so a caller awaiting connect() during the cooldown is never left hanging.
+				resolve()
 			}
 
 			// sets timer to retry when needed
@@ -120,7 +126,7 @@ export default class S101Client extends S101Socket {
 	}
 
 	protected handleClose(): void {
-		if (this.keepaliveIntervalTimer) clearInterval(this.keepaliveIntervalTimer)
+		this.clearKeepaliveTimers()
 		this.socket?.destroy()
 	}
 
@@ -168,7 +174,20 @@ export default class S101Client extends S101Socket {
 		this.emit('error', error)
 	}
 
-	private _onClose(_hadError: boolean) {
+	private _onClose(socket: net.Socket, _hadError: boolean) {
+		// A socket that was already replaced (or released) closing late must not tear
+		// down whatever this.socket is now.
+		if (this.socket !== socket) return
+
+		// The client wires its own 'close' handler instead of the base-class one, so it
+		// must run the same teardown: stop keepalive timers, drop partially received
+		// data and release the dead socket. Otherwise the keepalive interval keeps
+		// firing writes at a closed socket, and the next connection's first frame is
+		// merged with a stale partial one.
+		this.clearKeepaliveTimers()
+		this.codec.reset()
+		socket.removeAllListeners()
+		this.socket = undefined
 		if (this.status !== ConnectionStatus.Disconnected) this.emit('disconnected')
 		this.status = ConnectionStatus.Disconnected
 

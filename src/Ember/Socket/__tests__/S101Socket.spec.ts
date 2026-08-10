@@ -4,7 +4,9 @@ import '../../..'
 import { EventEmitter } from 'events'
 import type { Socket } from 'net'
 import S101Socket from '../S101Socket'
+import S101Client from '../S101Client'
 import { ConnectionStatus } from '../../Client/ConnectionStatus'
+import S101Codec from '../../../S101/S101Codec'
 
 // Minimal stand-in for net.Socket: enough to drive the 'data' path and observe destroy().
 class FakeSocket extends EventEmitter {
@@ -109,6 +111,18 @@ describe('S101Socket lifecycle', () => {
 		})
 	})
 
+	it('drops partially received data on socket close', () => {
+		const socket = new FakeSocket()
+		const s101Socket = new S101Socket(socket as any)
+		const codec = (s101Socket as any).codec as S101Codec
+
+		socket.emit('data', codec.keepAliveRequest().subarray(0, 4))
+		socket.emit('close')
+
+		expect((codec as any).pendingLength).toBe(0)
+		expect((codec as any).multiPacketBuffer).toBeUndefined()
+	})
+
 	it('handleClose tears down socket and marks disconnected', () => {
 		const socket = new FakeSocket()
 		const s101Socket = new S101Socket(socket as any)
@@ -125,5 +139,87 @@ describe('S101Socket lifecycle', () => {
 		expect((s101Socket as any).keepaliveResponseWindowTimer).toBeNull()
 		expect(s101Socket.status).toBe(ConnectionStatus.Disconnected)
 		expect(onDisconnected).toHaveBeenCalled()
+	})
+
+	it('startKeepAlive does not leak a second interval when re-armed on reconnect', () => {
+		const socket = new FakeSocket()
+		const s101Socket = new S101Socket(socket as any)
+		const clearSpy = jest.spyOn(global, 'clearInterval')
+
+		;(s101Socket as any).startKeepAlive()
+		const first = (s101Socket as any).keepaliveIntervalTimer
+		;(s101Socket as any).startKeepAlive() // simulates re-arm after a reconnect
+
+		// The prior interval must be cleared, not orphaned.
+		expect(clearSpy).toHaveBeenCalledWith(first)
+		expect((s101Socket as any).keepaliveIntervalTimer).not.toBe(first)
+		;(s101Socket as any).clearKeepaliveTimers()
+		clearSpy.mockRestore()
+	})
+})
+
+describe('S101Client lifecycle', () => {
+	it('_onClose clears keepalive timers and releases the dead socket', () => {
+		const client = new S101Client('127.0.0.1', 9000)
+		const fake = new FakeSocket()
+		;(client as any).socket = fake
+		;(client as any)._shouldBeConnected = false
+		;(client as any).keepaliveIntervalTimer = setInterval(() => null, 10000)
+		;(client as any).keepaliveResponseWindowTimer = setTimeout(() => null, 10000)
+		;(client as any)._onClose(fake, false)
+
+		expect((client as any).keepaliveIntervalTimer).toBeUndefined()
+		expect((client as any).keepaliveResponseWindowTimer).toBeNull()
+		expect((client as any).socket).toBeUndefined()
+	})
+
+	it('_onClose drops a partial frame so the next connection starts clean', () => {
+		const client = new S101Client('127.0.0.1', 9000)
+		const fake = new FakeSocket()
+		;(client as any).socket = fake
+		;(client as any)._shouldBeConnected = false
+		const codec = (client as any).codec as S101Codec
+		const keepalives = jest.fn()
+		codec.on('keepaliveReq', keepalives)
+
+		// The connection drops halfway through a frame...
+		const frame = codec.keepAliveRequest()
+		codec.dataIn(frame.subarray(0, 4))
+		;(client as any)._onClose(fake, false)
+
+		// ...so the first frame on the next connection must not be merged with it.
+		codec.dataIn(frame)
+		expect(keepalives).toHaveBeenCalledTimes(1)
+	})
+
+	it('_onClose ignores a socket that was already replaced', () => {
+		const client = new S101Client('127.0.0.1', 9000)
+		const stale = new FakeSocket()
+		const current = new FakeSocket()
+		const currentListener = jest.fn()
+		current.on('data', currentListener)
+		;(client as any).socket = current
+		client.status = ConnectionStatus.Connected
+		const onDisconnected = jest.fn()
+		client.on('disconnected', onDisconnected)
+		;(client as any)._onClose(stale, false)
+
+		expect((client as any).socket).toBe(current)
+		expect(current.listenerCount('data')).toBe(1)
+		expect(client.status).toBe(ConnectionStatus.Connected)
+		expect(onDisconnected).not.toHaveBeenCalled()
+	})
+
+	it('connect() resolves during the reconnect cooldown instead of hanging', async () => {
+		const client = new S101Client('127.0.0.1', 9000)
+		// Simulate a very recent attempt so the cooldown guard is active and no new
+		// socket is created; connect() must still settle rather than hang forever.
+		;(client as any)._lastConnectionAttempt = Date.now()
+		client.status = ConnectionStatus.Disconnected
+
+		await expect(client.connect()).resolves.toBeUndefined()
+
+		// Clean up the auto-reconnect interval connect() armed.
+		;(client as any)._clearConnectionAttemptTimer()
 	})
 })
