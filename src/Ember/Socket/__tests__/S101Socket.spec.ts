@@ -46,7 +46,7 @@ describe('S101Socket abusive-peer handling', () => {
 		expect(errors.some((e) => /oversized/i.test(e.message))).toBe(true)
 	}, 5000)
 
-	test('a single bad-CRC frame emits error but does NOT disconnect', () => {
+	test('a single bad-CRC frame is dropped without disconnecting or erroring', () => {
 		const fake = new FakeSocket()
 		const socket = new S101Socket(fake as unknown as Socket)
 
@@ -56,8 +56,11 @@ describe('S101Socket abusive-peer handling', () => {
 		// Complete frame (BOF .. EOF) with garbage contents -> CRC failure.
 		fake.emit('data', Buffer.from([0xfe, 0x00, 0x0e, 0x00, 0x01, 0xff]))
 
-		expect(errors.length).toBeGreaterThan(0)
+		// Forgiving contract: a malformed frame is logged and skipped so later frames
+		// in the stream survive; it neither tears down the connection nor floods the
+		// `error` event (which a hostile peer could otherwise use to spam listeners).
 		expect(fake.destroyed).toBe(false)
+		expect(errors).toHaveLength(0)
 	})
 })
 

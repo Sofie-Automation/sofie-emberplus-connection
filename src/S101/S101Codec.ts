@@ -2,7 +2,6 @@ import { EventEmitter } from 'eventemitter3'
 import { SmartBuffer } from 'smart-buffer'
 import Debug from 'debug'
 import { format } from 'util'
-import { berDecode } from '../encodings/ber'
 import { S101OversizedFrameError } from '../Errors'
 
 const debug = Debug('emberplus-connection:S101Codec')
@@ -76,19 +75,40 @@ const MAX_MULTI_PACKET_SIZE = 16 * 1024 * 1024
 
 export default class S101Codec extends EventEmitter<S101CodecEvents> {
 	inbuf = new SmartBuffer({ size: BUFFER_FRAME_SIZE })
-	private frameBuffer?: Buffer
+	// Partial frame carried across dataIn() calls, held as a list of chunks so a peer
+	// dribbling bytes without an EOF costs O(n) total memcpy rather than O(n^2) - the
+	// chunks are only concatenated once an EOF actually arrives.
+	private pendingChunks: Buffer[] = []
+	private pendingLength = 0
 	escaped = false
 
 	private multiPacketBuffer?: SmartBuffer
 	private isMultiPacket = false
 
-	dataIn(buf: Buffer): void {
-		// console.log('TimeStamp: ', Date.now(), 'dataIn', buf.toString('hex'))
+	private resetFramingState(): void {
+		this.pendingChunks = []
+		this.pendingLength = 0
+		this.escaped = false
+	}
 
-		// If we have leftover data from a previous incomplete frame, prepend it
-		if (this.frameBuffer) {
-			buf = Buffer.concat([this.frameBuffer, buf])
-			this.frameBuffer = undefined
+	dataIn(buf: Buffer): void {
+		// If a previous partial frame is pending, keep accumulating cheaply until an
+		// EOF shows up; only then materialize the whole thing and parse it.
+		if (this.pendingLength > 0) {
+			const hasEof = buf.indexOf(S101_EOF) !== -1
+			this.pendingChunks.push(buf)
+			this.pendingLength += buf.length
+			if (this.pendingLength > MAX_FRAME_BUFFER_SIZE) {
+				this.resetFramingState()
+				this.resetMultiPacketBuffer()
+				throw new S101OversizedFrameError(
+					format('dropping oversized S101 frame: %d bytes buffered without EOF', this.pendingLength)
+				)
+			}
+			if (!hasEof) return // still incomplete - do not concat yet
+			buf = Buffer.concat(this.pendingChunks, this.pendingLength)
+			this.pendingChunks = []
+			this.pendingLength = 0
 		}
 
 		let frameOffset = 0
@@ -97,20 +117,25 @@ export default class S101Codec extends EventEmitter<S101CodecEvents> {
 			if (frameStart === -1) break
 
 			const frameEnd = buf.indexOf(S101_EOF, frameStart + 1)
-			if (frameEnd === -1 || frameEnd - frameStart < 4) {
-				//console.log('Parsing frameEnd to next chunk')
+			if (frameEnd === -1) {
+				// Genuinely incomplete frame - stash the tail and wait for more data.
 				const pending = buf.subarray(frameStart)
 				if (pending.length > MAX_FRAME_BUFFER_SIZE) {
-					// Clear state before throwing so the next dataIn call starts clean.
-					this.frameBuffer = undefined
-					this.escaped = false
+					this.resetFramingState()
 					this.resetMultiPacketBuffer()
 					throw new S101OversizedFrameError(
 						format('dropping oversized S101 frame: %d bytes buffered without EOF', pending.length)
 					)
 				}
-				this.frameBuffer = pending
+				this.pendingChunks = [pending]
+				this.pendingLength = pending.length
 				break
+			}
+			if (frameEnd - frameStart < 4) {
+				// Complete but too short to be a valid frame - skip it rather than
+				// treating it as incomplete (which would wedge the framer).
+				frameOffset = frameEnd + 1
+				continue
 			}
 
 			this.inbuf.clear()
@@ -146,8 +171,15 @@ export default class S101Codec extends EventEmitter<S101CodecEvents> {
 			this.escaped = false // Reset escaped state at frame end
 			this.inbuf.moveTo(0)
 
-			// console.log('Buffer 00-16', this.inbuf.toString('hex').substring(0, 40))
-			this.handleFrame(this.inbuf)
+			try {
+				this.handleFrame(this.inbuf)
+			} catch (e) {
+				// A single malformed frame (bad CRC, short header, unknown command) must
+				// not discard the other well-formed frames batched in the same segment.
+				// The intentional oversized-drop still propagates to tear down the peer.
+				if (e instanceof S101OversizedFrameError) throw e
+				debug('dropping malformed S101 frame: %s', e instanceof Error ? e.message : String(e))
+			}
 			frameOffset = frameEnd + 1
 		}
 	}
@@ -271,8 +303,9 @@ export default class S101Codec extends EventEmitter<S101CodecEvents> {
 				if ((flags & FLAG_LAST_MULTI_PACKET) === FLAG_LAST_MULTI_PACKET) {
 					debug('multi ember packet end')
 					const completeData = this.multiPacketBuffer.toBuffer()
-					// Check if this is a stream packet, can also be a normal packet
-					if (completeData[0] === 0x60 && completeData[2] === 0x66) {
+					// Use the same long-form-aware check as the single-packet path so a
+					// long reassembled stream message is not misrouted as a normal packet.
+					if (this.isEmberStreamPacket(completeData)) {
 						this.handleEmberStreamPacket(completeData)
 					} else {
 						this.handleEmberPacket(completeData)
@@ -283,26 +316,19 @@ export default class S101Codec extends EventEmitter<S101CodecEvents> {
 		}
 	}
 	private handleEmberPacket(data: Buffer): void {
-		try {
-			const decoded = berDecode(data)
-			if (data[0] === 0x60) {
-				// Root tag check
-				if (decoded.value) {
-					this.emit('emberPacket', data)
-				}
-			}
-		} catch (error) {
-			console.error('Error decoding packet:', error)
+		// Only forward things that look like a Glow root; the consumer (S101Socket)
+		// performs the single authoritative berDecode and routes decode errors to its
+		// `error` event. Decoding here as well would be double the CPU (and double the
+		// DoS exposure) and would swallow errors to stderr.
+		if (data[0] === 0x60) {
+			this.emit('emberPacket', data)
+		} else {
+			debug('dropping ember packet with unexpected root tag 0x%s', (data[0] ?? 0).toString(16))
 		}
 	}
 
 	private handleEmberStreamPacket(data: Buffer): void {
-		try {
-			this.emit('emberStreamPacket', data)
-		} catch (error) {
-			console.error('Error decoding stream packet:', error)
-			this.resetMultiPacketBuffer()
-		}
+		this.emit('emberStreamPacket', data)
 	}
 
 	resetMultiPacketBuffer(): void {
