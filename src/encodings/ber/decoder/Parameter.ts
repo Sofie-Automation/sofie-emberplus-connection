@@ -46,6 +46,7 @@ function decodeParameter(reader: Ber.Reader, options: DecodeOptions = defaultDec
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
 		const tag = reader.readSequence()
+		if (tag === null) break // truncated/malformed - cannot make progress
 		switch (tag) {
 			case Ber.CONTEXT(0):
 				identifier = reader.readString(Ber.BERDataTypes.STRING) ?? identifier

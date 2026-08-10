@@ -17,6 +17,7 @@ function decodeNode(reader: Ber.Reader, options: DecodeOptions = defaultDecode):
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
 		const tag = reader.readSequence()
+		if (tag === null) break // truncated/malformed - cannot make progress
 		switch (tag) {
 			case Ber.CONTEXT(0):
 				identifier = reader.readString(Ber.BERDataTypes.STRING) ?? identifier

@@ -274,8 +274,16 @@ function unexpected<T>(
  * @param reader Reader to skip over the next tag for.
  */
 function skipNext(reader: Ber.Reader): void {
+	const before = reader.offset
 	const skipTag = reader.peek()
-	if (skipTag) {
+	if (skipTag === null) return
+	try {
 		reader.readStringAsBuffer(skipTag)
+	} catch {
+		// A malformed length on the skipped element must not abort the whole decode;
+		// fall through to the single-byte advance below.
 	}
+	// Guarantee forward progress: if the element could not be parsed/skipped, step
+	// over one byte so the surrounding decode loop cannot spin forever.
+	if (reader.offset <= before) reader.readByte()
 }

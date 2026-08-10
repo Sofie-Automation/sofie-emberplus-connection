@@ -17,6 +17,7 @@ export function decodeInvocationResult(
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
 		const tag = reader.readSequence()
+		if (tag === null) break // truncated/malformed - cannot make progress
 		switch (tag) {
 			case Ber.CONTEXT(0):
 				id = reader.readInt()
@@ -30,8 +31,9 @@ export function decodeInvocationResult(
 				seqOffset = reader.offset + reader.length
 				while (reader.offset < seqOffset) {
 					const resTag = reader.readSequence()
+					if (resTag === null) break // truncated/malformed - cannot make progress
 					if (resTag === 0) continue
-					if (resTag === null || resTag !== Ber.CONTEXT(0)) {
+					if (resTag !== Ber.CONTEXT(0)) {
 						unknownContext(errors, 'decode invocation result: result', resTag, options)
 						skipNext(reader)
 						continue

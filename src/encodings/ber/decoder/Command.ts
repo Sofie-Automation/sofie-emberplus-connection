@@ -52,6 +52,7 @@ function decodeCommand(reader: Ber.Reader, options: DecodeOptions = defaultDecod
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
 		const tag = reader.readSequence()
+		if (tag === null) break // truncated/malformed - cannot make progress
 		switch (tag) {
 			case Ber.CONTEXT(0):
 				type = reader.readInt()

@@ -22,7 +22,8 @@ import {
 export function decodeTemplate(
 	reader: Ber.Reader,
 	isQualified = false,
-	options: DecodeOptions = defaultDecode
+	options: DecodeOptions = defaultDecode,
+	depth = 0
 ): DecodeResult<TreeElement<Template>> {
 	reader.readSequence(isQualified ? QualifiedTemplateBERID : TemplateBERID)
 	let number: number | null = null
@@ -33,6 +34,7 @@ export function decodeTemplate(
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
 		const tag = reader.readSequence()
+		if (tag === null) break // truncated/malformed - cannot make progress
 		switch (tag) {
 			case Ber.CONTEXT(0):
 				if (isQualified) {
@@ -43,7 +45,7 @@ export function decodeTemplate(
 				break
 			case Ber.CONTEXT(1):
 				element = appendErrors(
-					decodeGenericElement(reader, options) as DecodeResult<
+					decodeGenericElement(reader, options, depth + 1) as DecodeResult<
 						EmberTreeNode<Parameter | EmberNode | Matrix | EmberFunction>
 					>,
 					errors
