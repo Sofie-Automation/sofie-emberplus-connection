@@ -19,6 +19,7 @@ export {
 	InvalidRequesrFormat,
 	InvalidStringPair,
 	PathDiscoveryFailure,
+	S101OversizedFrameError,
 }
 
 class UnimplementedEmberTypeError extends Error {
@@ -44,6 +45,18 @@ class UnimplementedEmberTypeError extends Error {
 class S101SocketError extends Error {
 	constructor(message: string | undefined) {
 		super(message)
+	}
+}
+
+/**
+ * Thrown by the S101 codec when an inbound frame or multi-packet message
+ * exceeds the configured size limits, indicating an abusive/broken peer.
+ * The socket layer recognises this type to drop the connection.
+ */
+class S101OversizedFrameError extends Error {
+	constructor(message: string) {
+		super(message)
+		this.name = this.constructor.name
 	}
 }
 

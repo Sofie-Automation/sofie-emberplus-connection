@@ -3,6 +3,7 @@ import { SmartBuffer } from 'smart-buffer'
 import Debug from 'debug'
 import { format } from 'util'
 import { berDecode } from '../encodings/ber'
+import { S101OversizedFrameError } from '../Errors'
 
 const debug = Debug('emberplus-connection:S101Codec')
 
@@ -65,6 +66,14 @@ export type S101CodecEvents = {
 // This is enough for typical size of Ember data, but buffer is Dynamic to allow for larger data if needed
 const BUFFER_FRAME_SIZE = 64 * 1024
 
+// Largest in-progress single S101 frame we will buffer before treating the
+// peer as abusive. Legitimate large payloads arrive via multi-packet
+// reassembly, so a single frame never needs to approach this. Tune as needed.
+const MAX_FRAME_BUFFER_SIZE = 4 * 1024 * 1024
+
+// Largest reassembled multi-packet Ember message we will accept.
+const MAX_MULTI_PACKET_SIZE = 16 * 1024 * 1024
+
 export default class S101Codec extends EventEmitter<S101CodecEvents> {
 	inbuf = new SmartBuffer({ size: BUFFER_FRAME_SIZE })
 	private frameBuffer?: Buffer
@@ -90,7 +99,17 @@ export default class S101Codec extends EventEmitter<S101CodecEvents> {
 			const frameEnd = buf.indexOf(S101_EOF, frameStart + 1)
 			if (frameEnd === -1 || frameEnd - frameStart < 4) {
 				//console.log('Parsing frameEnd to next chunk')
-				this.frameBuffer = buf.subarray(frameStart)
+				const pending = buf.subarray(frameStart)
+				if (pending.length > MAX_FRAME_BUFFER_SIZE) {
+					// Clear state before throwing so the next dataIn call starts clean.
+					this.frameBuffer = undefined
+					this.escaped = false
+					this.resetMultiPacketBuffer()
+					throw new S101OversizedFrameError(
+						format('dropping oversized S101 frame: %d bytes buffered without EOF', pending.length)
+					)
+				}
+				this.frameBuffer = pending
 				break
 			}
 
@@ -232,8 +251,22 @@ export default class S101Codec extends EventEmitter<S101CodecEvents> {
 				this.multiPacketBuffer = new SmartBuffer()
 				this.isMultiPacket = true
 				this.multiPacketBuffer.writeBuffer(payload)
+
+				if (this.multiPacketBuffer.length > MAX_MULTI_PACKET_SIZE) {
+					this.resetMultiPacketBuffer()
+					throw new S101OversizedFrameError(
+						format('dropping oversized multi-packet message: exceeded %d bytes', MAX_MULTI_PACKET_SIZE)
+					)
+				}
 			} else if (this.isMultiPacket && this.multiPacketBuffer) {
 				this.multiPacketBuffer.writeBuffer(payload)
+
+				if (this.multiPacketBuffer.length > MAX_MULTI_PACKET_SIZE) {
+					this.resetMultiPacketBuffer()
+					throw new S101OversizedFrameError(
+						format('dropping oversized multi-packet message: exceeded %d bytes', MAX_MULTI_PACKET_SIZE)
+					)
+				}
 
 				if ((flags & FLAG_LAST_MULTI_PACKET) === FLAG_LAST_MULTI_PACKET) {
 					debug('multi ember packet end')
