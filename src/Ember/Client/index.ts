@@ -182,7 +182,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		if (host) this.host = host
 		if (port) this.port = port
 
-		if (!this.host) return Promise.reject('No host specified')
+		if (!this.host) return Promise.reject(new Error('No host specified'))
 
 		this._client.address = this.host
 		this._client.port = this.port
@@ -600,6 +600,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		// iterate over requests, check path, if Invocation check id
 		// resolve requests
 		for (const change of changes) {
+			if (!change.node) continue // nothing to resolve a request against
 			const reqs = Array.from(this._requests.values()).filter(
 				(s) => (!('path' in s.node) && !change.path) || ('path' in s.node && s.node.path === change.path)
 			)

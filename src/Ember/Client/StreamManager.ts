@@ -31,7 +31,8 @@ export class StreamManager extends EventEmitter<StreamManagerEvents> {
 	}
 
 	public registerParameter(parameter: Parameter, path: string): void {
-		if (!parameter.streamIdentifier) {
+		if (parameter.streamIdentifier === undefined || parameter.streamIdentifier === null) {
+			// Explicit check, not `!streamIdentifier`: identifier 0 is valid.
 			debug('Warning: Attempted to register parameter without streamIdentifier')
 			return
 		}
@@ -48,7 +49,10 @@ export class StreamManager extends EventEmitter<StreamManagerEvents> {
 			parameter,
 			path,
 			streamIdentifier: parameter.streamIdentifier,
-			offset: parameter.streamDescriptor?.offset || 0,
+			// Clamp to >= 0: a provider-supplied negative offset would pass the
+			// `buffer.length >= offset + 4` check and make getFloat32 throw a RangeError
+			// that unwinds through the whole dataIn chain.
+			offset: Math.max(0, parameter.streamDescriptor?.offset ?? 0),
 		}
 
 		// Store both mappings
