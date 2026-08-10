@@ -1,0 +1,8 @@
+{
+	"extends": "../tsconfig.json",
+	"include": ["src/**/*.ts", "vectors/**/*.ts", "tests/**/*.ts", "../src/**/*.ts"],
+	"exclude": ["../node_modules/**", "../src/**/__tests__/*", "../src/**/__mocks__/*"],
+	"compilerOptions": {
+		"noEmit": true
+	}
+}

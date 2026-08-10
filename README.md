@@ -10,6 +10,8 @@ The current version is very losely based on the original library and Mr Gilles D
 
 - [Developer Info](DEVELOPER.md)
 - [Contribution Guidelines](CONTRIBUTING.md)
+- [E2E differential tests against the reference libember implementation](e2e/README.md)
+  (Linux + Node 26 only: `yarn e2e:build`, then `yarn e2e`)
 
 ### General Sofie System Info
 

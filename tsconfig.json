@@ -1,6 +1,7 @@
 {
 	"extends": "./tsconfig.build.json",
-	"exclude": ["node_modules/**"],
+	"include": ["src/**/*.ts", "e2e/**/*.ts"],
+	"exclude": ["node_modules/**", "e2e/native/**"],
 	"compilerOptions": {
 		"types": ["jest", "node"]
 	}

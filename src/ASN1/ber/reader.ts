@@ -316,19 +316,18 @@ export class Reader {
 		if (this.length > this._size - o) return null
 		this._offset = o
 
-		// Decode as two's-complement using Number arithmetic rather than 32-bit bitwise
-		// ops. The old code used `<<`/`>>`, which silently produced wrong values for any
-		// INTEGER longer than 4 bytes (e.g. a 5-byte 0x0100000000 decoded to 0). This is
-		// exact up to 2^53; beyond that Number cannot represent the value precisely, but
-		// it is never arbitrary garbage.
+		// Ember+ integers are Integer64: the unsigned intermediate can be up to 8 bytes
+		// wide, which overflows both 32-bit bitwise ops and 2^53 Number precision, so
+		// the two's-complement accumulation must happen in BigInt. The final conversion
+		// to Number is exact for the full safe-integer range.
 		const negative = this.length > 0 && (this._buf[this._offset] & 0x80) === 0x80
-		let value = 0
+		let value = 0n
 		for (let i = 0; i < this.length; i++) {
-			value = value * 0x100 + (this._buf[this._offset++] & 0xff)
+			value = (value << 8n) | BigInt(this._buf[this._offset++] & 0xff)
 		}
 
-		if (negative) value -= 2 ** (this.length * 8)
+		if (negative) value -= 1n << BigInt(this.length * 8)
 
-		return value
+		return Number(value)
 	}
 }

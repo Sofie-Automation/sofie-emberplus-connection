@@ -73,6 +73,8 @@ class ExtendedReader extends Reader {
 					return -Infinity
 				case 0x42:
 					return NaN
+				case 0x43:
+					return -0
 			}
 		}
 

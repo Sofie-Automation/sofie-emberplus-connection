@@ -50,24 +50,23 @@ export class Writer {
 
 	writeInt(i: number, tag?: number): void {
 		if (typeof i !== 'number') throw new TypeError('argument must be a Number')
+		if (!Number.isSafeInteger(i)) throw newInvalidAsn1Error('BER ints must be safe integers (|i| <= 2^53 - 1)')
 		if (typeof tag !== 'number') tag = Types.Integer
 
-		let sz = 4
-
-		while (((i & 0xff800000) === 0 || (i & 0xff800000) === 0xff800000 >> 0) && sz > 1) {
-			sz--
-			i <<= 8
-		}
-
-		if (sz > 4) throw newInvalidAsn1Error('BER ints cannot be > 0xffffffff')
+		// Minimal-length big-endian two's complement. Ember+ integers are Integer64
+		// (up to 8 bytes on the wire), beyond what 32-bit bitwise arithmetic can
+		// express, so the byte extraction must happen in BigInt.
+		const big = BigInt(i)
+		let sz = 1
+		while (big < -(1n << BigInt(8 * sz - 1)) || big >= 1n << BigInt(8 * sz - 1)) sz++
 
 		this._ensure(2 + sz)
 		this._buf[this._offset++] = tag
 		this._buf[this._offset++] = sz
 
-		while (sz-- > 0) {
-			this._buf[this._offset++] = (i & 0xff000000) >>> 24
-			i <<= 8
+		const unsigned = big < 0n ? big + (1n << BigInt(8 * sz)) : big
+		for (let shift = 8 * (sz - 1); shift >= 0; shift -= 8) {
+			this._buf[this._offset++] = Number((unsigned >> BigInt(shift)) & 0xffn)
 		}
 	}
 
@@ -219,10 +218,14 @@ export class Writer {
 
 		if (len <= 0x7f) {
 			this._buf[this._offset++] = len
-		} else if (len <= 0xff) {
-			this._buf[this._offset++] = 0x81
-			this._buf[this._offset++] = len
 		} else if (len <= 0xffff) {
+			// Lengths 128..255 use the 2-payload-byte form (82 00 xx) rather than
+			// the minimal 81 xx: libember's DomReader accounts consumed bytes by
+			// re-computing the length's encoding in ITS canonical form (which is
+			// 82 00 xx), so the minimal form makes it over-count by one byte per
+			// length and silently drop trailing sibling elements once the drift
+			// exceeds their size. Real Ember+ hardware runs libember, so match it.
+			// Both forms are valid BER and this library's reader accepts either.
 			this._buf[this._offset++] = 0x82
 			this._buf[this._offset++] = len >> 8
 			this._buf[this._offset++] = len
@@ -254,11 +257,8 @@ export class Writer {
 		if (len <= 0x7f) {
 			this._shift(start, len, -2)
 			this._buf[seq] = len
-		} else if (len <= 0xff) {
-			this._shift(start, len, -1)
-			this._buf[seq] = 0x81
-			this._buf[seq + 1] = len
 		} else if (len <= 0xffff) {
+			// 82 00 xx for 128..255 - see the matching comment in writeLength()
 			this._buf[seq] = 0x82
 			this._buf[seq + 1] = len >> 8
 			this._buf[seq + 2] = len

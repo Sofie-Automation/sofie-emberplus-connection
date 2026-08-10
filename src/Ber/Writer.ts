@@ -22,6 +22,12 @@ class ExtendedWriter extends Writer {
 
 		switch (value) {
 			case 0:
+				if (Object.is(value, -0)) {
+					// X.690 special value for minus zero (also what libember emits)
+					this.writeLength(1)
+					this.writeByte(0x43)
+					return
+				}
 				this.writeLength(0)
 				return
 			case Infinity:
@@ -70,7 +76,10 @@ class ExtendedWriter extends Writer {
 
 		this.writeLength(1 + shortExp.size + shortSig.size)
 
-		const preamble = value < 0 ? 0x80 | 0x40 : 0x80 // in what case will 0x80|0x40 be anything but 0xC0?
+		// Preamble per X.690 8.5.7: binary encoding (0x80), sign bit (0x40), and
+		// the exponent length in bits 0-1 (0 = 1 byte, 1 = 2 bytes, ...). Doubles
+		// with |unbiased exponent| >= 128 (e.g. 1e300) need the 2-byte form.
+		const preamble = (value < 0 ? 0x80 | 0x40 : 0x80) | (shortExp.size - 1)
 		this.writeByte(preamble)
 
 		for (let i = 0; i < shortExp.size; i++) {

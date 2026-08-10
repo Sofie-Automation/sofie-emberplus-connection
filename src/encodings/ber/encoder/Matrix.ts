@@ -2,7 +2,6 @@ import * as Ber from '../../../Ber'
 import { Matrix, MatrixType, MatrixAddressingMode } from '../../../model/Matrix'
 import { ElementType } from '../../../model/EmberElement'
 import { encodeLabel } from './Label'
-import { RelativeOID } from '../../../types/types'
 import { TargetBERID, SourceBERID } from '../constants'
 
 export function encodeMatrix(matrix: Matrix, writer: Ber.Writer): void {
@@ -29,11 +28,12 @@ export function encodeMatrix(matrix: Matrix, writer: Ber.Writer): void {
 
 	if (matrix.parametersLocation != null) {
 		writer.startSequence(Ber.CONTEXT(8))
-		const param = Number(matrix.parametersLocation)
-		if (isNaN(param)) {
-			writer.writeRelativeOID(matrix.parametersLocation as RelativeOID, Ber.BERDataTypes.RELATIVE_OID)
+		if (typeof matrix.parametersLocation === 'number') {
+			writer.writeInt(matrix.parametersLocation)
 		} else {
-			writer.writeInt(param)
+			// A RELATIVE-OID string. Note that a numeric-looking path such as "9.8"
+			// (two arcs) is still a path - only actual numbers use the inline form.
+			writer.writeRelativeOID(matrix.parametersLocation, Ber.BERDataTypes.RELATIVE_OID)
 		}
 		writer.endSequence()
 	}
