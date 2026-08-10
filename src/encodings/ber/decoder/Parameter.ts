@@ -78,7 +78,7 @@ function decodeParameter(reader: Ber.Reader, options: DecodeOptions = defaultDec
 				factor = reader.readInt() ?? factor
 				break
 			case Ber.CONTEXT(9):
-				isOnline = reader.readBoolean()
+				isOnline = reader.readBoolean() ?? isOnline
 				break
 			case Ber.CONTEXT(10):
 				formula = reader.readString(Ber.BERDataTypes.STRING) ?? formula

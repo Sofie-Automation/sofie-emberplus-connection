@@ -209,15 +209,21 @@ function decodeTargets(
 	_options: DecodeOptions = defaultDecode // eslint-disable-line @typescript-eslint/no-unused-vars
 ): DecodeResult<Array<number>> {
 	const targets: Array<number> = []
+	const errors: Array<Error> = []
 	reader.readSequence(Ber.BERDataTypes.SEQUENCE)
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
 		reader.readSequence(Ber.CONTEXT(0))
 		reader.readSequence(TargetBERID)
 		reader.readSequence(Ber.CONTEXT(0))
-		targets.push(reader.readInt() as number)
+		const target = reader.readInt()
+		if (target === null) {
+			errors.push(new Error('decode targets: missing target number'))
+		} else {
+			targets.push(target)
+		}
 	}
-	return makeResult(targets)
+	return makeResult(targets, errors)
 }
 
 function decodeSources(
@@ -225,15 +231,21 @@ function decodeSources(
 	_options: DecodeOptions = defaultDecode // eslint-disable-line @typescript-eslint/no-unused-vars
 ): DecodeResult<Array<number>> {
 	const sources: Array<number> = []
+	const errors: Array<Error> = []
 	reader.readSequence(Ber.BERDataTypes.SEQUENCE)
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
 		reader.readSequence(Ber.CONTEXT(0))
 		reader.readSequence(SourceBERID)
 		reader.readSequence(Ber.CONTEXT(0))
-		sources.push(reader.readInt() as number)
+		const source = reader.readInt()
+		if (source === null) {
+			errors.push(new Error('decode sources: missing source number'))
+		} else {
+			sources.push(source)
+		}
 	}
-	return makeResult(sources)
+	return makeResult(sources, errors)
 }
 
 function decodeConnections(reader: Ber.Reader, options: DecodeOptions = defaultDecode): DecodeResult<Connections> {

@@ -68,12 +68,17 @@ export class Reader {
 			return blockInf
 		}
 
-		while (this.remain > 0) {
+		// Note: this method advances `currOffset`, not `this._offset`, so every bounds
+		// check below must be against `currOffset` or a truncated block loops forever.
+		while (currOffset + 2 <= this._size) {
 			b = this._buf[currOffset++]
 			lenB = this._buf[currOffset++]
 
 			if (b == 0 && lenB == 0) {
-				break // end of block
+				// end of block
+				const blockLength = currOffset - offset
+				this._blockInfo[offset] = blockLength
+				return blockLength
 			}
 			let len = 0
 			if ((lenB & 0x80) == 0x80) {
@@ -81,12 +86,14 @@ export class Reader {
 
 				if (lenB == 0) {
 					this._blocklevel++
-					lenB = this.readBlock(currOffset) ?? 0
+					const nested = this.readBlock(currOffset)
 					this._blocklevel--
+					if (nested === null) return null
+					lenB = nested
 				} else {
 					if (lenB > 4) throw newInvalidAsn1Error('encoding too long')
 
-					if (this._size - this.offset < lenB) {
+					if (this._size - currOffset < lenB) {
 						return null
 					}
 
@@ -101,10 +108,9 @@ export class Reader {
 				throw new Error('invalid block at offset ' + offset)
 			}
 		}
-		lenB = currOffset - offset
-		this._blockInfo[offset] = lenB
 
-		return lenB
+		// Ran out of buffer without finding the end-of-block marker
+		return null
 	}
 
 	peek(): number | null {
@@ -175,8 +181,10 @@ export class Reader {
 		return this._readTag(Types.Integer)
 	}
 
-	readBoolean(): boolean {
-		return this._readTag(Types.Boolean) === 0 ? false : true
+	readBoolean(): boolean | null {
+		const value = this._readTag(Types.Boolean)
+		if (value === null) return null // not enough data, which is not the same as `true`
+		return value !== 0
 	}
 
 	readEnumeration(): number | null {

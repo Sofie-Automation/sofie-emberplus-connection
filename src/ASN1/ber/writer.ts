@@ -112,9 +112,12 @@ export class Writer {
 
 		this.writeByte(tag)
 		this.writeLength(buf.length)
-		this._ensure(buf.length)
-		buf.copy(this._buf, this._offset, 0, buf.length)
-		this._offset += buf.length
+		// An empty buffer is a valid zero-length TLV, but `_ensure(0)` asserts
+		if (buf.length) {
+			this._ensure(buf.length)
+			buf.copy(this._buf, this._offset, 0, buf.length)
+			this._offset += buf.length
+		}
 	}
 
 	writeStringArray(strings: ReadonlyArray<string>): void {
@@ -129,7 +132,8 @@ export class Writer {
 		if (typeof s !== 'string') throw new TypeError('argument must be a string')
 		if (typeof tag !== 'number') tag = Types.RelativeOID
 
-		if (!/^([0-9]+\.)*[0-9]*$/.test(s)) throw new Error('argument is not a valid OID string')
+		// An empty string is a valid empty OID, but an empty arc (eg a trailing dot) is not
+		if (!/^$|^[0-9]+(\.[0-9]+)*$/.test(s)) throw new Error('argument is not a valid OID string')
 
 		const tmp = s === '' ? [] : s.split('.')
 		const bytes: number[] = []

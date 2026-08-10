@@ -25,10 +25,10 @@ function decodeNode(reader: Ber.Reader, options: DecodeOptions = defaultDecode):
 				description = reader.readString(Ber.BERDataTypes.STRING) ?? description
 				break
 			case Ber.CONTEXT(2):
-				isRoot = reader.readBoolean()
+				isRoot = reader.readBoolean() ?? isRoot
 				break
 			case Ber.CONTEXT(3):
-				isOnline = reader.readBoolean()
+				isOnline = reader.readBoolean() ?? isOnline
 				break
 			case Ber.CONTEXT(4):
 				schemaIdentifiers = reader.readString(Ber.BERDataTypes.STRING) ?? schemaIdentifiers

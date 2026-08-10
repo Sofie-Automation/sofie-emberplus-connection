@@ -151,3 +151,54 @@ test('long string', () => {
 	const ber = new Reader(buf.slice(0, 3 + s.length))
 	expect(ber.readString()).toBe(s)
 })
+
+test('indefinite length sequence', () => {
+	// indefinite length, containing a 1 byte int, terminated by 0x00 0x00
+	const reader = new Reader(Buffer.from([0x60, 0x80, 0x02, 0x01, 0x05, 0x00, 0x00]))
+
+	expect(reader.readSequence(0x60)).toEqual(0x60)
+	expect(reader.length).toEqual(5)
+	expect(reader.offset).toEqual(2)
+	expect(reader.readInt()).toEqual(5)
+})
+
+test('nested indefinite length sequences', () => {
+	const reader = new Reader(Buffer.from([0x60, 0x80, 0x61, 0x80, 0x02, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00]))
+
+	expect(reader.readSequence(0x60)).toEqual(0x60)
+	expect(reader.length).toEqual(9)
+	expect(reader.readSequence(0x61)).toEqual(0x61)
+	expect(reader.length).toEqual(5)
+	expect(reader.readInt()).toEqual(7)
+})
+
+test('truncated indefinite length block does not hang', () => {
+	// no 0x00 0x00 terminator - this used to loop forever
+	const reader = new Reader(Buffer.from([0x60, 0x80, 0x01, 0x01, 0xff, 0x00]))
+
+	expect(reader.readBlock(2)).toBeNull()
+	expect(reader.readSequence(0x60)).toEqual(0x60)
+	expect(reader.length).toEqual(0)
+})
+
+test('truncated indefinite length block does not hang at any length', () => {
+	const full = Buffer.from([0x60, 0x80, 0x61, 0x80, 0x02, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00])
+
+	for (let len = 0; len < full.length; len++) {
+		const reader = new Reader(full.slice(0, len))
+		// throwing on malformed input is fine, hanging is not
+		expect(() => {
+			reader.readSequence()
+			reader.readSequence()
+			reader.readInt()
+		}).not.toThrow(RangeError)
+	}
+})
+
+test('read boolean with no value', () => {
+	// a truncated boolean must not be reported as `true`
+	expect(new Reader(Buffer.from([0x01])).readBoolean()).toBeNull()
+	expect(new Reader(Buffer.from([0x01, 0x01])).readBoolean()).toBeNull()
+	expect(new Reader(Buffer.from([0x01, 0x01, 0x00])).readBoolean()).toEqual(false)
+	expect(new Reader(Buffer.from([0x01, 0x01, 0xff])).readBoolean()).toEqual(true)
+})

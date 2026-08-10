@@ -161,12 +161,7 @@ class ExtendedWriter extends Writer {
 					if (!Buffer.isBuffer(value.value)) {
 						value.value = Buffer.from(`${value.value}`)
 					}
-					if (value.value.length) {
-						this.writeByte(BERDataTypes.OCTETSTRING)
-						this.writeLength(0)
-					} else {
-						this.writeBuffer(value.value, BERDataTypes.OCTETSTRING)
-					}
+					this.writeBuffer(value.value, BERDataTypes.OCTETSTRING)
 					break
 				case ParameterType.Null:
 					this.writeNull()

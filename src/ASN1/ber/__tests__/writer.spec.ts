@@ -298,3 +298,33 @@ test('Write OID', () => {
 	console.log(util.inspect(ber))
 	console.log(util.inspect(Buffer.from([0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01])))
 })
+
+test('write empty buffer', () => {
+	const writer = new Writer()
+	writer.writeBuffer(Buffer.alloc(0), 0x04)
+
+	const ber = writer.buffer
+	expect(ber).toHaveLength(2)
+	expect(ber[0]).toEqual(0x04) // wrong tag
+	expect(ber[1]).toEqual(0x00) // wrong length
+})
+
+test('write relative OID', () => {
+	const writer = new Writer()
+	writer.writeRelativeOID('1.2.3', 0x0d)
+
+	expect(writer.buffer).toEqual(Buffer.from([0x0d, 0x03, 0x01, 0x02, 0x03]))
+})
+
+test('write empty relative OID', () => {
+	const writer = new Writer()
+	writer.writeRelativeOID('', 0x0d)
+
+	expect(writer.buffer).toEqual(Buffer.from([0x0d, 0x00]))
+})
+
+test('write relative OID with empty arc', () => {
+	expect(() => new Writer().writeRelativeOID('1.2.', 0x0d)).toThrow('argument is not a valid OID string')
+	expect(() => new Writer().writeRelativeOID('.1.2', 0x0d)).toThrow('argument is not a valid OID string')
+	expect(() => new Writer().writeRelativeOID('1..2', 0x0d)).toThrow('argument is not a valid OID string')
+})
