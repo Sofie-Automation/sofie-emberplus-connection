@@ -1055,15 +1055,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/safer-buffer@npm:^2.1.0":
-  version: 2.1.1
-  resolution: "@types/safer-buffer@npm:2.1.1"
-  dependencies:
-    "@types/node": "*"
-  checksum: 24ae87ff0803bc7f943c6cb916bac7ff7173a23fc417fafb215cbb67c4ec2fc05aa3fde8c765c96e18ca34a7c1275961e2f8f0b5d34e8f362e455be402b73b94
-  languageName: node
-  linkType: hard
-
 "@types/semver@npm:^7.3.12":
   version: 7.5.3
   resolution: "@types/semver@npm:7.5.3"
@@ -1403,16 +1394,6 @@ __metadata:
   version: 2.0.6
   resolution: "asap@npm:2.0.6"
   checksum: b296c92c4b969e973260e47523207cd5769abd27c245a68c26dc7a0fe8053c55bb04360237cb51cab1df52be939da77150ace99ad331fb7fb13b3423ed73ff3d
-  languageName: node
-  linkType: hard
-
-asn1@evs-broadcast/node-asn1:
-  version: 0.5.4
-  resolution: "asn1@https://github.com/evs-broadcast/node-asn1.git#commit=0146823069e479e90595480dc90c72cafa161ba1"
-  dependencies:
-    "@types/safer-buffer": ^2.1.0
-    safer-buffer: ~2.1.0
-  checksum: d47f89f92ce0423cc8dc1cc18c633cd771d8a5180f04a5fd768ccd9b392a258f67c8412d175ad981ca133c00fc0767d4facd8f9f54c2b7676e2f6036a90d069d
   languageName: node
   linkType: hard
 
@@ -2026,7 +2007,6 @@ asn1@evs-broadcast/node-asn1:
     "@types/debug": ^4.1.9
     "@types/jest": ^29.5.5
     "@types/long": ^4.0.1
-    asn1: evs-broadcast/node-asn1
     debug: ^4.3.4
     eventemitter3: ^4.0.7
     jest: ^29.7.0
@@ -4881,7 +4861,7 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"safer-buffer@npm:>= 2.1.2 < 3.0.0, safer-buffer@npm:~2.1.0":
+"safer-buffer@npm:>= 2.1.2 < 3.0.0":
   version: 2.1.2
   resolution: "safer-buffer@npm:2.1.2"
   checksum: cab8f25ae6f1434abee8d80023d7e72b598cf1327164ddab31003c51215526801e40b66c5e65d658a0af1e9d6478cadcb4c745f4bd6751f97d8644786c0978b0
