@@ -1,6 +1,6 @@
 import net from 'net'
 import S101Socket from './S101Socket'
-import { ConnectionStatus } from '../Client'
+import { ConnectionStatus } from '../Client/ConnectionStatus'
 import { normalizeError } from '../Lib/util'
 
 import Debug from 'debug'

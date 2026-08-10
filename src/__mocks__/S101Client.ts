@@ -1,4 +1,4 @@
-import { ConnectionStatus } from '../Ember/Client'
+import { ConnectionStatus } from '../Ember/Client/ConnectionStatus'
 import type OrigS101Client from '../Ember/Socket/S101Client'
 import { EventEmitter } from 'eventemitter3'
 import { S101SocketEvents } from '../Ember/Socket/S101Socket'

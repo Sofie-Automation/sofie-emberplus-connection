@@ -420,6 +420,103 @@ describe('client', () => {
 		})
 	})
 
+	describe('Subscription behavior regressions', () => {
+		it('invokes all callbacks subscribed to the same path', async () => {
+			await runWithConnection(async (client, socket) => {
+				const cb1 = jest.fn()
+				const cb2 = jest.fn()
+
+				const parameter = new ParameterImpl(ParameterType.Integer, 'Level', undefined, 1)
+				const node = new NumberedTreeNodeImpl(1, parameter)
+
+				await client.subscribe(node, cb1)
+				await client.subscribe(node, cb2)
+
+				// Prime the tree first so subsequent qualified updates match path "1".
+				socket.mockData({
+					value: {
+						1: new NumberedTreeNodeImpl(1, new ParameterImpl(ParameterType.Integer, 'Level', undefined, 1)),
+					},
+				})
+				await new Promise(setImmediate)
+
+				socket.mockData(
+					createQualifiedNodeResponse('1', new ParameterImpl(ParameterType.Integer, 'Level', undefined, 2), undefined)
+				)
+
+				await new Promise(setImmediate)
+
+				expect(cb1).toHaveBeenCalledTimes(1)
+				expect(cb2).toHaveBeenCalledTimes(1)
+			})
+		})
+
+		it('removes all matching subscriptions when unsubscribing a path', async () => {
+			await runWithConnection(async (client) => {
+				const parameter = new ParameterImpl(ParameterType.Integer, 'Level', undefined, 1)
+				const node = new NumberedTreeNodeImpl(1, parameter)
+
+				await client.subscribe(node, jest.fn())
+				await client.subscribe(node, jest.fn())
+
+				//@ts-expect-error - private member
+				expect(client._subscriptions.filter((s) => s.path === '1')).toHaveLength(2)
+
+				await client.unsubscribe(node)
+
+				//@ts-expect-error - private member
+				expect(client._subscriptions.filter((s) => s.path === '1')).toHaveLength(0)
+			})
+		})
+
+		it('handles qualified updates that introduce new child nodes', async () => {
+			await runWithConnection(async (client, socket) => {
+				socket.mockData({
+					value: {
+						1: new NumberedTreeNodeImpl(1, new EmberNodeImpl('Root', undefined, undefined, true), {
+							1: new NumberedTreeNodeImpl(1, new EmberNodeImpl('Existing', undefined, undefined, true)),
+						}),
+					},
+				})
+				await new Promise(setImmediate)
+
+				const update = createQualifiedNodeResponse('1', new EmberNodeImpl('Root', undefined, undefined, true), {
+					1: new NumberedTreeNodeImpl(1, new EmberNodeImpl('Existing', undefined, undefined, true)),
+					2: new NumberedTreeNodeImpl(2, new EmberNodeImpl('Inserted', undefined, undefined, true)),
+				})
+
+				expect(() => socket.mockData(update)).not.toThrow()
+				await new Promise(setImmediate)
+
+				expect(client.tree[1].children?.[2]).toBeDefined()
+			})
+		})
+
+		it('queues one parent-path change when several missing children are inserted', async () => {
+			await runWithConnection(async (client) => {
+				const root = new NumberedTreeNodeImpl(1, new EmberNodeImpl('Root', undefined, undefined, true), {
+					1: new NumberedTreeNodeImpl(1, new EmberNodeImpl('Existing', undefined, undefined, true)),
+				})
+				if (!root.children?.[1]) throw new Error('Expected seeded child')
+				root.children[1].parent = root
+				client.tree[1] = root
+
+				const update = createQualifiedNodeResponse('1', new EmberNodeImpl('Root', undefined, undefined, true), {
+					1: new NumberedTreeNodeImpl(1, new EmberNodeImpl('Existing', undefined, undefined, true)),
+					2: new NumberedTreeNodeImpl(2, new EmberNodeImpl('Inserted A', undefined, undefined, true)),
+					3: new NumberedTreeNodeImpl(3, new EmberNodeImpl('Inserted B', undefined, undefined, true)),
+				})
+
+				//@ts-expect-error - private method under regression test
+				const changes = client._applyRootToTree(update.value)
+
+				expect(changes.filter((change) => change.path === '1')).toHaveLength(1)
+				expect(client.tree[1].children?.[2]?.parent).toBe(client.tree[1])
+				expect(client.tree[1].children?.[3]?.parent).toBe(client.tree[1])
+			})
+		})
+	})
+
 	describe('StreamManager Integration', () => {
 		it('registers stream parameter when subscribing', async () => {
 			await runWithConnection(async (client, socket) => {

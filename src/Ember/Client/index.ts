@@ -36,6 +36,9 @@ import { EmberFunction } from '../../model/EmberFunction'
 import { DecodeResult } from '../../encodings/ber/decoder/DecodeResult'
 import { StreamEntry } from '../../model/StreamEntry'
 import { StreamManager } from './StreamManager'
+import { ConnectionStatus } from './ConnectionStatus'
+
+export { ConnectionStatus } from './ConnectionStatus'
 
 export type RequestPromise<T> = Promise<RequestPromiseArguments<T>>
 export interface RequestPromiseArguments<T> {
@@ -73,13 +76,6 @@ export interface Change {
 	path: string | undefined
 	node: RootElement
 	emptyNode?: boolean
-}
-
-export enum ConnectionStatus {
-	Error,
-	Disconnected,
-	Connecting,
-	Connected,
 }
 
 export type EmberClientEvents = {
@@ -273,14 +269,16 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 
 		const command: Unsubscribe = new UnsubscribeImpl()
 
-		const path = Array.isArray(node) ? '' : getPath(node)
-
-		// Clean up subscriptions
-		for (const i in this._subscriptions) {
-			if (this._subscriptions[i].path === path) {
-				this._subscriptions.splice(Number(i), 1)
-			}
+		if (Array.isArray(node)) {
+			// root subscriptions are tracked with undefined path
+			this._subscriptions = this._subscriptions.filter((subscription) => subscription.path !== undefined)
+			return this._sendRequest<Root>(new NumberedTreeNodeImpl(0, command), ExpectResponse.Any)
 		}
+
+		const path = getPath(node)
+
+		// Remove all matching subscriptions for the path in one pass
+		this._subscriptions = this._subscriptions.filter((subscription) => subscription.path !== path)
 
 		// Deregister from StreamManager if this was a Parameter with streamIdentifier
 		if (!Array.isArray(node) && node.contents.type === ElementType.Parameter) {
@@ -288,10 +286,6 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 			if (parameter.streamIdentifier !== undefined) {
 				this._streamManager.unregisterParameter(path)
 			}
-		}
-
-		if (Array.isArray(node)) {
-			return this._sendRequest<Root>(new NumberedTreeNodeImpl(0, command), ExpectResponse.Any)
 		}
 
 		return this._sendCommand<void>(node, command, ExpectResponse.None)
@@ -564,8 +558,12 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 
 		// check for subscriptiions:
 		for (const change of changes) {
-			const subscription = this._subscriptions.find((s) => s.path === change.path)
-			if (subscription && change.node) subscription.cb(change.node)
+			const subscriptions = this._subscriptions.filter((s) => s.path === change.path)
+			if (change.node) {
+				for (const subscription of subscriptions) {
+					subscription.cb(change.node)
+				}
+			}
 		}
 
 		// check for any outstanding requests and resolve them
@@ -708,18 +706,31 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 					break
 			}
 		}
-		if (update.children && tree.children) {
-			// Update children
-			for (const child of Object.values<NumberedTreeNode<EmberElement>>(update.children)) {
-				const i = child.number
-				const oldChild = tree.children[i] // as NumberedTreeNode<EmberElement> | undefined // TODO
-				changes.push(...this._updateTree(child, oldChild))
-			}
-		} else if (update.children) {
-			changes.push({ path: getPath(tree), node: tree })
-			tree.children = update.children
-			for (const c of Object.values<NumberedTreeNode<EmberElement>>(update.children)) {
-				c.parent = tree
+		if (update.children) {
+			const treePath = getPath(tree)
+			if (!tree.children) {
+				changes.push({ path: treePath, node: tree })
+				tree.children = update.children
+				for (const c of Object.values<NumberedTreeNode<EmberElement>>(update.children)) {
+					c.parent = tree
+				}
+			} else {
+				// Update existing children and insert missing children without recursing into undefined nodes.
+				let insertedChild = false
+				for (const child of Object.values<NumberedTreeNode<EmberElement>>(update.children)) {
+					const i = child.number
+					const oldChild = tree.children[i]
+					if (oldChild) {
+						changes.push(...this._updateTree(child, oldChild))
+					} else {
+						child.parent = tree
+						tree.children[i] = child
+						insertedChild = true
+					}
+				}
+				if (insertedChild && !changes.some((change) => change.path === treePath && change.node === tree)) {
+					changes.push({ path: treePath, node: tree })
+				}
 			}
 		}
 
