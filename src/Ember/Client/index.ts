@@ -29,6 +29,7 @@ import { Connection, ConnectionDisposition, ConnectionOperation } from '../../mo
 import { EmberNode } from '../../model/EmberNode'
 import { EventEmitter } from 'eventemitter3'
 import { S101Client } from '../Socket'
+import { S101SocketOptions } from '../Socket/S101Socket'
 import { getPath, assertQualifiedEmberNode, insertCommand, updateProps, isEmptyNode } from '../Lib/util'
 import { berEncode } from '../../encodings/ber'
 import { NumberedTreeNodeImpl } from '../../model/Tree'
@@ -39,6 +40,8 @@ import { StreamManager } from './StreamManager'
 import { ConnectionStatus } from './ConnectionStatus'
 
 export { ConnectionStatus } from './ConnectionStatus'
+
+export type EmberClientOptions = S101SocketOptions
 
 export type RequestPromise<T> = Promise<RequestPromiseArguments<T>>
 export interface RequestPromiseArguments<T> {
@@ -103,7 +106,14 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 	private _resends = false
 	private _timer: NodeJS.Timeout
 
-	constructor(host: string, port = 9000, timeout = 3000, enableResends = false, resendTimeout = 1000) {
+	constructor(
+		host: string,
+		port = 9000,
+		timeout = 3000,
+		enableResends = false,
+		resendTimeout = 1000,
+		options?: EmberClientOptions
+	) {
 		super()
 
 		this.host = host
@@ -135,7 +145,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		// Don't let the sweeper keep the process alive on its own.
 		this._timer.unref?.()
 
-		this._client = new S101Client(this.host, this.port)
+		this._client = new S101Client(this.host, this.port, undefined, options)
 		this._client.on('emberTree', (tree: DecodeResult<Root>) => {
 			// Regular ember tree
 			this._handleIncoming(tree)

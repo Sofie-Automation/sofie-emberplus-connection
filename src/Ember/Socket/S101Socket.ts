@@ -5,11 +5,26 @@ import { S101Codec } from '../../S101'
 import { berDecode } from '../../encodings/ber'
 import { ConnectionStatus } from '../Client/ConnectionStatus'
 import { normalizeError } from '../Lib/util'
-import { S101OversizedFrameError } from '../../Errors'
+import { S101OversizedFrameError, S101SendBufferFullError } from '../../Errors'
 import { Root } from '../../types'
 import { DecodeResult } from '../../encodings/ber/decoder/DecodeResult'
 
 export type Request = any
+
+const DEFAULT_MAX_SEND_BUFFER_SIZE = 8 * 1024 * 1024
+
+export interface S101SocketOptions {
+	/**
+	 * The most data, in bytes, that may wait in memory to be sent to the peer. This is what is left over once the
+	 * operating system's socket buffer is full, so it only fills when the peer reads more slowly than data is sent
+	 * to it. When a send would go over it, the connection is closed with an `S101SendBufferFullError`, so that a
+	 * peer that has stopped reading cannot grow memory without bound.
+	 *
+	 * Raise it if you send large bursts (eg many updates in one go) to peers on slow links. `Infinity` disables it.
+	 * @default 8 MiB
+	 */
+	maxSendBufferSize?: number
+}
 
 export type S101SocketEvents = {
 	error: [Error]
@@ -28,10 +43,12 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 	private keepaliveResponseWindowTimer: NodeJS.Timeout | null
 	status: ConnectionStatus
 	protected readonly codec = new S101Codec()
+	private readonly maxSendBufferSize: number
 
-	constructor(socket?: Socket) {
+	constructor(socket?: Socket, options?: S101SocketOptions) {
 		super()
 		this.socket = socket
+		this.maxSendBufferSize = options?.maxSendBufferSize ?? DEFAULT_MAX_SEND_BUFFER_SIZE
 		this.keepaliveIntervalTimer = undefined
 		this.keepaliveResponseWindowTimer = null
 		this.status = this.isConnected() ? ConnectionStatus.Connected : ConnectionStatus.Disconnected
@@ -162,6 +179,20 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 	sendBER(data: Buffer): boolean {
 		if (this.isConnected() && this.socket) {
 			try {
+				// Backpressure guard: a peer that has stopped reading would otherwise grow
+				// the outgoing buffer without bound. Close rather than silently dropping the
+				// write: a dropped update leaves the peer with stale state and no signal,
+				// whereas a closed connection makes it reconnect and fetch fresh state.
+				if (this.socket.writableLength > this.maxSendBufferSize) {
+					this.emit(
+						'error',
+						new S101SendBufferFullError(
+							`closing connection: ${this.socket.writableLength} bytes are waiting to be sent, more than the maxSendBufferSize of ${this.maxSendBufferSize}`
+						)
+					)
+					this.handleClose()
+					return false
+				}
 				const frames = this.codec.encodeBER(data)
 				for (let i = 0; i < frames.length; i++) {
 					this.socket.write(frames[i])
@@ -211,7 +242,7 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 	// 	this.sendBER(ber)
 	// }
 
-	protected startKeepAlive(): void {
+	startKeepAlive(): void {
 		// Clear any prior interval first: on reconnect this would otherwise leak the
 		// previous timer, and two intervals racing produces an orphaned response-window
 		// timer that fires handleClose() and tears down the healthy socket.

@@ -71,6 +71,10 @@ export default class S101Client
 		}
 	}
 
+	startKeepAlive(): void {
+		// no-op in the mock
+	}
+
 	public static mockSockets(): S101Client[] {
 		return sockets
 	}

@@ -1,5 +1,5 @@
 import net from 'net'
-import S101Socket from './S101Socket'
+import S101Socket, { S101SocketOptions } from './S101Socket'
 import { ConnectionStatus } from '../Client/ConnectionStatus'
 import { normalizeError } from '../Lib/util'
 import { S101OversizedFrameError } from '../../Errors'
@@ -29,8 +29,8 @@ export default class S101Client extends S101Socket {
 	 * @param {string} address
 	 * @param {number} port=9000
 	 */
-	constructor(address: string, port = DEFAULT_PORT, autoConnect?: boolean) {
-		super()
+	constructor(address: string, port = DEFAULT_PORT, autoConnect?: boolean, options?: S101SocketOptions) {
+		super(undefined, options)
 		this.address = address
 		this.port = port
 

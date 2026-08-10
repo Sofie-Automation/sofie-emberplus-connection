@@ -5,6 +5,8 @@ import { EventEmitter } from 'events'
 import type { Socket } from 'net'
 import S101Socket from '../S101Socket'
 import S101Client from '../S101Client'
+import { S101Server } from '../S101Server'
+import { S101SendBufferFullError } from '../../../Errors'
 import { ConnectionStatus } from '../../Client/ConnectionStatus'
 import S101Codec from '../../../S101/S101Codec'
 
@@ -12,6 +14,7 @@ import S101Codec from '../../../S101/S101Codec'
 class FakeSocket extends EventEmitter {
 	public destroyed = false
 	public wrote: Buffer[] = []
+	public writableLength = 0
 
 	write(data: Buffer): boolean {
 		this.wrote.push(data)
@@ -139,6 +142,57 @@ describe('S101Socket lifecycle', () => {
 		expect((s101Socket as any).keepaliveResponseWindowTimer).toBeNull()
 		expect(s101Socket.status).toBe(ConnectionStatus.Disconnected)
 		expect(onDisconnected).toHaveBeenCalled()
+	})
+
+	it('sendBER closes the connection when the send buffer is over the default cap', () => {
+		const fake = new FakeSocket()
+		const socket = new S101Socket(fake as unknown as Socket)
+		const errors: Error[] = []
+		socket.on('error', (e) => errors.push(e))
+
+		// Under the cap: writes go through.
+		fake.writableLength = 8 * 1024 * 1024
+		expect(socket.sendBER(Buffer.from([0x60, 0x00]))).toBe(true)
+		const wroteBefore = fake.wrote.length
+		expect(wroteBefore).toBeGreaterThan(0)
+		expect(fake.destroyed).toBe(false)
+
+		// Peer stopped reading, buffer over the cap: close rather than buffer unboundedly.
+		fake.writableLength = 8 * 1024 * 1024 + 1
+		expect(socket.sendBER(Buffer.from([0x60, 0x00]))).toBe(false)
+		expect(fake.wrote.length).toBe(wroteBefore) // nothing further written
+		expect(fake.destroyed).toBe(true)
+		expect(socket.status).toBe(ConnectionStatus.Disconnected)
+		expect(errors).toHaveLength(1)
+		expect(errors[0]).toBeInstanceOf(S101SendBufferFullError)
+	})
+
+	it('sendBER uses the maxSendBufferSize option', () => {
+		const small = new FakeSocket()
+		const smallSocket = new S101Socket(small as unknown as Socket, { maxSendBufferSize: 100 })
+		smallSocket.on('error', () => null)
+		small.writableLength = 101
+		expect(smallSocket.sendBER(Buffer.from([0x60, 0x00]))).toBe(false)
+		expect(small.destroyed).toBe(true)
+
+		const unlimited = new FakeSocket()
+		const unlimitedSocket = new S101Socket(unlimited as unknown as Socket, { maxSendBufferSize: Infinity })
+		unlimited.writableLength = 1024 * 1024 * 1024
+		expect(unlimitedSocket.sendBER(Buffer.from([0x60, 0x00]))).toBe(true)
+		expect(unlimited.destroyed).toBe(false)
+	})
+
+	it('S101Server passes its socket options to accepted connections', () => {
+		const server = new S101Server(0, undefined, { maxSendBufferSize: 100 })
+		const accepted: S101Socket[] = []
+		server.on('connection', (c) => accepted.push(c))
+		const fake = new FakeSocket()
+		server.addClient(fake as unknown as Socket)
+
+		accepted[0].on('error', () => null)
+		fake.writableLength = 101
+		expect(accepted[0].sendBER(Buffer.from([0x60, 0x00]))).toBe(false)
+		expect(fake.destroyed).toBe(true)
 	})
 
 	it('startKeepAlive does not leak a second interval when re-armed on reconnect', () => {
