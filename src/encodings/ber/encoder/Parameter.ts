@@ -46,12 +46,15 @@ export function encodeParameter(parameter: Parameter, writer: Ber.Writer): void 
 		writeValue(parameter.value)
 		writer.endSequence()
 	}
-	if (parameter.minimum !== undefined) {
+	// A null minimum/maximum means "no bound" and is not encodable as a Glow
+	// MinMax (INTEGER | REAL), so it is omitted - encoding it through the typed
+	// value writer would coerce null to a bogus 0.
+	if (parameter.minimum !== undefined && parameter.minimum !== null) {
 		writer.startSequence(Ber.CONTEXT(3))
 		writeValue(parameter.minimum)
 		writer.endSequence()
 	}
-	if (parameter.maximum !== undefined) {
+	if (parameter.maximum !== undefined && parameter.maximum !== null) {
 		writer.startSequence(Ber.CONTEXT(4))
 		writeValue(parameter.maximum)
 		writer.endSequence()

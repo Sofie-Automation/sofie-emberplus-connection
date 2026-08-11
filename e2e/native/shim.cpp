@@ -56,6 +56,7 @@
 
 #include <s101/StreamDecoder.hpp>
 #include <s101/StreamEncoder.hpp>
+#include <s101/StreamEncoderWithoutEscaping.hpp>
 
 using json = nlohmann::json;
 namespace glow = libember::glow;
@@ -1127,6 +1128,14 @@ static std::string encodeS101Frame(std::vector<unsigned char> const& message)
 	return toHex(encoder.begin(), encoder.end());
 }
 
+static std::string encodeS101FrameNonEscaping(std::vector<unsigned char> const& message)
+{
+	libs101::StreamEncoderWithoutEscaping<unsigned char> encoder;
+	encoder.encode(message.begin(), message.end());
+	encoder.finish();
+	return toHex(encoder.begin(), encoder.end());
+}
+
 static json s101FrameFromJson(json const& request)
 {
 	std::string const command = request.at("command").get<std::string>();
@@ -1138,7 +1147,8 @@ static json s101FrameFromJson(json const& request)
 		frames.push_back(encodeS101Frame(message));
 		return frames;
 	}
-	if (command != "ember")
+	bool const nonEscaping = command == "emberNonEscaping";
+	if (command != "ember" && !nonEscaping)
 		throw std::runtime_error("unsupported s101 command: " + command);
 
 	std::vector<unsigned char> const payload = fromHex(request.at("payload").get<std::string>());
@@ -1163,7 +1173,7 @@ static json s101FrameFromJson(json const& request)
 		std::size_t const chunkStart = index * packetSize;
 		std::size_t const chunkEnd = std::min(payload.size(), chunkStart + packetSize);
 		message.insert(message.end(), payload.begin() + chunkStart, payload.begin() + chunkEnd);
-		frames.push_back(encodeS101Frame(message));
+		frames.push_back(nonEscaping ? encodeS101FrameNonEscaping(message) : encodeS101Frame(message));
 	}
 	return frames;
 }

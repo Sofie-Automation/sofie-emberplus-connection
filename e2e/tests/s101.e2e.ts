@@ -93,6 +93,25 @@ describe('ts frame -> libs101 unframe', () => {
 		expect(response[0].command).toBe(2)
 	})
 
+	it('an empty payload frames to a single empty message', () => {
+		const frames = new S101Codec().encodeBER(Buffer.alloc(0))
+		const messages = shim.s101Unframe(bufToHex(Buffer.concat(frames)))
+		expect(messages.length).toBe(1)
+		expect(messages[0].flags).toBe(0xc0)
+		expect(messages[0].payload).toBe('')
+	})
+
+	it('multiple messages batched in one byte stream all unframe', () => {
+		const codec = new S101Codec()
+		const first = codec.encodeBER(emberPayload(50, (i) => i))
+		const second = codec.encodeBER(emberPayload(60, (i) => i * 2))
+		const batch = Buffer.concat([...first, codec.keepAliveRequest(), ...second])
+		const messages = shim.s101Unframe(bufToHex(batch))
+		expect(messages.map((message) => message.command)).toEqual([0, 1, 0])
+		expect(hexToBuf(messages[0].payload ?? '')).toEqual(emberPayload(50, (i) => i))
+		expect(hexToBuf(messages[2].payload ?? '')).toEqual(emberPayload(60, (i) => i * 2))
+	})
+
 	it('a corrupted frame is rejected by both implementations', () => {
 		const payload = emberPayload(100, (i) => i)
 		const frames = new S101Codec().encodeBER(payload)
@@ -165,6 +184,63 @@ describe('libs101 frame -> ts dataIn', () => {
 			expect(packets.length).toBe(1)
 			expect(packets[0]).toEqual(payload)
 		}
+	})
+
+	describe('non-escaping (0xF8 length-prefixed) frames', () => {
+		const payloads: Array<[string, Buffer, number?]> = [
+			['single byte', emberPayload(1, () => 0)],
+			['containing frame marker bytes', Buffer.from([0x60, 0xfe, 0xff, 0xf8, 0xfd, 0x20])],
+			['multi-packet 5000 bytes', emberPayload(5000, (i) => i * 17), 1024],
+		]
+
+		for (const [name, payload, packetSize] of payloads) {
+			it(`payload: ${name}`, () => {
+				const frames = shim.s101Frame({ command: 'emberNonEscaping', payload: bufToHex(payload), packetSize })
+				const { packets } = collectPackets(frames.map(hexToBuf))
+				expect(packets.length).toBe(1)
+				expect(packets[0]).toEqual(payload)
+			})
+		}
+
+		it('frames delivered byte-by-byte reassemble', () => {
+			const payload = emberPayload(200, (i) => i * 9)
+			const frames = shim.s101Frame({ command: 'emberNonEscaping', payload: bufToHex(payload) })
+			const bytes = hexToBuf(frames[0])
+			const chunks: Buffer[] = []
+			for (let i = 0; i < bytes.length; i++) chunks.push(bytes.subarray(i, i + 1))
+			const { packets } = collectPackets(chunks)
+			expect(packets.length).toBe(1)
+			expect(packets[0]).toEqual(payload)
+		})
+
+		it('mixed escaped and non-escaped frames in one byte stream', () => {
+			const first = emberPayload(70, (i) => i)
+			const second = emberPayload(90, (i) => i * 2)
+			const third = emberPayload(40, (i) => i * 3)
+			const stream = Buffer.concat([
+				...shim.s101Frame({ command: 'ember', payload: bufToHex(first) }).map(hexToBuf),
+				...shim.s101Frame({ command: 'emberNonEscaping', payload: bufToHex(second) }).map(hexToBuf),
+				...shim.s101Frame({ command: 'keepaliveRequest' }).map(hexToBuf),
+				...shim.s101Frame({ command: 'ember', payload: bufToHex(third) }).map(hexToBuf),
+			])
+			const result = collectPackets([stream])
+			expect(result.packets).toEqual([first, second, third])
+			expect(result.keepaliveReq).toBe(1)
+		})
+	})
+
+	it('garbage before the frame start is skipped', () => {
+		const payload = emberPayload(80, (i) => i * 11)
+		const frames = shim.s101Frame({ command: 'ember', payload: bufToHex(payload) })
+		const withGarbage = Buffer.concat([Buffer.from([0x00, 0x13, 0x37, 0x42]), hexToBuf(frames[0])])
+		const { packets } = collectPackets([withGarbage])
+		expect(packets.length).toBe(1)
+		expect(packets[0]).toEqual(payload)
+		// and the same recovery on the libs101 side, from a ts-framed message
+		const tsFrames = new S101Codec().encodeBER(payload)
+		const messages = shim.s101Unframe(bufToHex(Buffer.concat([Buffer.from([0x00, 0x13, 0x37]), ...tsFrames])))
+		expect(messages.length).toBe(1)
+		expect(hexToBuf(messages[0].payload ?? '')).toEqual(payload)
 	})
 
 	it('a corrupted libs101 frame is dropped by the ts codec', () => {

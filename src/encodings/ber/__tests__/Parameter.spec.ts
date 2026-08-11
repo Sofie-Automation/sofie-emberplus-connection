@@ -226,3 +226,52 @@ describe('encodings/ber/Parameter', () => {
 		roundtripParameter(param)
 	})
 })
+
+describe('encodings/ber/Parameter - wire conformance', () => {
+	test('a declared parameter type wins over the value-inferred type', () => {
+		// A device may legitimately declare type REAL while momentarily sending an
+		// integer-encoded value; the declared type must survive decoding.
+		const writer = new Ber.Writer()
+		writer.startSequence(Ber.BERDataTypes.SET)
+		writer.startSequence(Ber.CONTEXT(2))
+		writer.writeInt(5, Ber.BERDataTypes.INTEGER)
+		writer.endSequence()
+		writer.startSequence(Ber.CONTEXT(13))
+		writer.writeInt(2) // ParameterType wire value: real
+		writer.endSequence()
+		writer.endSequence()
+
+		const decoded = guarded(decodeParameter(new Ber.Reader(writer.buffer)))
+		expect(decoded.parameterType).toBe(ParameterType.Real)
+		expect(decoded.value).toBe(5)
+	})
+
+	test('the type is inferred from the value only when the wire carries no type', () => {
+		const writer = new Ber.Writer()
+		writer.startSequence(Ber.BERDataTypes.SET)
+		writer.startSequence(Ber.CONTEXT(2))
+		writer.writeInt(5, Ber.BERDataTypes.INTEGER)
+		writer.endSequence()
+		writer.endSequence()
+
+		const decoded = guarded(decodeParameter(new Ber.Reader(writer.buffer)))
+		expect(decoded.parameterType).toBe(ParameterType.Integer)
+	})
+
+	test('a null minimum/maximum is omitted from the encoding', () => {
+		const writer = new Ber.Writer()
+		encodeParameter(
+			literal<Parameter>({
+				type: ElementType.Parameter,
+				parameterType: ParameterType.Integer,
+				minimum: null,
+				maximum: null,
+			}),
+			writer
+		)
+
+		const decoded = guarded(decodeParameter(new Ber.Reader(writer.buffer)))
+		expect(decoded.minimum).toBeUndefined()
+		expect(decoded.maximum).toBeUndefined()
+	})
+})

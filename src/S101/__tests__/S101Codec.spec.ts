@@ -130,3 +130,24 @@ describe('S101Codec frame robustness', () => {
 		expect((codec as any).pendingLength).toBe(0)
 	})
 })
+
+describe('S101Codec - emitted packet ownership', () => {
+	test('an emitted packet is not overwritten by a later frame', () => {
+		// Emitted packets must be owned copies: the unescape buffer is reused per
+		// frame, and a consumer may hold a packet across frames (e.g. async decode)
+		const codec = new S101Codec()
+		const packets: Buffer[] = []
+		codec.on('emberPacket', (packet: Buffer) => packets.push(packet))
+
+		const first = Buffer.from([0x60, 1, 2, 3, 4, 5])
+		const second = Buffer.from([0x60, 9, 8, 7, 6, 5])
+		codec.dataIn(Buffer.concat(codec.encodeBER(first)))
+		const firstSnapshot = Buffer.from(packets[0])
+		codec.dataIn(Buffer.concat(codec.encodeBER(second)))
+
+		expect(packets.length).toBe(2)
+		expect(packets[0]).toEqual(firstSnapshot)
+		expect(packets[0]).toEqual(first)
+		expect(packets[1]).toEqual(second)
+	})
+})

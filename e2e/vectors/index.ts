@@ -8,6 +8,7 @@ import { invocationResultVectors } from './invocationResults'
 import { streamVectors } from './streams'
 import { templateVectors } from './templates'
 import { qualifiedVectors } from './qualified'
+import { miscVectors } from './misc'
 
 export { Vector } from './vector'
 
@@ -21,4 +22,5 @@ export const vectors: Vector[] = [
 	...streamVectors,
 	...templateVectors,
 	...qualifiedVectors,
+	...miscVectors,
 ]

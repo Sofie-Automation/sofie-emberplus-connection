@@ -103,9 +103,21 @@ export const parameterVectors: Vector[] = [
 		new NumberedTreeNodeImpl(1, param(ParameterType.Null, { value: null })),
 		{ number: 1, contents: { kind: 'parameter', value: { type: 'null' }, parameterType: 0 } },
 		{
-			tsToLib:
-				"libember's DomReader has no case for the universal NULL type and silently drops the value leaf on decode",
-			roundtrip: "libember's DomReader silently drops NULL value leaves, so its re-encode loses the value",
+			tsToLib: {
+				reason:
+					"libember's DomReader has no case for the universal NULL type and silently drops the value leaf on decode",
+				produces: {
+					rootType: 'elements',
+					elements: [{ number: 1, contents: { kind: 'parameter', parameterType: 0 } }],
+				},
+			},
+			roundtrip: {
+				reason: "libember's DomReader silently drops NULL value leaves, so its re-encode loses the value",
+				produces: {
+					rootType: 'elements',
+					elements: [{ number: 1, contents: { kind: 'parameter', parameterType: 0 } }],
+				},
+			},
 		}
 	),
 	elementVector(

@@ -13,6 +13,17 @@ The current version is very losely based on the original library and Mr Gilles D
 - [E2E differential tests against the reference libember implementation](e2e/README.md)
   (Linux + Node 26 only: `yarn e2e:build`, then `yarn e2e`)
 
+#### Breaking changes queued for the next semver major
+
+- Decoded sibling elements are keyed by their element number
+  (`Collection<T>`), which silently collapses duplicate numbers (a protocol
+  violation a buggy device could send) and loses wire order — commands re-sort
+  after regular children. The decode result should preserve wire order and
+  reject/report duplicates, which changes the public `Collection` shape.
+- `EmberValue` uses `number`, so Ember+ Integer64 values beyond
+  ±(2^53 − 1) lose precision (they decode to the nearest double). Exact
+  support needs `bigint` in the public value types.
+
 ### General Sofie System Info
 
 - [Documentation](https://Sofie-Automation.github.io/sofie-core/)

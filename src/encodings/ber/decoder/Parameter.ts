@@ -118,14 +118,17 @@ function decodeParameter(reader: Ber.Reader, options: DecodeOptions = defaultDec
 				break
 		}
 	}
+	// Effective type per the Ember+ documentation: an enumeration forces Enum,
+	// otherwise an explicitly declared type wins, and only when the wire carried
+	// no type at all is it inferred from the value's BER type.
 	parameterType =
 		parameterType === ParameterType.Trigger
 			? ParameterType.Trigger
 			: !!enumMap || !!enumeration
 			? ParameterType.Enum
-			: valueType
-			? valueType
 			: parameterType
+			? parameterType
+			: valueType
 	parameterType = check(parameterType, 'decode parameter', 'parameterType', ParameterType.Null, errors, options)
 
 	return makeResult(

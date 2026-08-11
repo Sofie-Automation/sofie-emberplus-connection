@@ -56,15 +56,23 @@ export const nodeVectors: Vector[] = [
 		new NumberedTreeNodeImpl(8, new EmberNodeImpl('æøå-node', '日本語 🎚 δοκιμή')),
 		{ number: 8, contents: { kind: 'node', identifier: 'æøå-node', description: '日本語 🎚 δοκιμή' } },
 		{
-			libToTs:
-				'libember setIdentifier enforces the Glow identifier syntax (C-style identifiers) and refuses to build this tree; this library does not validate identifiers',
+			libToTs: {
+				reason:
+					'libember setIdentifier enforces the Glow identifier syntax (C-style identifiers); this library does not validate identifiers',
+				throws: "Identifier must begin with a letter or the '_'",
+			},
 		}
 	),
 	elementVector(
 		'node: empty-string identifier',
 		new NumberedTreeNodeImpl(9, new EmberNodeImpl('')),
 		{ number: 9, contents: { kind: 'node', identifier: '' } },
-		{ libToTs: 'libember setIdentifier refuses empty identifiers; this library does not validate identifiers' }
+		{
+			libToTs: {
+				reason: 'libember setIdentifier refuses empty identifiers; this library does not validate identifiers',
+				throws: 'Identifier must not be empty',
+			},
+		}
 	),
 	elementVector(
 		'node: three levels of children',

@@ -105,11 +105,9 @@ class ExtendedWriter extends Writer {
 			value = arg1 as EmberValue
 		}
 
-		if (tag === BERDataTypes.NULL && (value === null || value === undefined)) {
-			this.writeNull()
-			return
-		}
-		if (value === null || value === undefined) {
+		// A NULL-tagged value has no content whatever the caller passed alongside -
+		// this also covers trigger-typed values, which carry no data on the wire
+		if (tag === BERDataTypes.NULL || value === null || value === undefined) {
 			this.writeNull()
 			return
 		}
@@ -226,7 +224,8 @@ function parameterTypetoBERTAG(parameterType: ParameterType): number {
 		case ParameterType.Boolean:
 			return BERDataTypes.BOOLEAN
 		case ParameterType.Trigger:
-			return BERDataTypes.STRING // TODO: this is a guess
+			// Trigger parameters carry no value; NULL is the only value-less encoding
+			return BERDataTypes.NULL
 		case ParameterType.Enum:
 			return BERDataTypes.ENUMERATED
 		case ParameterType.Octets:

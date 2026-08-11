@@ -7,7 +7,7 @@ import { CanonicalRoot } from './canonicalTypes'
 export const SHIM_PATH = path.join(__dirname, '..', 'native', 'build', 'libepshim.so')
 
 export interface S101FrameRequest {
-	command: 'ember' | 'keepaliveRequest' | 'keepaliveResponse'
+	command: 'ember' | 'emberNonEscaping' | 'keepaliveRequest' | 'keepaliveResponse'
 	/** hex payload; required for command "ember" */
 	payload?: string
 	/** raw (pre-escaping) bytes per packet; defaults to 1024 */

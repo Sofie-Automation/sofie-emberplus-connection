@@ -9,8 +9,7 @@ The value over the unit tests in `src/` is that those are TS-internal
 round-trips: a symmetric encode/decode bug is invisible to them. Here, every
 tree is encoded by one implementation and decoded by the other (in both
 directions, plus a decode/re-encode round-trip through libember), so the two
-implementations continuously cross-check each other. This has caught real
-bugs — see "Findings" below.
+implementations continuously cross-check each other.
 
 ## Requirements
 
@@ -47,33 +46,20 @@ does not affect the published package (its `engines` range is unchanged).
 To bump the libember pin, change `EMBERPLUS_PIN` in `native/CMakeLists.txt`,
 delete `native/build` and re-run `yarn e2e:build`.
 
-## Findings
+## libember quirks the suite accounts for
 
-Bugs in **this library** found by the suite and since fixed:
-
-- `writeInt` truncated all integers to 32 bits (2^31 encoded as -2^31, 2^32 as
-  0). Ember+ integers are Integer64.
-- `readInt` lost precision on negative integers wider than 2^53 intermediate
-  (-(2^53-1) decoded off by one).
-- `writeReal` never encoded the exponent length in the REAL preamble, corrupting
-  every value with |unbiased exponent| >= 128 (e.g. 1e300), and dropped the
-  sign of -0.
-- `readReal` did not understand the X.690 minus-zero special (0x43).
-- Matrix `parametersLocation` classified numeric-looking base paths (e.g.
-  `"9.8"`) as inline integers.
-- BER lengths 128..255 are now encoded as `82 00 xx` instead of the minimal
-  `81 xx` — see below.
-
-Bugs found in **libember** (present at the pinned commit; the suite works
-around them, they are worth reporting upstream):
+Bugs present in libember at the pinned commit. They are living constraints on
+the suite (and in one case on this library's wire format), and are worth
+reporting upstream:
 
 - `DomReader` accounts consumed bytes by re-computing each tag/length's
   encoded size from its decoded value, assuming libember's own non-minimal
   length form (`82 00 xx` for 128..255). Decoding the spec-canonical `81 xx`
   form makes it over-count one byte per length; once the accumulated drift in
   a container exceeds a trailing sibling's size, that sibling is _silently
-  dropped_. Real devices run libember, so this library now emits the
-  libember-compatible `82 00 xx` form (still valid BER).
+  dropped_. Real devices run libember, so this library emits the
+  libember-compatible `82 00 xx` form (still valid BER) — see the comment in
+  `src/ASN1/ber/writer.ts`.
 - `glow::Variant` stores "long" values in an `int` member, so the
   `glow::Value`/`MinMax` accessors truncate integers wider than 32 bits on
   LP64 platforms (the wire codec itself is exact; the shim reads raw
