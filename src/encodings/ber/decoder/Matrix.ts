@@ -161,6 +161,10 @@ function decodeMatrixContents(reader: Ber.Reader, options: DecodeOptions = defau
 				reader.readSequence(Ber.BERDataTypes.SEQUENCE)
 				seqOffset = reader.offset + reader.length
 				while (reader.offset < seqOffset) {
+					if (reader.peek() === 0) {
+						reader.readSequence() // end of contents, indefinite length
+						continue
+					}
 					reader.readSequence(Ber.CONTEXT(0))
 					const lvVal = appendErrors(decodeLabel(reader, options), errors)
 					labels.push(lvVal)
@@ -212,6 +216,10 @@ function decodeTargets(
 	reader.readSequence(Ber.BERDataTypes.SEQUENCE)
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
+		if (reader.peek() === 0) {
+			reader.readSequence() // end of contents, indefinite length
+			continue
+		}
 		reader.readSequence(Ber.CONTEXT(0))
 		reader.readSequence(TargetBERID)
 		reader.readSequence(Ber.CONTEXT(0))
@@ -228,6 +236,10 @@ function decodeSources(
 	reader.readSequence(Ber.BERDataTypes.SEQUENCE)
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
+		if (reader.peek() === 0) {
+			reader.readSequence() // end of contents, indefinite length
+			continue
+		}
 		reader.readSequence(Ber.CONTEXT(0))
 		reader.readSequence(SourceBERID)
 		reader.readSequence(Ber.CONTEXT(0))
@@ -242,6 +254,7 @@ function decodeConnections(reader: Ber.Reader, options: DecodeOptions = defaultD
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
 		const tag = reader.readSequence()
+		if (tag === 0) continue // indefinite length
 		if (tag === Ber.CONTEXT(0)) {
 			const connection = appendErrors(decodeConnection(reader, options), connections)
 			connections.value[connection.target] = connection

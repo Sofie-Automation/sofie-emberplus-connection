@@ -24,6 +24,7 @@ function decodeInvocation(reader: Ber.Reader, options: DecodeOptions = defaultDe
 				seqOffset = reader.offset + reader.length
 				while (reader.offset < seqOffset) {
 					const tag = reader.readSequence()
+					if (tag === 0) continue // indefinite length
 					if (tag === Ber.CONTEXT(0)) {
 						args.push(reader.readValue())
 					} else {
