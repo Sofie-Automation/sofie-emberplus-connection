@@ -7,11 +7,16 @@ import {
 	ParameterType,
 	QualifiedElementImpl,
 	StreamFormat,
+	Matrix,
+	MatrixImpl,
+	MatrixAddressingMode,
 } from '../../../model'
 import { Collection, EmberTypedValue, Root, RootElement } from '../../../types/types'
 import { EmberClient } from '../'
 import S101ClientMock from '../../../__mocks__/S101Client'
 import { DecodeResult } from '../../../encodings/ber/decoder/DecodeResult'
+import { berDecode } from '../../../encodings/ber'
+import { Connection } from '../../../model/Connection'
 import { StreamDescriptionImpl } from '../../../model/StreamDescription'
 import { StreamEntry, StreamEntryImpl } from '../../../model/StreamEntry'
 // import { EmberTreeNode, RootElement } from '../../../types/types'
@@ -513,6 +518,104 @@ describe('client', () => {
 				expect(changes.filter((change) => change.path === '1')).toHaveLength(1)
 				expect(client.tree[1].children?.[2]?.parent).toBe(client.tree[1])
 				expect(client.tree[1].children?.[3]?.parent).toBe(client.tree[1])
+			})
+		})
+	})
+
+	describe('Matrix connection updates', () => {
+		// Providers report a crosspoint change with only the targets that changed
+		it('keeps the other targets when a report covers one target', async () => {
+			await runWithConnection(async (client, socket) => {
+				socket.mockData({
+					value: {
+						1: new NumberedTreeNodeImpl(1, new EmberNodeImpl('router'), {
+							1: new NumberedTreeNodeImpl(
+								1,
+								new MatrixImpl('matrix', undefined, undefined, {
+									0: { target: 0, sources: [1] },
+									1: { target: 1, sources: [2] },
+									2: { target: 2, sources: [0] },
+									3: { target: 3, sources: [3] },
+								})
+							),
+						}),
+					},
+				})
+				await new Promise(setImmediate)
+
+				socket.mockData(
+					createQualifiedNodeResponse(
+						'1.1',
+						new MatrixImpl('matrix', undefined, undefined, { 1: { target: 1, sources: [3] } }),
+						undefined
+					)
+				)
+				await new Promise(setImmediate)
+
+				const matrix = client.tree[1].children?.[1]?.contents as Matrix
+				expect(matrix.connections).toEqual({
+					0: { target: 0, sources: [1] },
+					1: { target: 1, sources: [3] },
+					2: { target: 2, sources: [0] },
+					3: { target: 3, sources: [3] },
+				})
+			})
+		})
+
+		// Captured from a test device. It answers a GetDirectory on matrix 0.5.2 with one message per
+		// target, and reports each change the same way.
+		it("merges a test device's one-target reports", async () => {
+			const reports = [
+				'60806b80a0807180a0050d03000502a5803080a0807080a00302010aa1040d02812ca30302010100000000000000000000000000000000', // target 10 <- 172
+				'60806b80a0807180a0050d03000502a5803080a0807080a00302010ba1040d02812ba30302010100000000000000000000000000000000', // target 11 <- 171
+				'60806b80a0807180a0050d03000502a5803080a0807080a00302010ca1040d02812ca30302010100000000000000000000000000000000', // target 12 <- 172
+				'60806b80a0807180a0050d03000502a5803080a0807080a00302010da1040d02812ca30302010100000000000000000000000000000000', // target 13 <- 172
+				'60806b80a0807180a0050d03000502a5803080a0807080a00302010aa1040d02812da30302010100000000000000000000000000000000', // change: target 10 <- 173
+				'60806b80a0807180a0050d03000502a5803080a0807080a00302010da1020d00a30302010100000000000000000000000000000000', // disconnect: target 13 <- none
+			]
+
+			await runWithConnection(async (client, socket) => {
+				socket.mockData({
+					value: {
+						0: new NumberedTreeNodeImpl(0, new EmberNodeImpl('device'), {
+							5: new NumberedTreeNodeImpl(5, new EmberNodeImpl('routing'), {
+								2: new NumberedTreeNodeImpl(
+									2,
+									new MatrixImpl(
+										'matrix',
+										[10, 11, 12, 13],
+										[170, 171, 172, 173],
+										undefined,
+										undefined,
+										undefined,
+										MatrixAddressingMode.NonLinear,
+										4,
+										4
+									)
+								),
+							}),
+						}),
+					},
+				})
+				await new Promise(setImmediate)
+
+				for (const report of reports) {
+					socket.mockData(berDecode(Buffer.from(report, 'hex')))
+					await new Promise(setImmediate)
+				}
+
+				const matrix = client.tree[0].children?.[5]?.children?.[2]?.contents as Matrix
+				expect(
+					Object.values<Connection>((matrix.connections ?? {}) as { [target: number]: Connection }).map((c) => [
+						c.target,
+						c.sources,
+					])
+				).toEqual([
+					[10, [173]],
+					[11, [171]],
+					[12, [172]],
+					[13, []],
+				])
 			})
 		})
 	})
