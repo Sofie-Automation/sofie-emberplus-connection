@@ -216,4 +216,49 @@ describe('encodings/ber/Parameter', () => {
 
 		roundtripParameter(param)
 	})
+
+	// In the Glow DTD, minimum and maximum are MinMax: a CHOICE of integer, real or null, whatever the
+	// parameter type.
+	describe('minimum and maximum', () => {
+		const parameterTypes = [
+			ParameterType.Integer,
+			ParameterType.Real,
+			ParameterType.String,
+			ParameterType.Boolean,
+			ParameterType.Enum,
+			ParameterType.Octets,
+		]
+
+		test.each(parameterTypes)('%s parameter with integer limits', (parameterType) => {
+			roundtripParameter({ ...prm, parameterType, minimum: -22, maximum: 2048 })
+		})
+		test.each(parameterTypes)('%s parameter with real limits', (parameterType) => {
+			roundtripParameter({ ...prm, parameterType, minimum: -12.5, maximum: 6.25 })
+		})
+		test.each(parameterTypes)('%s parameter with null limits', (parameterType) => {
+			roundtripParameter({ ...prm, parameterType, minimum: null, maximum: null })
+		})
+
+		test('encodes a limit by its value', () => {
+			const maximumTag = (param: Parameter): number => {
+				const writer = new Ber.Writer()
+				encodeParameter(param, writer)
+				return writer.buffer[writer.buffer.indexOf(Ber.CONTEXT(4)) + 2]
+			}
+
+			expect(maximumTag({ ...prm, parameterType: ParameterType.String, maximum: 2048 })).toBe(Ber.BERDataTypes.INTEGER)
+			expect(maximumTag({ ...prm, parameterType: ParameterType.Integer, maximum: 2.5 })).toBe(Ber.BERDataTypes.REAL)
+			expect(maximumTag({ ...prm, parameterType: ParameterType.Real, maximum: 2048 })).toBe(Ber.BERDataTypes.REAL)
+			expect(maximumTag({ ...prm, parameterType: ParameterType.Boolean, maximum: null })).toBe(Ber.BERDataTypes.NULL)
+		})
+
+		test('leaves out a limit that is not a number', () => {
+			// e.g. a string limit decoded from a provider that encoded it with the parameter's type
+			const writer = new Ber.Writer()
+			encodeParameter({ ...prm, maximum: '2048' as unknown as number }, writer)
+			const decoded = guarded(decodeParameter(new Ber.Reader(writer.buffer)))
+
+			expect(decoded.maximum).toBeUndefined()
+		})
+	})
 })
