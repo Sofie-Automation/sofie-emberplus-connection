@@ -576,8 +576,8 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 			for (const req of reqs) {
 				// Don't complete the response, if the call was expecting the children to be loaded
 				if (req.nodeResponse === ExpectResponse.HasChildren && !change.node.children) {
-					if (change.node.contents.type === ElementType.Parameter) {
-						// can't have children, therefore don't continue
+					if (change.node.contents.type === ElementType.Parameter || change.node.contents.type === ElementType.Matrix) {
+						// leaves: their children only ever hold a command, so don't wait for any
 					} else if (change.emptyNode) {
 						// update comes from an empty node, so we can't continue anyway
 					} else {

@@ -7,6 +7,7 @@ import {
 	ParameterType,
 	QualifiedElementImpl,
 	StreamFormat,
+	MatrixImpl,
 } from '../../../model'
 import { Collection, EmberTypedValue, Root, RootElement } from '../../../types/types'
 import { EmberClient } from '../'
@@ -736,6 +737,32 @@ describe('client', () => {
 
 				expect(stream1?.parameter.value).toBeCloseTo(-39.67915344238281)
 				expect(stream2?.parameter.value).toBeCloseTo(-23.860210418701172)
+			})
+		})
+	})
+
+	describe('Matrix requests', () => {
+		// A matrix is a leaf, so a provider's reply to a GetDirectory on it doesn't have to include children
+		it('resolves a GetDirectory on a matrix when the reply has no children', async () => {
+			await runWithConnection(async (client, socket) => {
+				const router = new NumberedTreeNodeImpl(1, new EmberNodeImpl('router'), {
+					1: new NumberedTreeNodeImpl(1, new MatrixImpl('matrix')),
+				})
+				if (!router.children?.[1]) throw new Error('Expected seeded matrix')
+				router.children[1].parent = router
+				socket.mockData({ value: { 1: router } })
+				await new Promise(setImmediate)
+
+				const request = await client.getDirectory(new QualifiedElementImpl('1.1', new MatrixImpl('matrix')))
+				socket.mockData(
+					createQualifiedNodeResponse(
+						'1.1',
+						new MatrixImpl('matrix', undefined, undefined, { 0: { target: 0, sources: [1] } }),
+						undefined
+					)
+				)
+
+				await expect(request.response).resolves.toBeDefined()
 			})
 		})
 	})

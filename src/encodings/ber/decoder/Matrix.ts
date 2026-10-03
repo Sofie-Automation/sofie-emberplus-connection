@@ -76,7 +76,8 @@ function decodeMatrix(
 				break
 		}
 	}
-	contents = check(contents, 'decode matrix', 'contents', new MatrixImpl(''), errors, options)
+	// contents are optional, but the model keeps targets, sources and connections in them
+	if (!contents) contents = new MatrixImpl('')
 	contents.targets = targets
 	contents.sources = sources
 	contents.connections = connections
