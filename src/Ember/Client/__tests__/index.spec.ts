@@ -7,11 +7,20 @@ import {
 	ParameterType,
 	QualifiedElementImpl,
 	StreamFormat,
+	ElementType,
+	ParameterAccess,
+	MatrixImpl,
+	MatrixType,
+	EmberFunctionImpl,
+	FunctionArgumentImpl,
 } from '../../../model'
+import { CommandType } from '../../../model/Command'
 import { Collection, EmberTypedValue, Root, RootElement } from '../../../types/types'
 import { EmberClient } from '../'
 import S101ClientMock from '../../../__mocks__/S101Client'
 import { DecodeResult } from '../../../encodings/ber/decoder/DecodeResult'
+import { berDecode } from '../../../encodings/ber'
+import * as Ber from '../../../Ber'
 import { StreamDescriptionImpl } from '../../../model/StreamDescription'
 import { StreamEntry, StreamEntryImpl } from '../../../model/StreamEntry'
 // import { EmberTreeNode, RootElement } from '../../../types/types'
@@ -417,6 +426,103 @@ describe('client', () => {
 
 			const res = await req.response
 			expect(res).toBeTruthy()
+		})
+	})
+
+	describe('command requests', () => {
+		// Reads a command request as sent: the element's BER type, its path, which fields follow the path and the
+		// commands
+		function readCommandRequest(data: Buffer) {
+			const reader = new Ber.Reader(data)
+			reader.readSequence(Ber.APPLICATION(0)) // root
+			reader.readSequence(Ber.APPLICATION(11)) // root element collection
+			reader.readSequence(Ber.CONTEXT(0))
+			const elementTag = reader.readSequence()
+			const elementEnd = reader.offset + reader.length
+			reader.readSequence(Ber.CONTEXT(0))
+			const path = reader.readRelativeOID(Ber.BERDataTypes.RELATIVE_OID)
+
+			const fields: number[] = []
+			while (reader.offset < elementEnd) {
+				const tag = reader.readSequence()
+				if (tag === null) break
+				fields.push(tag)
+				const inner = reader.peek()
+				if (inner !== null) reader.readString(inner, true)
+			}
+			const element = (berDecode(data).value as Collection<RootElement>)[0]
+			const commands = Object.values<NumberedTreeNode<EmberElement>>(element.children ?? {}).map(
+				(child) => child.contents
+			)
+			return { elementTag, path, fields, commands }
+		}
+
+		// A device, 1, with a node, a parameter, a matrix and a function that have plenty of properties, as discovered
+		function seedDevice(client: EmberClient) {
+			const device = new NumberedTreeNodeImpl(1, new EmberNodeImpl('device'), {
+				1: new NumberedTreeNodeImpl(1, new EmberNodeImpl('node', 'Node', false, true)),
+				2: new NumberedTreeNodeImpl(
+					2,
+					new ParameterImpl(ParameterType.Integer, 'gain', 'Gain', 0, 70, -20, ParameterAccess.ReadWrite)
+				),
+				3: new NumberedTreeNodeImpl(
+					3,
+					new MatrixImpl('matrix', undefined, undefined, undefined, 'Matrix', MatrixType.OneToN, undefined, 4, 4)
+				),
+				4: new NumberedTreeNodeImpl(
+					4,
+					new EmberFunctionImpl(
+						'add',
+						'Add',
+						[
+							new FunctionArgumentImpl(ParameterType.Integer, 'a'),
+							new FunctionArgumentImpl(ParameterType.Integer, 'b'),
+						],
+						[new FunctionArgumentImpl(ParameterType.Integer, 'sum')]
+					)
+				),
+			})
+			const elements = device.children ?? {}
+			for (const element of Object.values<NumberedTreeNode<EmberElement>>(elements)) element.parent = device
+			client.tree[1] = device
+			return elements
+		}
+
+		type Send = (client: EmberClient, element: NumberedTreeNode<any>) => Promise<{ response?: Promise<unknown> }>
+		const getDirectory: Send = async (c, e) => c.getDirectory(e)
+		const args: EmberTypedValue[] = [
+			{ type: ParameterType.Integer, value: 1 },
+			{ type: ParameterType.Integer, value: 2 },
+		]
+
+		// As the specification's examples send them: the path and the command, without the element's contents
+		test.each<[string, number, number, Send, object]>([
+			['GetDirectory on a node', 1, Ber.APPLICATION(10), getDirectory, { number: CommandType.GetDirectory }],
+			['GetDirectory on a parameter', 2, Ber.APPLICATION(9), getDirectory, { number: CommandType.GetDirectory }],
+			['GetDirectory on a matrix', 3, Ber.APPLICATION(17), getDirectory, { number: CommandType.GetDirectory }],
+			['Subscribe', 2, Ber.APPLICATION(9), async (c, e) => c.subscribe(e), { number: CommandType.Subscribe }],
+			['Unsubscribe', 2, Ber.APPLICATION(9), async (c, e) => c.unsubscribe(e), { number: CommandType.Unsubscribe }],
+			[
+				'Invoke',
+				4,
+				Ber.APPLICATION(20),
+				async (c, e) => c.invoke(e, ...args),
+				{ number: CommandType.Invoke, invocation: { args } },
+			],
+		])('%s sends only the path and the command', async (_, number, elementTag, send, command) => {
+			await runWithConnection(async (client) => {
+				const elements = seedDevice(client)
+
+				const request = await send(client, elements[number])
+				request.response?.catch(() => null) // no reply here, so the request is cancelled on disconnect
+
+				expect(onSocketWrite).toHaveBeenCalledTimes(1)
+				const sent = readCommandRequest(onSocketWrite.mock.calls[0][0])
+				expect(sent.elementTag).toBe(elementTag)
+				expect(sent.path).toBe(`1.${number}`)
+				expect(sent.fields).toEqual([Ber.CONTEXT(2)])
+				expect(sent.commands).toMatchObject([{ type: ElementType.Command, ...command }])
+			})
 		})
 	})
 
