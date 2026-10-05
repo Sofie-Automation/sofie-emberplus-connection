@@ -433,17 +433,17 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 			if (tree?.number !== undefined) numberedPath.push(tree.number)
 		}
 
-		if (tree?.contents.type === ElementType.Parameter) {
-			// do an additional getDirectory because Providers do not _have_ to send updates without that (should vs shall)
-			const req = await this.getDirectory(tree)
-			await req.response
-		}
-
 		if (cb && numberedPath) {
 			this._subscriptions.push({
 				path: numberedPath.join('.'),
 				cb,
 			})
+		}
+
+		if (tree?.contents.type === ElementType.Parameter) {
+			// do an additional getDirectory because Providers do not _have_ to send updates without that (should vs shall).
+			// Don't wait for the reply, as some providers never answer one. A reply updates the tree and calls cb.
+			await this._sendCommand(tree, new GetDirectoryImpl(), ExpectResponse.None)
 		}
 
 		return tree
