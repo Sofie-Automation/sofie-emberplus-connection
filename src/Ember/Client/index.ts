@@ -24,14 +24,14 @@ import {
 	Subscribe,
 	Invoke,
 } from '../../model/Command'
-import { Parameter } from '../../model/Parameter'
+import { Parameter, ParameterImpl } from '../../model/Parameter'
 import { Connection, ConnectionDisposition, ConnectionOperation } from '../../model/Connection'
 import { EmberNode } from '../../model/EmberNode'
 import { EventEmitter } from 'eventemitter3'
 import { S101Client } from '../Socket'
 import { getPath, assertQualifiedEmberNode, insertCommand, updateProps, isEmptyNode } from '../Lib/util'
 import { berEncode } from '../../encodings/ber'
-import { NumberedTreeNodeImpl } from '../../model/Tree'
+import { NumberedTreeNodeImpl, QualifiedElementImpl } from '../../model/Tree'
 import { EmberFunction } from '../../model/EmberFunction'
 import { DecodeResult } from '../../encodings/ber/decoder/DecodeResult'
 import { StreamEntry } from '../../model/StreamEntry'
@@ -320,17 +320,16 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 			throw new Error('No node specified')
 		}
 
-		const qualifiedParam = assertQualifiedEmberNode(node) as QualifiedElement<Parameter>
-
 		// TODO - validate value
-		// TODO - should other properties be scrapped
 
-		qualifiedParam.contents.value = value
-
-		return this._sendRequest<TreeElement<Parameter>>(
-			qualifiedParam,
-			awaitResponse ? ExpectResponse.Any : ExpectResponse.None
+		// Send only the path and the value, as the specification's examples and Lawo's libember do. The parameter type
+		// only decides how the value is encoded. The tree is updated when the provider replies.
+		const request = new QualifiedElementImpl<Parameter>(
+			getPath(node),
+			new ParameterImpl(node.contents.parameterType, undefined, undefined, value)
 		)
+
+		return this._sendRequest<TreeElement<Parameter>>(request, awaitResponse ? ExpectResponse.Any : ExpectResponse.None)
 	}
 	async matrixConnect(
 		matrix: QualifiedElement<Matrix> | NumberedTreeNode<Matrix>,

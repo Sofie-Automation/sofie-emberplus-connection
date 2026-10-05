@@ -75,7 +75,14 @@ export function encodeParameter(parameter: Parameter, writer: Ber.Writer): void 
 		writer.endSequence()
 	}
 
-	if (parameter.parameterType) {
+	// A parameter that carries only a value is a value change, such as a consumer's set request. The value's own BER
+	// type gives its type, so the type field is left out, as Lawo's libember does.
+	const valueOnly =
+		parameter.value !== undefined &&
+		Object.entries<unknown>({ ...parameter }).every(
+			([key, v]) => v === undefined || ['type', 'parameterType', 'value'].includes(key)
+		)
+	if (parameter.parameterType && !valueOnly) {
 		writer.startSequence(Ber.CONTEXT(13))
 		writer.writeInt(parameterTypeToInt(parameter.parameterType))
 		writer.endSequence()

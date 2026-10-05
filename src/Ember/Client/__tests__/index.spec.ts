@@ -14,6 +14,8 @@ import S101ClientMock from '../../../__mocks__/S101Client'
 import { DecodeResult } from '../../../encodings/ber/decoder/DecodeResult'
 import { StreamDescriptionImpl } from '../../../model/StreamDescription'
 import { StreamEntry, StreamEntryImpl } from '../../../model/StreamEntry'
+import { Parameter, ParameterAccess } from '../../../model/Parameter'
+import * as Ber from '../../../Ber'
 // import { EmberTreeNode, RootElement } from '../../../types/types'
 // import { ElementType, EmberElement } from '../../../model/EmberElement'
 // import { Parameter, ParameterType } from '../../../model/Parameter'
@@ -417,6 +419,113 @@ describe('client', () => {
 
 			const res = await req.response
 			expect(res).toBeTruthy()
+		})
+	})
+
+	describe('setValue', () => {
+		// Reads a set request as sent: the path, which fields the contents set holds, the value and its BER tag,
+		// and whether anything follows the contents (children)
+		function readSetRequest(data: Buffer) {
+			const reader = new Ber.Reader(data)
+			reader.readSequence(Ber.APPLICATION(0)) // root
+			reader.readSequence(Ber.APPLICATION(11)) // root element collection
+			reader.readSequence(Ber.CONTEXT(0))
+			reader.readSequence(Ber.APPLICATION(9)) // qualified parameter
+			const parameterEnd = reader.offset + reader.length
+			reader.readSequence(Ber.CONTEXT(0))
+			const path = reader.readRelativeOID(Ber.BERDataTypes.RELATIVE_OID)
+			reader.readSequence(Ber.CONTEXT(1))
+			reader.readSequence(Ber.BERDataTypes.SET)
+			const contentsEnd = reader.offset + reader.length
+
+			const fields: number[] = []
+			let valueTag: number | null = null
+			let value: unknown
+			while (reader.offset < contentsEnd) {
+				const tag = reader.readSequence()
+				if (tag === null) break
+				fields.push(tag)
+				if (tag === Ber.CONTEXT(2)) {
+					valueTag = reader.peek()
+					value = reader.readValue().value
+				} else {
+					const inner = reader.peek()
+					if (inner !== null) reader.readString(inner, true)
+				}
+			}
+			return { path, fields, valueTag, value, hasChildren: contentsEnd < parameterEnd }
+		}
+
+		// A device, 1, with a parameter, 1.1, that has plenty of properties besides its value
+		function seedParameter(client: EmberClient, parameter: Parameter) {
+			const device = new NumberedTreeNodeImpl(1, new EmberNodeImpl('device'), {
+				1: new NumberedTreeNodeImpl(1, parameter),
+			})
+			if (!device.children?.[1]) throw new Error('Expected seeded parameter')
+			device.children[1].parent = device
+			client.tree[1] = device
+			return device.children[1] as NumberedTreeNode<Parameter>
+		}
+
+		// As the specification's examples, Lawo's libember and Ember+ Viewer do: a QualifiedParameter holding the path
+		// and only the value, without the type field
+		test.each([
+			[ParameterType.Integer, 20, Ber.BERDataTypes.INTEGER],
+			[ParameterType.Real, 2, Ber.BERDataTypes.REAL],
+			[ParameterType.Enum, 3, Ber.BERDataTypes.INTEGER],
+			[ParameterType.Boolean, true, Ber.BERDataTypes.BOOLEAN],
+			[ParameterType.String, 'name', Ber.BERDataTypes.STRING],
+		])('sends only the path and value of a %s parameter', async (parameterType, value, valueTag) => {
+			await runWithConnection(async (client) => {
+				const node = seedParameter(
+					client,
+					new ParameterImpl(
+						parameterType,
+						'param',
+						'Param',
+						undefined,
+						parameterType === ParameterType.String || parameterType === ParameterType.Boolean ? undefined : 70,
+						parameterType === ParameterType.String || parameterType === ParameterType.Boolean ? undefined : -20,
+						ParameterAccess.ReadWrite,
+						'%d',
+						parameterType === ParameterType.Enum ? 'a\nb\nc\nd' : undefined
+					)
+				)
+
+				await client.setValue(node, value, false)
+
+				expect(onSocketWrite).toHaveBeenCalledTimes(1)
+				const request = readSetRequest(onSocketWrite.mock.calls[0][0])
+				expect(request.path).toBe('1.1')
+				expect(request.fields).toEqual([Ber.CONTEXT(2)])
+				expect(request.valueTag).toBe(valueTag)
+				expect(request.value).toEqual(value)
+				expect(request.hasChildren).toBe(false)
+
+				// the cached parameter is unchanged until the provider replies
+				expect(node.contents.value).toBeUndefined()
+				expect(node.contents.identifier).toBe('param')
+			})
+		})
+
+		it('updates the tree when the provider replies', async () => {
+			await runWithConnection(async (client, socket) => {
+				const node = seedParameter(client, new ParameterImpl(ParameterType.Integer, 'gain', undefined, 0, 70, -20))
+
+				const request = await client.setValue(node, 20)
+				socket.mockData(
+					createQualifiedNodeResponse(
+						'1.1',
+						new ParameterImpl(ParameterType.Integer, undefined, undefined, 20),
+						undefined
+					)
+				)
+
+				await expect(request.response).resolves.toBeDefined()
+				expect(node.contents.value).toBe(20)
+				expect(node.contents.identifier).toBe('gain')
+				expect(node.contents.maximum).toBe(70)
+			})
 		})
 	})
 

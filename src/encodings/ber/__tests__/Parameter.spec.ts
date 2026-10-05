@@ -55,6 +55,39 @@ describe('encodings/ber/Parameter', () => {
 		roundtripParameter(param)
 	})
 
+	describe('type field', () => {
+		const fieldsOf = (param: Parameter): number[] => {
+			const writer = new Ber.Writer()
+			encodeParameter(param, writer)
+			const reader = new Ber.Reader(writer.buffer)
+			reader.readSequence(Ber.BERDataTypes.SET)
+			const end = reader.offset + reader.length
+			const fields: number[] = []
+			while (reader.offset < end) {
+				const tag = reader.readSequence()
+				if (tag === null) break
+				fields.push(tag)
+				const inner = reader.peek()
+				if (inner !== null) reader.readString(inner, true)
+			}
+			return fields
+		}
+
+		// A value change: the value's own BER type gives its type, as in Lawo's libember
+		test('a parameter with only a value has no type field', () => {
+			expect(fieldsOf({ ...prm, parameterType: ParameterType.Integer, value: 20 })).toEqual([Ber.CONTEXT(2)])
+		})
+
+		test('a parameter with other properties keeps its type field', () => {
+			expect(fieldsOf({ ...prm, parameterType: ParameterType.Integer, identifier: 'gain', value: 20 })).toEqual([
+				Ber.CONTEXT(0),
+				Ber.CONTEXT(2),
+				Ber.CONTEXT(13),
+			])
+			expect(fieldsOf({ ...prm, parameterType: ParameterType.Trigger })).toEqual([Ber.CONTEXT(13)])
+		})
+	})
+
 	test('write and read a parameter - maximum', () => {
 		const param: Parameter = {
 			...prm,
