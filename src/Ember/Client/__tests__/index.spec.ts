@@ -7,11 +7,19 @@ import {
 	ParameterType,
 	QualifiedElementImpl,
 	StreamFormat,
+	Matrix,
+	MatrixImpl,
+	MatrixType,
+	MatrixAddressingMode,
+	QualifiedElement,
 } from '../../../model'
+import { ConnectionOperation } from '../../../model/Connection'
 import { Collection, EmberTypedValue, Root, RootElement } from '../../../types/types'
 import { EmberClient } from '../'
 import S101ClientMock from '../../../__mocks__/S101Client'
 import { DecodeResult } from '../../../encodings/ber/decoder/DecodeResult'
+import { berDecode } from '../../../encodings/ber'
+import * as Ber from '../../../Ber'
 import { StreamDescriptionImpl } from '../../../model/StreamDescription'
 import { StreamEntry, StreamEntryImpl } from '../../../model/StreamEntry'
 // import { EmberTreeNode, RootElement } from '../../../types/types'
@@ -417,6 +425,112 @@ describe('client', () => {
 
 			const res = await req.response
 			expect(res).toBeTruthy()
+		})
+	})
+
+	describe('matrix connections', () => {
+		// Reads a connect request as sent: the path, which fields follow it and the connections
+		function readConnectRequest(data: Buffer) {
+			const reader = new Ber.Reader(data)
+			reader.readSequence(Ber.APPLICATION(0)) // root
+			reader.readSequence(Ber.APPLICATION(11)) // root element collection
+			reader.readSequence(Ber.CONTEXT(0))
+			reader.readSequence(Ber.APPLICATION(17)) // qualified matrix
+			const matrixEnd = reader.offset + reader.length
+			reader.readSequence(Ber.CONTEXT(0))
+			const path = reader.readRelativeOID(Ber.BERDataTypes.RELATIVE_OID)
+
+			const fields: number[] = []
+			while (reader.offset < matrixEnd) {
+				const tag = reader.readSequence()
+				if (tag === null) break
+				fields.push(tag)
+				const inner = reader.peek()
+				if (inner !== null) reader.readString(inner, true)
+			}
+			const matrix = (berDecode(data).value as Collection<RootElement>)[0] as QualifiedElement<Matrix>
+			return { path, fields, connections: matrix.contents.connections }
+		}
+
+		// A device, 1, with a matrix, 1.1, as a provider reports it in reply to a GetDirectory on the matrix: its
+		// contents, targets, sources and the connections of every target
+		function seedMatrix(client: EmberClient) {
+			const device = new NumberedTreeNodeImpl(1, new EmberNodeImpl('device'), {
+				1: new NumberedTreeNodeImpl(
+					1,
+					new MatrixImpl(
+						'matrix',
+						[1, 2, 3],
+						[1, 2, 3, 4],
+						{ 1: { target: 1, sources: [1] }, 2: { target: 2, sources: [2] }, 3: { target: 3, sources: [] } },
+						'Matrix',
+						MatrixType.OneToN,
+						MatrixAddressingMode.NonLinear,
+						3,
+						4,
+						undefined,
+						undefined,
+						undefined,
+						undefined,
+						[{ basePath: '1.2', description: 'labels' }]
+					)
+				),
+			})
+			if (!device.children?.[1]) throw new Error('Expected seeded matrix')
+			device.children[1].parent = device
+			client.tree[1] = device
+			return device.children[1] as NumberedTreeNode<Matrix>
+		}
+
+		// As the specification's examples, Lawo's libember and Ember+ Viewer do: a QualifiedMatrix holding the path
+		// and only the connection, without contents
+		test.each([
+			['matrixConnect', ConnectionOperation.Connect],
+			['matrixDisconnect', ConnectionOperation.Disconnect],
+			['matrixSetConnection', ConnectionOperation.Absolute],
+		] as const)('%s sends only the path and the connection', async (method, operation) => {
+			await runWithConnection(async (client) => {
+				const node = seedMatrix(client)
+				const stored = node.contents.connections
+
+				const request = await client[method](node, 2, [3])
+				request.response?.catch(() => null) // no reply here, so the request is cancelled on disconnect
+
+				expect(onSocketWrite).toHaveBeenCalledTimes(1)
+				const sent = readConnectRequest(onSocketWrite.mock.calls[0][0])
+				expect(sent.path).toBe('1.1')
+				expect(sent.fields).toEqual([Ber.CONTEXT(5)])
+				expect(sent.connections).toEqual({ 2: { target: 2, sources: [3], operation } })
+
+				// the cached matrix is unchanged until the provider replies
+				expect(node.contents.connections).toBe(stored)
+				expect(node.contents.connections).toEqual({
+					1: { target: 1, sources: [1] },
+					2: { target: 2, sources: [2] },
+					3: { target: 3, sources: [] },
+				})
+			})
+		})
+
+		it('updates the tree when the provider replies', async () => {
+			await runWithConnection(async (client, socket) => {
+				const node = seedMatrix(client)
+
+				const request = await client.matrixConnect(node, 2, [3])
+				// a report without contents, decoded: the path and the changed target
+				socket.mockData(
+					createQualifiedNodeResponse(
+						'1.1',
+						new MatrixImpl('', undefined, undefined, { 2: { target: 2, sources: [3] } }),
+						undefined
+					)
+				)
+
+				await expect(request.response).resolves.toBeDefined()
+				expect(node.contents.connections?.[2]).toEqual({ target: 2, sources: [3] })
+				expect(node.contents.identifier).toBe('matrix')
+				expect(node.contents.targets).toEqual([1, 2, 3])
+			})
 		})
 	})
 

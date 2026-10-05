@@ -31,7 +31,7 @@ import { EventEmitter } from 'eventemitter3'
 import { S101Client } from '../Socket'
 import { getPath, assertQualifiedEmberNode, insertCommand, updateProps, isEmptyNode } from '../Lib/util'
 import { berEncode } from '../../encodings/ber'
-import { NumberedTreeNodeImpl } from '../../model/Tree'
+import { NumberedTreeNodeImpl, QualifiedElementImpl } from '../../model/Tree'
 import { EmberFunction } from '../../model/EmberFunction'
 import { DecodeResult } from '../../encodings/ber/decoder/DecodeResult'
 import { StreamEntry } from '../../model/StreamEntry'
@@ -484,17 +484,20 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 			throw new Error('No matrix specified')
 		}
 
-		const qualifiedMatrix = assertQualifiedEmberNode(matrix) as QualifiedElement<Matrix>
-
 		const connection: Connection = {
 			operation,
 			target,
 			sources,
 		}
 
-		qualifiedMatrix.contents.connections = [connection]
+		// Send only the path and the connection, as the specification's examples and Lawo's libember do. Leaving out
+		// the contents leaves out the identifier they require. The tree is updated when the provider replies.
+		const request = new QualifiedElementImpl<Matrix>(getPath(matrix), {
+			type: ElementType.Matrix,
+			connections: { [target]: connection },
+		} as Matrix)
 
-		return this._sendRequest<TreeElement<Matrix>>(qualifiedMatrix, ExpectResponse.Any)
+		return this._sendRequest<TreeElement<Matrix>>(request, ExpectResponse.Any)
 	}
 
 	private async _sendCommand<T>(node: RootElement, command: Command, expectResponse: ExpectResponse) {
