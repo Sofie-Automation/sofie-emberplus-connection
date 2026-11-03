@@ -3,7 +3,8 @@ import { InvocationResultImpl } from '../../../model/InvocationResult'
 import { ParameterType } from '../../../model/Parameter'
 import { Root, RootType, RootElement, Collection } from '../../../types/types'
 import { berEncode, berDecode } from '..'
-import { QualifiedElementImpl, NumberedTreeNodeImpl } from '../../../model/Tree'
+import { QualifiedElement, QualifiedElementImpl, NumberedTreeNodeImpl } from '../../../model/Tree'
+import { Matrix } from '../../../model/Matrix'
 import { EmberNodeImpl } from '../../../model/EmberNode'
 import { guarded } from '../decoder/DecodeResult'
 import * as Ber from '../../../Ber'
@@ -71,5 +72,19 @@ describe('encoders/Ber/index', () => {
 		expect((decoded.value as Collection<RootElement>)[0].contents.type).toBe(ElementType.Node)
 		expect(decoded.errors).toHaveLength(1)
 		expect(decoded.errors?.toString()).toMatch(/Unexpected BER application tag '127'/)
+	})
+	// A connection report captured from a test device: a QualifiedMatrix with a path and connections but no
+	// contents, which the Glow DTD makes optional
+	test('Qualified matrix without contents', () => {
+		const report = Buffer.from(
+			'60806b80a0807180a0050d03000502a5803080a0807080a00302010aa1040d02812ca30302010100000000000000000000000000000000',
+			'hex'
+		)
+		const decoded = guarded(berDecode(report)) as Collection<RootElement>
+		const matrix = decoded[0] as QualifiedElement<Matrix>
+
+		expect(matrix.path).toBe('0.5.2')
+		expect(matrix.contents.type).toBe(ElementType.Matrix)
+		expect(matrix.contents.connections?.[10]).toMatchObject({ target: 10, sources: [172] })
 	})
 })
