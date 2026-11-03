@@ -746,7 +746,8 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 	}
 
 	private _updateMatrix(update: Matrix, matrix: Matrix) {
-		updateProps<Matrix>(matrix, update, ['targets', 'targetCount', 'sources', 'sourceCount', 'connections'])
+		// connections are merged below, since a report may cover only the targets that changed
+		updateProps<Matrix>(matrix, update, ['targets', 'targetCount', 'sources', 'sourceCount'])
 
 		// update connections
 		if (update.connections) {
