@@ -52,7 +52,9 @@ export function insertCommand(
 	node: Exclude<RootElement, NumberedTreeNode<EmberElement>>,
 	command: Command
 ): Exclude<RootElement, NumberedTreeNode<EmberElement>> {
-	return new QualifiedElementImpl<EmberElement>(node.path, node.contents, [
+	// Send only the path and the command, as the specification's examples do. The element's type is kept, as it
+	// decides how the element is encoded, but not its other contents.
+	return new QualifiedElementImpl<EmberElement>(node.path, { type: node.contents.type } as EmberElement, [
 		new NumberedTreeNodeImpl(0, command),
 	]) as Exclude<RootElement, NumberedTreeNode<EmberElement>>
 }
