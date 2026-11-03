@@ -5,6 +5,7 @@ import { decodeInvocation } from '../decoder/Invocation'
 import { ParameterType } from '../../../model/Parameter'
 import { literal } from '../../../types/types'
 import { guarded } from '../decoder/DecodeResult'
+import { toIndefiniteLength } from './indefiniteLength'
 
 describe('encodings/ber/Invocation', () => {
 	const iv = literal<Invocation>({
@@ -53,5 +54,17 @@ describe('encodings/ber/Invocation', () => {
 		const decoded = guarded(decodeInvocation(reader))
 
 		expect(decoded).toEqual(noId)
+	})
+
+	test('write and read an invocation - 3 args, indefinite length', () => {
+		const writer = new Ber.Writer()
+		encodeInvocation(iv, writer)
+		const buffer = toIndefiniteLength(writer.buffer)
+		console.log(buffer)
+		expect(buffer[1]).toBe(0x80)
+		const reader = new Ber.Reader(buffer)
+		const decoded = guarded(decodeInvocation(reader))
+
+		expect(decoded).toEqual(iv)
 	})
 })
