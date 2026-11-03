@@ -93,11 +93,11 @@ export default class S101Codec extends EventEmitter<S101CodecEvents> {
 
 		let frameOffset = 0
 		while (frameOffset < buf.length) {
-			const frameStart = buf.indexOf(S101_BOF, frameOffset)
+			let frameStart = buf.indexOf(S101_BOF, frameOffset)
 			if (frameStart === -1) break
 
 			const frameEnd = buf.indexOf(S101_EOF, frameStart + 1)
-			if (frameEnd === -1 || frameEnd - frameStart < 4) {
+			if (frameEnd === -1) {
 				//console.log('Parsing frameEnd to next chunk')
 				const pending = buf.subarray(frameStart)
 				if (pending.length > MAX_FRAME_BUFFER_SIZE) {
@@ -112,6 +112,9 @@ export default class S101Codec extends EventEmitter<S101CodecEvents> {
 				this.frameBuffer = pending
 				break
 			}
+
+			// A BOF always starts a new frame, so anything from an earlier BOF is discarded
+			frameStart = buf.lastIndexOf(S101_BOF, frameEnd)
 
 			this.inbuf.clear()
 			let chunkOffset = frameStart + 1
