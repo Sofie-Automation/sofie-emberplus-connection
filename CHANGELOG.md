@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file. See [Convential Commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) for commit guidelines.
 
+## [0.3.2-0](https://github.com/Sofie-Automation/sofie-emberplus-connection/compare/v0.3.1...v0.3.2-0) (Tue Nov 03 2026)
+
+
+### Fixes
+
+* keep reconnecting until the client is disconnected [17e3592](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/17e359249225fa4bb0e60f8c94550667e2e7f99c)
+* stop reconnecting when the client is disconnected or discarded [27af5bf](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/27af5bf5b1e137f07c436b4aa7c191b51197cf1b)
+* keep a replaced or failed connect attempt's timeout from destroying the current socket [911994d](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/911994d6d06ac89235843ebfc4163079720813d3)
+* send only the path and the command in command requests [bc4f531](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/bc4f531320b6bc9819c4e6584702d74945b03f9e)
+* don't wait for a reply to the GetDirectory on a parameter [e090b95](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/e090b9556f57b6cdff1c999d179d5f109c261aa5)
+* send only the path and connection in matrix connects [292c3fb](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/292c3fb7b1f5e992617c7077bc048fe7c9de92de)
+* send only the path and value in setValue [bd579c3](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/bd579c35be848bed2e2994acc1caea78ebb17339)
+* restart S101 frames at every BOF and drop short frames [330472e](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/330472e32842e4a7cbe6037623365913ad494795)
+* accept matrix messages without contents [96c319a](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/96c319a3c7394d59012b18ddd37b2f98055ddffe)
+* resolve a GetDirectory on a matrix when the reply has no children [a626119](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/a626119cb8872859e678dbed91e6ff51c0266902)
+* keep unchanged matrix connections when a report covers some targets [b568933](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/b56893397879932ea39b38d0e80d1b5fcfd8ae50)
+* encode parameter minimum and maximum as MinMax [bc6e8c2](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/bc6e8c225ae3e6beb8f7bd6725d63a2f943c6f21)
+* accept end-of-contents in invocation arguments [d2a4b46](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/d2a4b46f091eebc98874c2280294caef13add174)
+* decode matrix lists sent with indefinite length [914aee9](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/914aee99bfa262e89fdcf5fd79ae7d5d2fb4318a)
+* Intermittent subscription update loss and socket lifecycle reliability (#51) [9e636a8](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/9e636a882dfbe553d0253bc1767313f672bcf0e2)
+* packet size error handling [a2dd77a](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/a2dd77aacd05b70081de3a1db4f3d1ecd2889d8b)
+* disconnect connections that exceed size limits [0bdb4c8](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/0bdb4c8822d32ccc38c8f0b4441d22e37f5a3a01)
+* guard against 0 values in reader causing infinite loops [eacdd5b](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/eacdd5b53b17a06247a068151fdfe4bc9f837ab0)
+* add max frame/packet size [dbc6851](https://github.com/Sofie-Automation/sofie-emberplus-connection/commit/dbc68518c4075f428007a45452bed88a4adeae54)
+
 ## [0.3.1](https://github.com/Sofie-Automation/sofie-emberplus-connection/compare/v0.3.0...v0.3.1) (Tue Oct 14 2025)
 
 

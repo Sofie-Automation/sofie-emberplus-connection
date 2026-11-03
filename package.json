@@ -1,6 +1,6 @@
 {
 	"name": "emberplus-connection",
-	"version": "0.3.1",
+	"version": "0.3.2-0",
 	"description": "Javascript implementation of the Ember+ automation protocol",
 	"engines": {
 		"node": ">=14.18"
@@ -79,5 +79,6 @@
 			"yarn lint:raw --fix"
 		]
 	},
-	"packageManager": "yarn@3.6.3"
+	"packageManager": "yarn@3.6.3",
+	"stableVersion": "0.3.1"
 }
