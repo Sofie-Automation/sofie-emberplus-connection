@@ -84,10 +84,29 @@ export default class S101Client extends S101Socket {
 
 				this.emit('connecting')
 				this.status = ConnectionStatus.Disconnected
+				// The timeout belongs to this attempt only: it is cleared when the attempt
+				// connects or closes, and never touches a socket a later attempt is using.
+				// A timeout left running for an attempt that has ended or been replaced
+				// (a retry replaces a socket that is still connecting) would otherwise
+				// destroy the current socket when it fires, even a live connection, and
+				// remove its listeners, so the client would go on reporting "connected".
+				const socket = this.socket
+				const onConnect = () => {
+					clearTimeout(timer)
+					socket.off('close', onClose)
+					resolve()
+				}
+				const onClose = () => {
+					clearTimeout(timer)
+					socket.off('connect', onConnect)
+					resolve(new Error(`Could not connect to ${this.address}:${this.port}`))
+				}
 				const connectTimeoutListener = () => {
-					if (this.socket) {
-						this.socket.destroy()
-						this.socket.removeAllListeners()
+					socket.off('connect', onConnect)
+					socket.off('close', onClose)
+					if (this.socket === socket) {
+						socket.destroy()
+						socket.removeAllListeners()
 						delete this.socket
 					}
 					const reason = new Error(
@@ -98,11 +117,9 @@ export default class S101Client extends S101Socket {
 				}
 
 				const timer = setTimeout(() => connectTimeoutListener(), timeout * 1000)
-				this.socket.connect(this.port, this.address)
-				this.socket.once('connect', () => {
-					clearInterval(timer)
-					resolve()
-				})
+				socket.once('connect', onConnect)
+				socket.once('close', onClose)
+				socket.connect(this.port, this.address)
 				this._shouldBeConnected = true
 				this._lastConnectionAttempt = Date.now()
 			}
