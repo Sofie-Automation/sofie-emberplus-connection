@@ -1,6 +1,6 @@
 import * as Ber from '../../../Ber'
 import { Parameter, ParameterType, ParameterAccess } from '../../../model/Parameter'
-import { EmberValue } from '../../../types/types'
+import { EmberValue, MinMax } from '../../../types/types'
 import { encodeStringIntegerCollection } from './StringIntegerCollection'
 import { encodeStreamDescription } from './StreamDescription'
 // import { elementTypeToInt } from './Matrix'
@@ -39,6 +39,21 @@ export function encodeParameter(parameter: Parameter, writer: Ber.Writer): void 
 		}
 	}
 
+	const writeMinMax = (value: MinMax | undefined, tag: number): void => {
+		// MinMax is a CHOICE of integer, real or null whatever the parameter type. Anything else, such as a
+		// string limit decoded from a provider that encoded it with the parameter's type, is left out.
+		if (value !== null && typeof value !== 'number') return
+		writer.startSequence(tag)
+		if (value === null) {
+			writer.writeNull()
+		} else if (parameter.parameterType === ParameterType.Real || !Number.isInteger(value)) {
+			writer.writeReal(value, Ber.BERDataTypes.REAL)
+		} else {
+			writer.writeInt(value, Ber.BERDataTypes.INTEGER)
+		}
+		writer.endSequence()
+	}
+
 	writer.writeIfDefined(parameter.identifier, writer.writeString, 0, Ber.BERDataTypes.STRING)
 	writer.writeIfDefined(parameter.description, writer.writeString, 1, Ber.BERDataTypes.STRING)
 	if (parameter.value !== undefined) {
@@ -46,16 +61,8 @@ export function encodeParameter(parameter: Parameter, writer: Ber.Writer): void 
 		writeValue(parameter.value)
 		writer.endSequence()
 	}
-	if (parameter.minimum !== undefined) {
-		writer.startSequence(Ber.CONTEXT(3))
-		writeValue(parameter.minimum)
-		writer.endSequence()
-	}
-	if (parameter.maximum !== undefined) {
-		writer.startSequence(Ber.CONTEXT(4))
-		writeValue(parameter.maximum)
-		writer.endSequence()
-	}
+	writeMinMax(parameter.minimum, Ber.CONTEXT(3))
+	writeMinMax(parameter.maximum, Ber.CONTEXT(4))
 	writer.writeIfDefined(
 		parameter.access && parameterAccessToInt(parameter.access),
 		writer.writeInt,
