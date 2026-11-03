@@ -12,18 +12,22 @@ import {
 	MatrixType,
 	MatrixAddressingMode,
 	QualifiedElement,
+	ElementType,
+	Parameter,
+	TreeElement,
 } from '../../../model'
 import { ConnectionOperation } from '../../../model/Connection'
+import { CommandType } from '../../../model/Command'
 import { Collection, EmberTypedValue, Root, RootElement } from '../../../types/types'
 import { EmberClient } from '../'
 import S101ClientMock from '../../../__mocks__/S101Client'
 import { DecodeResult } from '../../../encodings/ber/decoder/DecodeResult'
 import { Connection } from '../../../model/Connection'
+import { berDecode } from '../../../encodings/ber'
 import { StreamDescriptionImpl } from '../../../model/StreamDescription'
 import { StreamEntry, StreamEntryImpl } from '../../../model/StreamEntry'
-import { Parameter, ParameterAccess } from '../../../model/Parameter'
+import { ParameterAccess } from '../../../model/Parameter'
 import * as Ber from '../../../Ber'
-import { berDecode } from '../../../encodings/ber'
 // import { EmberTreeNode, RootElement } from '../../../types/types'
 // import { ElementType, EmberElement } from '../../../model/EmberElement'
 // import { Parameter, ParameterType } from '../../../model/Parameter'
@@ -458,7 +462,7 @@ describe('client', () => {
 					value = reader.readValue().value
 				} else {
 					const inner = reader.peek()
-					if (inner !== null) reader.readString(inner, true)
+					if (inner !== null) reader.readString(inner)
 				}
 			}
 			return { path, fields, valueTag, value, hasChildren: contentsEnd < parameterEnd }
@@ -555,7 +559,7 @@ describe('client', () => {
 				if (tag === null) break
 				fields.push(tag)
 				const inner = reader.peek()
-				if (inner !== null) reader.readString(inner, true)
+				if (inner !== null) reader.readString(inner)
 			}
 			const matrix = (berDecode(data).value as Collection<RootElement>)[0] as QualifiedElement<Matrix>
 			return { path, fields, connections: matrix.contents.connections }
@@ -639,6 +643,62 @@ describe('client', () => {
 				expect(node.contents.connections?.[2]).toEqual({ target: 2, sources: [3] })
 				expect(node.contents.identifier).toBe('matrix')
 				expect(node.contents.targets).toEqual([1, 2, 3])
+			})
+		})
+	})
+
+	describe('getElementByPath on a parameter', () => {
+		// A device, 1, with a parameter, 1.1, already in the tree from an earlier GetDirectory on the device
+		function seedParameter(client: EmberClient) {
+			const device = new NumberedTreeNodeImpl(1, new EmberNodeImpl('device'), {
+				1: new NumberedTreeNodeImpl(1, new ParameterImpl(ParameterType.Integer, 'gain', undefined, 0)),
+			})
+			if (!device.children?.[1]) throw new Error('Expected seeded parameter')
+			device.children[1].parent = device
+			client.tree[1] = device
+			return device.children[1] as NumberedTreeNode<Parameter>
+		}
+
+		// Some providers never answer a GetDirectory on a parameter
+		it('sends a GetDirectory to the parameter without waiting for a reply', async () => {
+			await runWithConnection(async (client) => {
+				const node = seedParameter(client)
+
+				let found: TreeElement<EmberElement> | undefined
+				client
+					.getElementByPath('1.1')
+					.then((element) => (found = element))
+					.catch(() => null) // without a reply, a lookup that waits is cancelled on disconnect
+				await new Promise(setImmediate)
+
+				expect(found).toBe(node)
+				expect(onSocketWrite).toHaveBeenCalledTimes(1)
+				const request = (berDecode(onSocketWrite.mock.calls[0][0]).value as Collection<RootElement>)[0]
+				expect(request).toMatchObject({ path: '1.1', contents: { type: ElementType.Parameter } })
+				expect(Object.values<NumberedTreeNode<EmberElement>>(request.children ?? {})).toMatchObject([
+					{ contents: { type: ElementType.Command, number: CommandType.GetDirectory } },
+				])
+			})
+		})
+
+		// Others may only report a parameter's changes once it has had a GetDirectory
+		it('applies the reply and calls the callback when the provider answers', async () => {
+			await runWithConnection(async (client, socket) => {
+				const node = seedParameter(client)
+				const cb = jest.fn()
+
+				await client.getElementByPath('1.1', cb)
+				socket.mockData(
+					createQualifiedNodeResponse(
+						'1.1',
+						new ParameterImpl(ParameterType.Integer, undefined, undefined, 5),
+						undefined
+					)
+				)
+				await new Promise(setImmediate)
+
+				expect(node.contents.value).toBe(5)
+				expect(cb).toHaveBeenCalledWith(node)
 			})
 		})
 	})

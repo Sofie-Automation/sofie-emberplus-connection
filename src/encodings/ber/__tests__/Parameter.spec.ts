@@ -68,7 +68,7 @@ describe('encodings/ber/Parameter', () => {
 				if (tag === null) break
 				fields.push(tag)
 				const inner = reader.peek()
-				if (inner !== null) reader.readString(inner, true)
+				if (inner !== null) reader.readString(inner)
 			}
 			return fields
 		}

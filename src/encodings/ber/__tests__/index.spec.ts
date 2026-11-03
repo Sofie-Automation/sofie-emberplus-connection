@@ -9,7 +9,6 @@ import { EmberNodeImpl } from '../../../model/EmberNode'
 import { guarded } from '../decoder/DecodeResult'
 import * as Ber from '../../../Ber'
 import { ElementType } from '../../../model/EmberElement'
-import { Matrix } from '../../../model/Matrix'
 import { ConnectionImpl, ConnectionOperation } from '../../../model/Connection'
 import { RootBERID } from '../constants'
 
