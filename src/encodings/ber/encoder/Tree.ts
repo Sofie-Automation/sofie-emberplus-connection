@@ -59,8 +59,12 @@ export function encodeTree(el: TreeElement<EmberElement>, writer: Ber.Writer): v
 		return
 	}
 
-	// Encode Contents:
-	if (Object.values<any>(el.contents).filter((v) => v !== undefined).length > 1) {
+	// Encode Contents, unless there's nothing to put in them. A matrix's targets, sources and connections are encoded
+	// after them.
+	const contents = isMatrix(el.contents)
+		? { ...el.contents, targets: undefined, sources: undefined, connections: undefined }
+		: el.contents
+	if (Object.values<any>(contents).filter((v) => v !== undefined).length > 1) {
 		writer.startSequence(Ber.CONTEXT(1)) // start contents
 		encodeEmberElement(el.contents, writer)
 		writer.endSequence() // end contents
