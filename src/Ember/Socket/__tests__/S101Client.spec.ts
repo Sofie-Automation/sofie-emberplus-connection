@@ -145,6 +145,39 @@ describe('S101Client connection attempts', () => {
 	})
 })
 
+describe('S101Client reconnecting', () => {
+	beforeEach(() => {
+		jest.useFakeTimers()
+		FakeNetSocket.attempts = 0
+	})
+	afterEach(() => {
+		jest.useRealTimers()
+	})
+
+	it('keeps retrying however long the provider refuses connections', async () => {
+		const client = new S101Client('127.0.0.1', 9000)
+		client.on('error', () => null)
+		void client.connect()
+
+		// The provider refuses every attempt for 10 minutes...
+		for (let elapsed = 0; elapsed < 600000; elapsed += 1000) {
+			const socket = currentSocket(client)
+			if (socket.connecting) socket.refuse()
+			await jest.advanceTimersByTimeAsync(1000)
+		}
+		// ...then comes back: the client must still be trying.
+		const before = FakeNetSocket.attempts
+		await jest.advanceTimersByTimeAsync(5000)
+		expect(FakeNetSocket.attempts).toBeGreaterThan(before)
+
+		currentSocket(client).succeed()
+		expect(client.status).toBe(ConnectionStatus.Connected)
+
+		client.removeAllListeners()
+		await client.disconnect()
+	})
+})
+
 describe('S101Client disconnect', () => {
 	beforeEach(() => {
 		jest.useFakeTimers()
