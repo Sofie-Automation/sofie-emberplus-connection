@@ -14,6 +14,13 @@ function octetsParameter(value: Buffer): Parameter {
 }
 
 describe('BER', () => {
+	describe('readValue', () => {
+		test('relative OID', () => {
+			// a relative OID has no combined first arc, unlike an absolute OID
+			const r = new Reader(Buffer.from([BERDataTypes.RELATIVE_OID, 0x04, 0x01, 0x02, 0x81, 0x00]))
+			expect(r.readValue()).toEqual({ value: '1.2.128', type: ParameterType.String })
+		})
+	})
 	describe('Roundtrip', () => {
 		test('writeReal - readReal', () => {
 			const w = new Writer()

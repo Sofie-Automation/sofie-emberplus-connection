@@ -130,12 +130,7 @@ class ExtendedWriter extends Writer {
 		}
 
 		if (Buffer.isBuffer(value) && tag) {
-			if (value.length === 0) {
-				this.writeByte(tag)
-				this.writeLength(0)
-			} else {
-				this.writeBuffer(value, tag)
-			}
+			this.writeBuffer(value, tag)
 			return
 		}
 

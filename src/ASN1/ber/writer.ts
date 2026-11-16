@@ -26,9 +26,10 @@ export class Writer {
 	}
 
 	constructor(options?: Partial<WriterOptions>) {
+		// `||` so that 0 means "use the default"; a zero size or growth factor is never useful
 		this._options = {
-			size: options?.size ?? 1024,
-			growthFactor: options?.growthFactor ?? 8,
+			size: options?.size || 1024,
+			growthFactor: options?.growthFactor || 8,
 		}
 
 		this._buf = Buffer.alloc(this._options.size)
@@ -285,8 +286,8 @@ export class Writer {
 		assert.ok(len)
 
 		if (this._size - this._offset < len) {
-			let sz = this._size * this._options.growthFactor
-			if (sz - this._offset < len) sz += len
+			// The growth factor alone may not leave room (eg a factor <= 1), so never allocate less than is needed
+			const sz = Math.max(Math.ceil(this._size * this._options.growthFactor), this._offset + len)
 
 			const buf = Buffer.alloc(sz)
 

@@ -1,7 +1,6 @@
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
 import { Writer } from '../writer'
-import util from 'util'
 
 test('write byte', () => {
 	const writer = new Writer()
@@ -222,7 +221,6 @@ test('sequence', () => {
 	const ber = writer.buffer
 
 	expect(ber).toBeInstanceOf(Buffer)
-	console.log(ber)
 	expect(ber.length).toEqual(15) // wrong length
 	expect(ber[0]).toEqual(0x30) // wrong tag
 	expect(ber[1]).toEqual(13) // wrong length
@@ -295,9 +293,24 @@ test('Write OID', () => {
 
 	const ber = writer.buffer
 	expect(ber).toBeInstanceOf(Buffer)
-	console.log(util.inspect(ber))
-	console.log(util.inspect(Buffer.from([0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01])))
+	expect(ber).toEqual(Buffer.from([0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01]))
 })
+
+test.each([{ growthFactor: 0 }, { growthFactor: 0.5 }, { growthFactor: 1 }, { size: 0 }, { size: 1 }])(
+	'grows correctly with options %j',
+	(options) => {
+		const s = 'x'.repeat(3000)
+		const writer = new Writer(options)
+		writer.writeString('a')
+		writer.writeString(s)
+
+		const ber = writer.buffer
+		expect(ber.length).toEqual(2 + 1 + 4 + s.length)
+		expect(ber.slice(0, 3)).toEqual(Buffer.from([0x04, 0x01, 0x61]))
+		expect(ber.slice(3, 7)).toEqual(Buffer.from([0x04, 0x82, 0x0b, 0xb8]))
+		expect(ber.slice(7).toString('utf8')).toEqual(s)
+	}
+)
 
 test('write empty buffer', () => {
 	const writer = new Writer()

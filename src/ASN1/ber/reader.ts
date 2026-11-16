@@ -56,7 +56,12 @@ export class Reader {
 		return b
 	}
 
-	readBlock(offset: number): number | null {
+	/**
+	 * Measures the indefinite-length block starting at `offset`, including its end-of-block marker.
+	 * @throws {InvalidAsn1Error} if the block is truncated. Callers decode whole messages, so a block
+	 * without its end-of-block marker is malformed rather than incomplete.
+	 */
+	readBlock(offset: number): number {
 		if (offset === undefined) {
 			offset = this._offset
 		}
@@ -86,15 +91,13 @@ export class Reader {
 
 				if (lenB == 0) {
 					this._blocklevel++
-					const nested = this.readBlock(currOffset)
+					lenB = this.readBlock(currOffset)
 					this._blocklevel--
-					if (nested === null) return null
-					lenB = nested
 				} else {
 					if (lenB > 4) throw newInvalidAsn1Error('encoding too long')
 
 					if (this._size - currOffset < lenB) {
-						return null
+						throw newInvalidAsn1Error('truncated length in block at offset ' + offset)
 					}
 
 					for (let i = 0; i < lenB; i++) {
@@ -109,8 +112,7 @@ export class Reader {
 			}
 		}
 
-		// Ran out of buffer without finding the end-of-block marker
-		return null
+		throw newInvalidAsn1Error('unterminated indefinite-length block at offset ' + offset)
 	}
 
 	peek(): number | null {
@@ -140,7 +142,7 @@ export class Reader {
 			lenB &= 0x7f
 
 			if (lenB === 0) {
-				this._len = this.readBlock(offset) ?? 0
+				this._len = this.readBlock(offset)
 			} else {
 				if (lenB > 4) throw newInvalidAsn1Error('encoding too long')
 
