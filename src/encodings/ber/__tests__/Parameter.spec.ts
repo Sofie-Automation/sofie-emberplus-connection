@@ -1,12 +1,14 @@
-/* eslint-disable jest/expect-expect */
-import * as Ber from '../../../Ber'
-import { Parameter, ParameterType, ParameterAccess } from '../../../model/Parameter'
-import { encodeParameter } from '../encoder/Parameter'
-import { decodeParameter } from '../decoder/Parameter'
-import { ElementType } from '../../../model/EmberElement'
-import { StreamFormat, StreamDescriptionImpl } from '../../../model/StreamDescription'
-import { literal } from '../../../types/types'
-import { guarded } from '../decoder/DecodeResult'
+import { describe, expect, test } from 'vitest'
+
+/* eslint-disable vitest/expect-expect */
+import * as Ber from '../../../Ber/index.js'
+import { ElementType } from '../../../model/EmberElement.js'
+import { Parameter, ParameterAccess, ParameterType } from '../../../model/Parameter.js'
+import { StreamDescriptionImpl, StreamFormat } from '../../../model/StreamDescription.js'
+import { literal } from '../../../types/types.js'
+import { guarded } from '../decoder/DecodeResult.js'
+import { decodeParameter } from '../decoder/Parameter.js'
+import { encodeParameter } from '../encoder/Parameter.js'
 
 describe('encodings/ber/Parameter', () => {
 	const prm = literal<Parameter>({

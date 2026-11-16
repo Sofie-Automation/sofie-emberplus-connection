@@ -1,7 +1,7 @@
-import { EmberBaseElement, ElementType } from './EmberElement'
-import { Connection } from './Connection'
-import { Label } from './Label'
-import { RelativeOID } from '../types/types'
+import { RelativeOID } from '../types/types.js'
+import { Connection } from './Connection.js'
+import { ElementType, EmberBaseElement } from './EmberElement.js'
+import { Label } from './Label.js'
 
 export { Matrix, MatrixType, MatrixAddressingMode, Connections, MatrixImpl }
 
@@ -33,7 +33,7 @@ enum MatrixAddressingMode {
 /**
  *  Dictionary or targets, indexed by element number.
  */
-interface Connections {
+type Connections = {
 	[target: number]: Connection
 }
 

@@ -1,9 +1,11 @@
-import * as Ber from '../../../Ber'
-import { Label } from '../../../model/Label'
-import { encodeLabel } from '../encoder/Label'
-import { decodeLabel } from '../decoder/Label'
-import { literal } from '../../../types/types'
-import { guarded } from '../decoder/DecodeResult'
+import { describe, expect, test } from 'vitest'
+
+import * as Ber from '../../../Ber/index.js'
+import { Label } from '../../../model/Label.js'
+import { literal } from '../../../types/types.js'
+import { guarded } from '../decoder/DecodeResult.js'
+import { decodeLabel } from '../decoder/Label.js'
+import { encodeLabel } from '../encoder/Label.js'
 
 describe('encodings/ber/Label', () => {
 	const lbl = literal<Label>({
@@ -23,7 +25,7 @@ describe('encodings/ber/Label', () => {
 
 	test('write and read a label without description', () => {
 		const writer = new Ber.Writer()
-		const badLabel = { basePath: '5.4.3.2.1', description: '' } as Label
+		const badLabel = { basePath: '5.4.3.2.1', description: '' }
 		encodeLabel(badLabel, writer)
 		const badBuffer = writer.buffer.slice(0, writer.buffer.length - 4)
 		badBuffer[1] = badBuffer[1] - 4

@@ -1,4 +1,4 @@
-import { EmberTypedValue } from '../types/types'
+import { EmberTypedValue } from '../types/types.js'
 
 export { InvocationResult, InvocationResultImpl }
 
@@ -15,5 +15,9 @@ interface InvocationResult {
 }
 
 class InvocationResultImpl implements InvocationResult {
-	constructor(public id: number, public success?: boolean, public result?: Array<EmberTypedValue>) {}
+	constructor(
+		public id: number,
+		public success?: boolean,
+		public result?: Array<EmberTypedValue>
+	) {}
 }

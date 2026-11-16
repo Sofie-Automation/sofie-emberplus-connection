@@ -1,5 +1,7 @@
 import { SmartBuffer } from 'smart-buffer'
-import S101Codec from '../S101Codec'
+import { describe, expect, test } from 'vitest'
+
+import S101Codec from '../S101Codec.js'
 
 const FLAG_FIRST_MULTI_PACKET = 0x80
 const FLAG_MULTI_PACKET = 0x00

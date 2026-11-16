@@ -1,14 +1,16 @@
-/* eslint-disable jest/expect-expect */
-import { InvocationResultImpl } from '../../../model/InvocationResult'
-import { ParameterType } from '../../../model/Parameter'
-import { Root, RootType, RootElement, Collection } from '../../../types/types'
-import { berEncode, berDecode } from '..'
-import { QualifiedElementImpl, NumberedTreeNodeImpl } from '../../../model/Tree'
-import { EmberNodeImpl } from '../../../model/EmberNode'
-import { guarded } from '../decoder/DecodeResult'
-import * as Ber from '../../../Ber'
-import { ElementType } from '../../../model/EmberElement'
-import { RootBERID } from '../constants'
+import { describe, expect, test } from 'vitest'
+
+/* eslint-disable vitest/expect-expect */
+import * as Ber from '../../../Ber/index.js'
+import { ElementType } from '../../../model/EmberElement.js'
+import { EmberNodeImpl } from '../../../model/EmberNode.js'
+import { InvocationResultImpl } from '../../../model/InvocationResult.js'
+import { ParameterType } from '../../../model/Parameter.js'
+import { NumberedTreeNodeImpl, QualifiedElementImpl } from '../../../model/Tree.js'
+import { Collection, Root, RootElement, RootType } from '../../../types/types.js'
+import { RootBERID } from '../constants.js'
+import { guarded } from '../decoder/DecodeResult.js'
+import { berDecode, berEncode } from '../index.js'
 
 describe('encoders/Ber/index', () => {
 	function roundTrip(res: Root, type: RootType): void {

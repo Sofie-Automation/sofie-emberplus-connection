@@ -1,57 +1,28 @@
-import * as Ber from '../../Ber'
+import * as Ber from '../../Ber/index.js'
 
-export {
-	RootBERID,
-	ParameterBERID,
-	CommandBERID,
-	NodeBERID,
-	ElementCollectionBERID,
-	StreamEntryBERID,
-	StreamEntriesBERID,
-	StringIntegerPairBERID,
-	StringIntegerCollectionBERID,
-	QualifiedParameterBERID,
-	QualifiedNodeBERID,
-	RootElementsBERID,
-	StreamDescriptionBERID,
-	MatrixBERID,
-	TargetBERID,
-	SourceBERID,
-	ConnectionBERID,
-	QualifiedMatrixBERID,
-	LabelBERID,
-	FunctionBERID,
-	QualifiedFunctionBERID,
-	FunctionArgumentBERID,
-	InvocationBERID,
-	InvocationResultBERID,
-	TemplateBERID,
-	QualifiedTemplateBERID,
-}
-
-const RootBERID = Ber.APPLICATION(0)
-const ParameterBERID = Ber.APPLICATION(1)
-const CommandBERID = Ber.APPLICATION(2)
-const NodeBERID = Ber.APPLICATION(3)
-const ElementCollectionBERID = Ber.APPLICATION(4)
-const StreamEntryBERID = Ber.APPLICATION(5)
-const StreamEntriesBERID = Ber.APPLICATION(6)
-const StringIntegerPairBERID = Ber.APPLICATION(7)
-const StringIntegerCollectionBERID = Ber.APPLICATION(8)
-const QualifiedParameterBERID = Ber.APPLICATION(9)
-const QualifiedNodeBERID = Ber.APPLICATION(10)
-const RootElementsBERID = Ber.APPLICATION(11)
-const StreamDescriptionBERID = Ber.APPLICATION(12)
-const MatrixBERID = Ber.APPLICATION(13)
-const TargetBERID = Ber.APPLICATION(14)
-const SourceBERID = Ber.APPLICATION(15)
-const ConnectionBERID = Ber.APPLICATION(16)
-const QualifiedMatrixBERID = Ber.APPLICATION(17)
-const LabelBERID = Ber.APPLICATION(18)
-const FunctionBERID = Ber.APPLICATION(19)
-const QualifiedFunctionBERID = Ber.APPLICATION(20)
-const FunctionArgumentBERID = Ber.APPLICATION(21)
-const InvocationBERID = Ber.APPLICATION(22)
-const InvocationResultBERID = Ber.APPLICATION(23)
-const TemplateBERID = Ber.APPLICATION(24)
-const QualifiedTemplateBERID = Ber.APPLICATION(25)
+export const RootBERID = Ber.APPLICATION(0)
+export const ParameterBERID = Ber.APPLICATION(1)
+export const CommandBERID = Ber.APPLICATION(2)
+export const NodeBERID = Ber.APPLICATION(3)
+export const ElementCollectionBERID = Ber.APPLICATION(4)
+export const StreamEntryBERID = Ber.APPLICATION(5)
+export const StreamEntriesBERID = Ber.APPLICATION(6)
+export const StringIntegerPairBERID = Ber.APPLICATION(7)
+export const StringIntegerCollectionBERID = Ber.APPLICATION(8)
+export const QualifiedParameterBERID = Ber.APPLICATION(9)
+export const QualifiedNodeBERID = Ber.APPLICATION(10)
+export const RootElementsBERID = Ber.APPLICATION(11)
+export const StreamDescriptionBERID = Ber.APPLICATION(12)
+export const MatrixBERID = Ber.APPLICATION(13)
+export const TargetBERID = Ber.APPLICATION(14)
+export const SourceBERID = Ber.APPLICATION(15)
+export const ConnectionBERID = Ber.APPLICATION(16)
+export const QualifiedMatrixBERID = Ber.APPLICATION(17)
+export const LabelBERID = Ber.APPLICATION(18)
+export const FunctionBERID = Ber.APPLICATION(19)
+export const QualifiedFunctionBERID = Ber.APPLICATION(20)
+export const FunctionArgumentBERID = Ber.APPLICATION(21)
+export const InvocationBERID = Ber.APPLICATION(22)
+export const InvocationResultBERID = Ber.APPLICATION(23)
+export const TemplateBERID = Ber.APPLICATION(24)
+export const QualifiedTemplateBERID = Ber.APPLICATION(25)

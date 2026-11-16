@@ -1,9 +1,11 @@
-import * as Ber from '../../../Ber'
-import { Connection, ConnectionOperation, ConnectionDisposition } from '../../../model/Connection'
-import { encodeConnection } from '../encoder/Connection'
-import { decodeConnection } from '../decoder/Connection'
-import { literal } from '../../../types/types'
-import { guarded } from '../decoder/DecodeResult'
+import { describe, expect, test } from 'vitest'
+
+import * as Ber from '../../../Ber/index.js'
+import { Connection, ConnectionDisposition, ConnectionOperation } from '../../../model/Connection.js'
+import { literal } from '../../../types/types.js'
+import { decodeConnection } from '../decoder/Connection.js'
+import { guarded } from '../decoder/DecodeResult.js'
+import { encodeConnection } from '../encoder/Connection.js'
 
 describe('encodings/ber/Connection', () => {
 	const connection = literal<Connection>({

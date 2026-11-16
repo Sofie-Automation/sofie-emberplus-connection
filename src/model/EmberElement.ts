@@ -1,9 +1,9 @@
-import { Parameter } from './Parameter'
-import { EmberFunction } from './EmberFunction'
-import { EmberNode } from './EmberNode'
-import { Matrix } from './Matrix'
-import { Command } from './Command'
-import { Template } from './Template'
+import { Command } from './Command.js'
+import { EmberFunction } from './EmberFunction.js'
+import { EmberNode } from './EmberNode.js'
+import { Matrix } from './Matrix.js'
+import { Parameter } from './Parameter.js'
+import { Template } from './Template.js'
 
 export { ElementType, EmberElement, EmberBaseElement, isEmberElement }
 
@@ -30,7 +30,7 @@ function isEmberElement(obj: unknown): obj is EmberElement {
 
 	if (!(typeof obj === 'object' && 'type' in obj)) return false
 
-	const { type } = obj as { type: unknown }
+	const { type } = obj
 
 	if (!type || !Object.values<ElementType>(ElementType).includes(type as any)) {
 		return false

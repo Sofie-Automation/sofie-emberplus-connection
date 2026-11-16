@@ -1,4 +1,6 @@
-import { ElementType, isEmberElement } from '../EmberElement'
+import { describe, expect, test } from 'vitest'
+
+import { ElementType, isEmberElement } from '../EmberElement.js'
 
 describe('model/EmberElement', () => {
 	describe('isEmberElement()', () => {

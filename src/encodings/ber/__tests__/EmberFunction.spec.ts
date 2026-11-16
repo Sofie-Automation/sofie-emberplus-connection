@@ -1,11 +1,13 @@
-/* eslint-disable jest/expect-expect */
-import * as Ber from '../../../Ber'
-import { EmberFunction, EmberFunctionImpl } from '../../../model/EmberFunction'
-import { encodeFunction } from '../encoder/EmberFunction'
-import { decodeFunctionContent } from '../decoder/EmberFunction'
-import { FunctionArgumentImpl } from '../../../model/FunctionArgument'
-import { ParameterType } from '../../../model/Parameter'
-import { guarded } from '../decoder/DecodeResult'
+import { describe, expect, test } from 'vitest'
+
+/* eslint-disable vitest/expect-expect */
+import * as Ber from '../../../Ber/index.js'
+import { EmberFunction, EmberFunctionImpl } from '../../../model/EmberFunction.js'
+import { FunctionArgumentImpl } from '../../../model/FunctionArgument.js'
+import { ParameterType } from '../../../model/Parameter.js'
+import { guarded } from '../decoder/DecodeResult.js'
+import { decodeFunctionContent } from '../decoder/EmberFunction.js'
+import { encodeFunction } from '../encoder/EmberFunction.js'
 
 describe('encodings/ber/EmberFunction', () => {
 	describe('roundtrips', () => {

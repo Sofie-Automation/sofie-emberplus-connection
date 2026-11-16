@@ -1,27 +1,27 @@
-import * as Ber from '../../../Ber'
+import * as Ber from '../../../Ber/index.js'
 import {
 	Command,
 	CommandType,
 	FieldFlags,
-	SubscribeImpl,
-	UnsubscribeImpl,
 	GetDirectoryImpl,
 	InvokeImpl,
-} from '../../../model/Command'
-import { Invocation } from '../../../model/Invocation'
-import { decodeInvocation } from './Invocation'
-import { CommandBERID } from '../constants'
+	SubscribeImpl,
+	UnsubscribeImpl,
+} from '../../../model/Command.js'
+import { Invocation } from '../../../model/Invocation.js'
+import { CommandBERID } from '../constants.js'
 import {
-	DecodeOptions,
-	defaultDecode,
-	DecodeResult,
-	unknownContext,
-	check,
-	makeResult,
 	appendErrors,
-	unexpected,
+	check,
+	DecodeOptions,
+	DecodeResult,
+	defaultDecode,
+	makeResult,
 	skipNext,
-} from './DecodeResult'
+	unexpected,
+	unknownContext,
+} from './DecodeResult.js'
+import { decodeInvocation } from './Invocation.js'
 
 export { decodeCommand }
 

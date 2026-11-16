@@ -7,7 +7,8 @@ process.env.DEBUG = 'emberplus-connection:*'
 // 'emberplus-connection:S101Codec' // for the S101Codec class
 // 'emberplus-connection:StreamManager' // for the StreamManager class
 
-const { EmberClient } = require('../dist/index')
+// A dynamic import, so that DEBUG is set before the debug module is loaded
+const { EmberClient } = await import('../dist/index.js')
 
 //-------------------------------------------------------------------------
 // Client

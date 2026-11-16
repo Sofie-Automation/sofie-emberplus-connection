@@ -28,7 +28,7 @@ class UnimplementedEmberTypeError extends Error {
 		this.name = this.constructor.name
 		const identifier = (tag & 0xc0) >> 6
 		const value = (tag & 0x1f).toString()
-		let tagStr = tag.toString()
+		let tagStr: string
 		if (identifier == 0) {
 			tagStr = '[UNIVERSAL ' + value + ']'
 		} else if (identifier == 1) {

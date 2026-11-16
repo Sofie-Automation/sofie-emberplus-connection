@@ -1,5 +1,7 @@
-import { isParameter, ParameterType, Parameter } from '../Parameter'
-import { ElementType } from '../EmberElement'
+import { describe, expect, test } from 'vitest'
+
+import { ElementType } from '../EmberElement.js'
+import { isParameter, Parameter, ParameterType } from '../Parameter.js'
 
 describe('model/Parameter', () => {
 	describe('isParameter()', () => {

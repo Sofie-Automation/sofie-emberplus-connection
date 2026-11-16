@@ -25,7 +25,8 @@ The current version is very losely based on the original library and Mr Gilles D
 Get Full tree:
 
 ```javascript
-const { EmberClient, StreamManager } = require('emberplus-connection')
+import { EmberClient, StreamManager } from 'emberplus-connection'
+
 const client = new EmberClient('10.9.8.7', 9000)
 client.on('error', (e) => {
 	console.log(e)
@@ -63,7 +64,7 @@ console.log(client.tree)
 Subsribe to changes
 
 ```javascript
-const { EmberClient, EmberLib } = require('emberplus-connection')
+import { EmberClient, EmberLib } from 'emberplus-connection'
 
 const client = new EmberClient(HOST, PORT)
 client
@@ -126,7 +127,7 @@ return client.disconnect().then(() => {
 ### Invoking Function
 
 ```javascript
-const { EmberClient, EmberLib } = require('node-emberplus')
+import { EmberClient, EmberLib } from 'emberplus-connection'
 
 const client = new EmberClient(HOST, PORT)
 await client.connect()
@@ -141,18 +142,18 @@ console.log('result', await req.response)
 ### Basic Server
 
 ```javascript
-const {
-	EmberServer,
-	NumberedTreeNodeImpl,
-	EmberNodeImpl,
-	ParameterImpl,
-	ParameterType,
+import {
 	EmberFunctionImpl,
-	ParameterAccess,
+	EmberNodeImpl,
+	EmberServer,
+	MatrixAddressingMode,
 	MatrixImpl,
 	MatrixType,
-	MatrixAddressingMode,
-} = require('emberplus-connection')
+	NumberedTreeNodeImpl,
+	ParameterAccess,
+	ParameterImpl,
+	ParameterType,
+} from 'emberplus-connection'
 
 const s = new EmberServer(9000) // start server on port 9000
 

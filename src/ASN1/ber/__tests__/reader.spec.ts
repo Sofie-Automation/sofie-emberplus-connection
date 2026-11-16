@@ -1,6 +1,8 @@
+import { expect, test } from 'vitest'
+
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
-import { Reader } from '../reader'
+import { Reader } from '../reader.js'
 
 test('read byte', () => {
 	const reader = new Reader(Buffer.from([0xde]))

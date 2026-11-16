@@ -1,13 +1,13 @@
-import { EventEmitter } from 'eventemitter3'
 import { Socket } from 'net'
+import { EventEmitter } from 'node:events'
 
-import { S101Codec } from '../../S101'
-import { berDecode } from '../../encodings/ber'
-import { ConnectionStatus } from '../Client/ConnectionStatus'
-import { normalizeError } from '../Lib/util'
-import { S101OversizedFrameError } from '../../Errors'
-import { Root } from '../../types'
-import { DecodeResult } from '../../encodings/ber/decoder/DecodeResult'
+import { DecodeResult } from '../../encodings/ber/decoder/DecodeResult.js'
+import { berDecode } from '../../encodings/ber/index.js'
+import { S101OversizedFrameError } from '../../Errors.js'
+import { S101Codec } from '../../S101/index.js'
+import { Root } from '../../types/index.js'
+import { ConnectionStatus } from '../Client/ConnectionStatus.js'
+import { normalizeError } from '../Lib/util.js'
 
 export type Request = any
 
@@ -176,7 +176,7 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 					this.socket.write(frames[i])
 				}
 				return true
-			} catch (e) {
+			} catch {
 				this.handleClose()
 				return false
 			}
@@ -195,7 +195,7 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 				this.keepaliveResponseWindowTimer = setTimeout(() => {
 					this.handleClose()
 				}, this.keepaliveMaxResponseTime)
-			} catch (e) {
+			} catch {
 				this.handleClose()
 			}
 		}
@@ -208,7 +208,7 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 		if (this.isConnected() && this.socket) {
 			try {
 				this.socket.write(this.codec.keepAliveResponse())
-			} catch (e) {
+			} catch {
 				this.handleClose()
 			}
 		}

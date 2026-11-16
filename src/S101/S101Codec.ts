@@ -1,9 +1,11 @@
-import { EventEmitter } from 'eventemitter3'
-import { SmartBuffer } from 'smart-buffer'
-import Debug from 'debug'
+import { EventEmitter } from 'node:events'
 import { format } from 'util'
-import { berDecode } from '../encodings/ber'
-import { S101OversizedFrameError } from '../Errors'
+
+import Debug from 'debug'
+import { SmartBuffer } from 'smart-buffer'
+
+import { berDecode } from '../encodings/ber/index.js'
+import { S101OversizedFrameError } from '../Errors.js'
 
 const debug = Debug('emberplus-connection:S101Codec')
 
@@ -144,7 +146,7 @@ export default class S101Codec extends EventEmitter<S101CodecEvents> {
 			}
 
 			this.escaped = false // Reset escaped state at frame end
-			this.inbuf.moveTo(0)
+			this.inbuf.readOffset = 0
 
 			// console.log('Buffer 00-16', this.inbuf.toString('hex').substring(0, 40))
 			this.handleFrame(this.inbuf)
@@ -221,13 +223,13 @@ export default class S101Codec extends EventEmitter<S101CodecEvents> {
 
 		if (appBytes < 2) {
 			debug('Warning: Frame missing Glow DTD version')
-			frame.skip(appBytes)
+			frame.readOffset += appBytes
 		} else {
-			frame.skip(1) // Skip minor version
-			frame.skip(1) // Skip major version
+			frame.readOffset += 1 // Skip minor version
+			frame.readOffset += 1 // Skip major version
 			appBytes -= 2
 			if (appBytes > 0) {
-				frame.skip(appBytes)
+				frame.readOffset += appBytes
 				debug('Warning: App bytes with unknown meaning left over')
 			}
 		}

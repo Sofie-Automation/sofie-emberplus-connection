@@ -1,51 +1,51 @@
-import * as Ber from '../../../Ber'
-import { EmberElement, ElementType } from '../../../model/EmberElement'
-import { NumberedTreeNode, TreeElement, QualifiedElementImpl, NumberedTreeNodeImpl } from '../../../model/Tree'
-import { decodeFunctionContent } from './EmberFunction'
-import { decodeNode } from './EmberNode'
-import { decodeParameter } from './Parameter'
-import { decodeTemplate } from './Template'
+import * as Ber from '../../../Ber/index.js'
+import { Command } from '../../../model/Command.js'
+import { ElementType, EmberElement } from '../../../model/EmberElement.js'
+import { EmberNodeImpl } from '../../../model/EmberNode.js'
+import { EmberFunctionImpl, ParameterImpl, ParameterType } from '../../../model/index.js'
+import { NumberedTreeNode, NumberedTreeNodeImpl, QualifiedElementImpl, TreeElement } from '../../../model/Tree.js'
+import { Collection, RootElement } from '../../../types/types.js'
 import {
-	QualifiedTemplateBERID,
-	QualifiedParameterBERID,
-	QualifiedNodeBERID,
-	QualifiedMatrixBERID,
-	QualifiedFunctionBERID,
 	CommandBERID,
-	FunctionBERID,
-	NodeBERID,
-	MatrixBERID,
-	ParameterBERID,
-	TemplateBERID,
-	RootElementsBERID,
 	ElementCollectionBERID,
-} from '../constants'
-import { decodeMatrix } from './Matrix'
-import { decodeCommand } from './Command'
-import { RootElement, Collection } from '../../../types/types'
+	FunctionBERID,
+	MatrixBERID,
+	NodeBERID,
+	ParameterBERID,
+	QualifiedFunctionBERID,
+	QualifiedMatrixBERID,
+	QualifiedNodeBERID,
+	QualifiedParameterBERID,
+	QualifiedTemplateBERID,
+	RootElementsBERID,
+	TemplateBERID,
+} from '../constants.js'
+import { decodeCommand } from './Command.js'
 import {
-	DecodeResult,
+	appendErrors,
+	check,
 	DecodeOptions,
+	DecodeResult,
 	defaultDecode,
 	makeResult,
-	unknownContext,
 	safeSet,
-	appendErrors,
-	unknownApplication,
-	check,
-	unexpected,
 	skipNext,
-} from './DecodeResult'
-import { Command } from '../../../model/Command'
-import { EmberNodeImpl } from '../../../model/EmberNode'
-import { ParameterImpl, ParameterType, EmberFunctionImpl } from '../../../model'
+	unexpected,
+	unknownApplication,
+	unknownContext,
+} from './DecodeResult.js'
+import { decodeFunctionContent } from './EmberFunction.js'
+import { decodeNode } from './EmberNode.js'
+import { decodeMatrix } from './Matrix.js'
+import { decodeParameter } from './Parameter.js'
+import { decodeTemplate } from './Template.js'
 
 export function decodeChildren(
 	reader: Ber.Reader,
 	options: DecodeOptions = defaultDecode
 ): DecodeResult<Collection<NumberedTreeNode<EmberElement>>> {
 	reader.readSequence(ElementCollectionBERID)
-	const kids = makeResult<Collection<NumberedTreeNode<EmberElement>>>({} as Collection<NumberedTreeNode<EmberElement>>)
+	const kids = makeResult<Collection<NumberedTreeNode<EmberElement>>>({})
 
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
@@ -83,7 +83,10 @@ export function decodeGenericElement(
 		return decodeTemplate(reader, isQualified)
 	} else if (tag === CommandBERID) {
 		const commandResult: DecodeResult<Command> = decodeCommand(reader, options)
-		return makeResult(new NumberedTreeNodeImpl(commandResult.value.number, commandResult.value), commandResult.errors)
+		return makeResult(
+			new NumberedTreeNodeImpl(commandResult.value.number, commandResult.value),
+			commandResult.errors
+		)
 	}
 
 	reader.readSequence(tag)

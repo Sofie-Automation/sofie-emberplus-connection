@@ -1,6 +1,8 @@
-import { Writer } from '../Writer'
-import { BERDataTypes } from '../BERDataTypes'
-import { Reader } from '../Reader'
+import { describe, expect, test } from 'vitest'
+
+import { BERDataTypes } from '../BERDataTypes.js'
+import { Reader } from '../Reader.js'
+import { Writer } from '../Writer.js'
 
 describe('BER Reader.readReal', () => {
 	// Regression for the infinite-loop DoS: a non-canonical REAL with an explicit

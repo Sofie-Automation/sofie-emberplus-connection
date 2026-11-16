@@ -1,30 +1,30 @@
-import * as Ber from '../../../Ber'
-import { Matrix, MatrixImpl, Connections, MatrixType, MatrixAddressingMode } from '../../../model/Matrix'
-import { EmberTreeNode, RelativeOID, Collection } from '../../../types/types'
-import { EmberElement } from '../../../model/EmberElement'
-import { decodeChildren } from './Tree'
-import { decodeConnection } from './Connection'
-import { decodeLabel } from './Label'
-import { MatrixBERID, QualifiedMatrixBERID, TargetBERID, SourceBERID } from '../constants'
+import * as Ber from '../../../Ber/index.js'
+import { EmberElement } from '../../../model/EmberElement.js'
+import { Label } from '../../../model/Label.js'
+import { Connections, Matrix, MatrixAddressingMode, MatrixImpl, MatrixType } from '../../../model/Matrix.js'
 import {
-	QualifiedElementImpl,
-	NumberedTreeNodeImpl,
-	TreeElement,
-	QualifiedElement,
 	NumberedTreeNode,
-} from '../../../model/Tree'
+	NumberedTreeNodeImpl,
+	QualifiedElement,
+	QualifiedElementImpl,
+	TreeElement,
+} from '../../../model/Tree.js'
+import { Collection, EmberTreeNode, RelativeOID } from '../../../types/types.js'
+import { MatrixBERID, QualifiedMatrixBERID, SourceBERID, TargetBERID } from '../constants.js'
+import { decodeConnection } from './Connection.js'
 import {
-	DecodeOptions,
-	defaultDecode,
-	DecodeResult,
 	appendErrors,
+	check,
+	DecodeOptions,
+	DecodeResult,
+	defaultDecode,
 	makeResult,
+	skipNext,
 	unexpected,
 	unknownContext,
-	check,
-	skipNext,
-} from './DecodeResult'
-import { Label } from '../../../model/Label'
+} from './DecodeResult.js'
+import { decodeLabel } from './Label.js'
+import { decodeChildren } from './Tree.js'
 
 export { decodeMatrix }
 
@@ -204,10 +204,7 @@ function decodeMatrixContents(reader: Ber.Reader, options: DecodeOptions = defau
 	)
 }
 
-function decodeTargets(
-	reader: Ber.Reader,
-	_options: DecodeOptions = defaultDecode // eslint-disable-line @typescript-eslint/no-unused-vars
-): DecodeResult<Array<number>> {
+function decodeTargets(reader: Ber.Reader, _options: DecodeOptions = defaultDecode): DecodeResult<Array<number>> {
 	const targets: Array<number> = []
 	const errors: Array<Error> = []
 	reader.readSequence(Ber.BERDataTypes.SEQUENCE)
@@ -226,10 +223,7 @@ function decodeTargets(
 	return makeResult(targets, errors)
 }
 
-function decodeSources(
-	reader: Ber.Reader,
-	_options: DecodeOptions = defaultDecode // eslint-disable-line @typescript-eslint/no-unused-vars
-): DecodeResult<Array<number>> {
+function decodeSources(reader: Ber.Reader, _options: DecodeOptions = defaultDecode): DecodeResult<Array<number>> {
 	const sources: Array<number> = []
 	const errors: Array<Error> = []
 	reader.readSequence(Ber.BERDataTypes.SEQUENCE)

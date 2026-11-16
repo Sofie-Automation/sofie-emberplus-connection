@@ -1,18 +1,18 @@
-import * as Ber from '../../../Ber'
-import { FunctionArgument, FunctionArgumentImpl } from '../../../model/FunctionArgument'
-import { ParameterType } from '../../../model/Parameter'
-import { FunctionArgumentBERID } from '../constants'
-import { readParameterType } from './Parameter'
+import * as Ber from '../../../Ber/index.js'
+import { FunctionArgument, FunctionArgumentImpl } from '../../../model/FunctionArgument.js'
+import { ParameterType } from '../../../model/Parameter.js'
+import { FunctionArgumentBERID } from '../constants.js'
 import {
-	DecodeOptions,
-	defaultDecode,
-	DecodeResult,
-	makeResult,
-	unknownContext,
-	check,
 	appendErrors,
+	check,
+	DecodeOptions,
+	DecodeResult,
+	defaultDecode,
+	makeResult,
 	skipNext,
-} from './DecodeResult'
+	unknownContext,
+} from './DecodeResult.js'
+import { readParameterType } from './Parameter.js'
 
 export { decodeFunctionArgument }
 

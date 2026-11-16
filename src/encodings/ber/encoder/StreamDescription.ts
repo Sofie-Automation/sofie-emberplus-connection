@@ -1,6 +1,6 @@
-import * as Ber from '../../../Ber'
-import { StreamDescription, StreamFormat } from '../../../model/StreamDescription'
-import { StreamDescriptionBERID } from '../constants'
+import * as Ber from '../../../Ber/index.js'
+import { StreamDescription, StreamFormat } from '../../../model/StreamDescription.js'
+import { StreamDescriptionBERID } from '../constants.js'
 
 export function encodeStreamDescription(description: StreamDescription, writer: Ber.Writer): void {
 	writer.startSequence(StreamDescriptionBERID)

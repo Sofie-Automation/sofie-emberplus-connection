@@ -1,10 +1,10 @@
-import { Reader } from '../ASN1/ber/reader'
-import Long from 'long'
-import { ASN1Error, UnimplementedEmberTypeError } from '../Errors'
-import { BERDataTypes } from './BERDataTypes'
-import { UNIVERSAL } from './functions'
-import { EmberTypedValue } from '../types/types'
-import { ParameterType } from '../model/Parameter'
+import { Reader } from '../ASN1/ber/reader.js'
+import { ASN1Error, UnimplementedEmberTypeError } from '../Errors.js'
+import { ParameterType } from '../model/Parameter.js'
+import { EmberTypedValue } from '../types/types.js'
+import { BERDataTypes } from './BERDataTypes.js'
+import { UNIVERSAL } from './functions.js'
+import { shl64 } from './uint64.js'
 
 export { ExtendedReader as Reader }
 
@@ -25,7 +25,7 @@ class ExtendedReader extends Reader {
 			throw new Error('No tag available')
 		}
 
-		switch (tag) {
+		switch (tag as BERDataTypes) {
 			case BERDataTypes.STRING:
 				return { type: ParameterType.String, value: this.readString(BERDataTypes.STRING) }
 			case BERDataTypes.INTEGER:
@@ -47,11 +47,7 @@ class ExtendedReader extends Reader {
 		}
 	}
 
-	readReal(tag?: number): number | null {
-		if (tag !== null) {
-			tag = UNIVERSAL(9)
-		}
-
+	readReal(): number | null {
 		const b = this.peek()
 		if (b === null) {
 			return null
@@ -94,38 +90,37 @@ class ExtendedReader extends Reader {
 			exponent = (exponent << 8) | buf.readUInt8(o++)
 		}
 
-		let significand = new Long(0, 0, true)
+		let significand = 0n
 		while (o < buf.length) {
-			significand = significand.shl(8).or(buf.readUInt8(o++))
+			significand = shl64(significand, 8n) | BigInt(buf.readUInt8(o++))
 		}
 
-		significand = significand.shl(significandShift)
+		significand = shl64(significand, BigInt(significandShift))
 
 		// A zero significand represents the value zero and cannot be normalised;
 		// the loops below would spin forever on it. Non-canonical / crafted REALs
 		// can reach this point, so guard explicitly.
-		if (significand.isZero()) {
+		if (significand === 0n) {
 			return sign < 0 ? -0 : 0
 		}
 
-		while (significand.and(Long.fromBits(0x00000000, 0x7ffff000, true)).eq(0)) {
-			significand = significand.shl(8)
+		while ((significand & 0x7fff_f000_0000_0000n) === 0n) {
+			significand = shl64(significand, 8n)
 		}
 
-		while (significand.and(Long.fromBits(0x00000000, 0x7ff00000, true)).eq(0)) {
-			significand = significand.shl(1)
+		while ((significand & 0x7ff0_0000_0000_0000n) === 0n) {
+			significand = shl64(significand, 1n)
 		}
 
-		significand = significand.and(Long.fromBits(0xffffffff, 0x000fffff, true))
+		significand = significand & 0x000f_ffff_ffff_ffffn
 
-		let bits = Long.fromNumber(exponent).add(1023).shl(52).or(significand)
+		let bits = shl64(BigInt(exponent) + 1023n, 52n) | significand
 		if (sign < 0) {
-			bits = bits.or(Long.fromBits(0x00000000, 0x80000000, true))
+			bits = bits | 0x8000_0000_0000_0000n
 		}
 
 		const fbuf = Buffer.alloc(8)
-		fbuf.writeUInt32LE(bits.getLowBitsUnsigned(), 0)
-		fbuf.writeUInt32LE(bits.getHighBitsUnsigned(), 4)
+		fbuf.writeBigUInt64LE(bits, 0)
 
 		return fbuf.readDoubleLE(0)
 	}

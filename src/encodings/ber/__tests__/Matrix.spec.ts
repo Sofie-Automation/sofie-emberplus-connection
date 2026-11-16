@@ -1,12 +1,14 @@
-/* eslint-disable jest/expect-expect */
-import * as Ber from '../../../Ber'
-import { NumberedTreeNode, QualifiedElement, QualifiedElementImpl, NumberedTreeNodeImpl } from '../../../model/Tree'
-import { Matrix, MatrixImpl, MatrixType, MatrixAddressingMode } from '../../../model/Matrix'
-import { encodeNumberedElement } from '../encoder/Tree'
-import { encodeQualifedElement } from '../encoder/Qualified'
-import { decodeMatrix } from '../decoder/Matrix'
-import { ConnectionOperation, ConnectionDisposition } from '../../../model/Connection'
-import { guarded } from '../decoder/DecodeResult'
+import { describe, expect, test } from 'vitest'
+
+/* eslint-disable vitest/expect-expect */
+import * as Ber from '../../../Ber/index.js'
+import { ConnectionDisposition, ConnectionOperation } from '../../../model/Connection.js'
+import { Matrix, MatrixAddressingMode, MatrixImpl, MatrixType } from '../../../model/Matrix.js'
+import { NumberedTreeNode, NumberedTreeNodeImpl, QualifiedElement, QualifiedElementImpl } from '../../../model/Tree.js'
+import { guarded } from '../decoder/DecodeResult.js'
+import { decodeMatrix } from '../decoder/Matrix.js'
+import { encodeQualifedElement } from '../encoder/Qualified.js'
+import { encodeNumberedElement } from '../encoder/Tree.js'
 
 describe('encodings/ber/Matrix', () => {
 	function roundtripMatrix(matrix: Matrix, qualified = false): void {

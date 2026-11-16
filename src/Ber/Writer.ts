@@ -1,10 +1,9 @@
-import Long from 'long'
-import { Writer, WriterOptions } from '../ASN1/ber/writer'
-
-import { CONTEXT, UNIVERSAL } from './functions'
-import { BERDataTypes } from './BERDataTypes'
-import { Parameter, ParameterType, isParameter } from '../model/Parameter'
-import { EmberValue, EmberTypedValue } from '../types/types'
+import { Writer, WriterOptions } from '../ASN1/ber/writer.js'
+import { isParameter, Parameter, ParameterType } from '../model/Parameter.js'
+import { EmberTypedValue, EmberValue } from '../types/types.js'
+import { BERDataTypes } from './BERDataTypes.js'
+import { CONTEXT, UNIVERSAL } from './functions.js'
+import { shl64 } from './uint64.js'
 
 export { ExtendedWriter as Writer }
 
@@ -43,30 +42,22 @@ class ExtendedWriter extends Writer {
 		const fbuf = Buffer.alloc(8)
 		fbuf.writeDoubleLE(value, 0)
 
-		const bits = Long.fromBits(fbuf.readUInt32LE(0), fbuf.readUInt32LE(4), true)
+		const bits = fbuf.readBigUInt64LE(0)
 
-		let significand = bits
-			.and(Long.fromBits(0xffffffff, 0x000fffff, true))
-			.or(Long.fromBits(0x00000000, 0x00100000, true))
+		let significand = (bits & 0x000f_ffff_ffff_ffffn) | 0x0010_0000_0000_0000n
 
-		let exponent: Long.Long | number = bits
-			.and(Long.fromBits(0x00000000, 0x7ff00000, true))
-			.shru(52)
-			.sub(1023)
-			.toSigned()
+		const exponent = Number((bits & 0x7ff0_0000_0000_0000n) >> 52n) - 1023
 
-		while (significand.and(0xff).toNumber() === 0) {
-			significand = significand.shru(8)
+		while ((significand & 0xffn) === 0n) {
+			significand = significand >> 8n
 		}
 
-		while (significand.and(0x01).toNumber() === 0) {
-			significand = significand.shru(1)
+		while ((significand & 0x01n) === 0n) {
+			significand = significand >> 1n
 		}
-
-		exponent = exponent.toNumber()
 
 		const shortExp = shorten(exponent)
-		const shortSig = shortenLong(significand)
+		const shortSig = shortenUint64(significand)
 
 		this.writeLength(1 + shortExp.size + shortSig.size)
 
@@ -78,10 +69,9 @@ class ExtendedWriter extends Writer {
 			shortExp.value <<= 8
 		}
 
-		const mask = Long.fromBits(0x00000000, 0xff000000, true)
 		for (let i = 0; i < shortSig.size; i++) {
-			this.writeByte(shortSig.value.and(mask).shru(56).toNumber())
-			shortSig.value = shortSig.value.shl(8)
+			this.writeByte(Number(shortSig.value >> 56n))
+			shortSig.value = shl64(shortSig.value, 8n)
 		}
 	}
 
@@ -93,7 +83,7 @@ class ExtendedWriter extends Writer {
 			value = arg1.value
 			tag = parameterTypetoBERTAG(arg1.type)
 		} else {
-			value = arg1 as EmberValue
+			value = arg1
 		}
 
 		if (tag === BERDataTypes.NULL && (value === null || value === undefined)) {
@@ -193,14 +183,13 @@ function shorten(value: number): { size: number; value: number } {
 	return { size, value }
 }
 
-function shortenLong(value: Long): { size: number; value: Long } {
-	const mask = Long.fromBits(0x00000000, 0xff800000, true)
-	value = value.toUnsigned()
+function shortenUint64(value: bigint): { size: number; value: bigint } {
+	const mask = 0xff80_0000_0000_0000n
 
 	let size = 8
-	while (value.and(mask).eq(0) || (value.and(mask).eq(mask) && size > 1)) {
+	while ((value & mask) === 0n || ((value & mask) === mask && size > 1)) {
 		size--
-		value = value.shl(8)
+		value = shl64(value, 8n)
 	}
 
 	return { size, value }

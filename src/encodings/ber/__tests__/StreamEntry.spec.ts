@@ -1,10 +1,12 @@
-import * as Ber from '../../../Ber'
-import { StreamEntry } from '../../../model/StreamEntry'
-import { encodeStreamEntry } from '../encoder/StreamEntry'
-import { decodeStreamEntry } from '../decoder/StreamEntry'
-import { ParameterType } from '../../../model/Parameter'
-import { literal } from '../../../types/types'
-import { guarded } from '../decoder/DecodeResult'
+import { describe, expect, test } from 'vitest'
+
+import * as Ber from '../../../Ber/index.js'
+import { ParameterType } from '../../../model/Parameter.js'
+import { StreamEntry } from '../../../model/StreamEntry.js'
+import { literal } from '../../../types/types.js'
+import { guarded } from '../decoder/DecodeResult.js'
+import { decodeStreamEntry } from '../decoder/StreamEntry.js'
+import { encodeStreamEntry } from '../encoder/StreamEntry.js'
 
 describe('encodings/ber/StreamEntry', () => {
 	test('write and read stream entry - integer', () => {

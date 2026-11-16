@@ -1,6 +1,6 @@
-import * as Ber from '../../../Ber'
-import { EmberFunction } from '../../../model/EmberFunction'
-import { encodeFunctionArgument } from './FunctionArgument'
+import * as Ber from '../../../Ber/index.js'
+import { EmberFunction } from '../../../model/EmberFunction.js'
+import { encodeFunctionArgument } from './FunctionArgument.js'
 
 export function encodeFunction(el: EmberFunction, writer: Ber.Writer): void {
 	// The function itself is a node, and then the contents are another node I think. This just encodes the contents:

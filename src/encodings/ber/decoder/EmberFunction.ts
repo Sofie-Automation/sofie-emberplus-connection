@@ -1,18 +1,18 @@
-import * as Ber from '../../../Ber'
+import * as Ber from '../../../Ber/index.js'
 // import { EmberFunction, EmberFunctionImpl } from '../../../model/EmberFunction'
-import { EmberFunction, EmberFunctionImpl } from '../../../model/EmberFunction'
-import { decodeFunctionArgument } from './FunctionArgument'
+import { EmberFunction, EmberFunctionImpl } from '../../../model/EmberFunction.js'
+import { FunctionArgument } from '../../../model/FunctionArgument.js'
+import { RelativeOID } from '../../../types/types.js'
 import {
-	DecodeOptions,
-	defaultDecode,
-	DecodeResult,
-	unknownContext,
-	makeResult,
 	appendErrors,
+	DecodeOptions,
+	DecodeResult,
+	defaultDecode,
+	makeResult,
 	skipNext,
-} from './DecodeResult'
-import { FunctionArgument } from '../../../model/FunctionArgument'
-import { RelativeOID } from '../../../types/types'
+	unknownContext,
+} from './DecodeResult.js'
+import { decodeFunctionArgument } from './FunctionArgument.js'
 
 export { decodeFunctionContent }
 

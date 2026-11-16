@@ -1,4 +1,4 @@
-import { EmberTypedValue } from '../types/types'
+import { EmberTypedValue } from '../types/types.js'
 
 export { StreamEntry }
 
@@ -8,5 +8,8 @@ interface StreamEntry {
 }
 
 export class StreamEntryImpl implements StreamEntry {
-	constructor(public identifier: number, public value: EmberTypedValue) {}
+	constructor(
+		public identifier: number,
+		public value: EmberTypedValue
+	) {}
 }

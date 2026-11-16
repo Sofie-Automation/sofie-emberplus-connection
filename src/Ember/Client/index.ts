@@ -1,44 +1,45 @@
-import {
-	EmberValue,
-	RootElement,
-	QualifiedElement,
-	TreeElement,
-	NumberedTreeNode,
-	EmberTypedValue,
-	RootType,
-	Collection,
-	Root,
-} from '../../types/types'
-import { InvocationResult } from '../../model/InvocationResult'
-import { Matrix } from '../../model/Matrix'
-import { EmberElement, ElementType } from '../../model/EmberElement'
+import { EventEmitter } from 'node:events'
+
+import { DecodeResult } from '../../encodings/ber/decoder/DecodeResult.js'
+import { berEncode } from '../../encodings/ber/index.js'
 import {
 	Command,
-	GetDirectoryImpl,
-	SubscribeImpl,
-	UnsubscribeImpl,
-	Unsubscribe,
-	GetDirectory,
 	CommandType,
 	FieldFlags,
-	Subscribe,
+	GetDirectory,
+	GetDirectoryImpl,
 	Invoke,
-} from '../../model/Command'
-import { Parameter } from '../../model/Parameter'
-import { Connection, ConnectionDisposition, ConnectionOperation } from '../../model/Connection'
-import { EmberNode } from '../../model/EmberNode'
-import { EventEmitter } from 'eventemitter3'
-import { S101Client } from '../Socket'
-import { getPath, assertQualifiedEmberNode, insertCommand, updateProps, isEmptyNode } from '../Lib/util'
-import { berEncode } from '../../encodings/ber'
-import { NumberedTreeNodeImpl } from '../../model/Tree'
-import { EmberFunction } from '../../model/EmberFunction'
-import { DecodeResult } from '../../encodings/ber/decoder/DecodeResult'
-import { StreamEntry } from '../../model/StreamEntry'
-import { StreamManager } from './StreamManager'
-import { ConnectionStatus } from './ConnectionStatus'
+	Subscribe,
+	SubscribeImpl,
+	Unsubscribe,
+	UnsubscribeImpl,
+} from '../../model/Command.js'
+import { Connection, ConnectionDisposition, ConnectionOperation } from '../../model/Connection.js'
+import { ElementType, EmberElement } from '../../model/EmberElement.js'
+import { EmberFunction } from '../../model/EmberFunction.js'
+import { EmberNode } from '../../model/EmberNode.js'
+import { InvocationResult } from '../../model/InvocationResult.js'
+import { Matrix } from '../../model/Matrix.js'
+import { Parameter } from '../../model/Parameter.js'
+import { StreamEntry } from '../../model/StreamEntry.js'
+import { NumberedTreeNodeImpl } from '../../model/Tree.js'
+import {
+	Collection,
+	EmberTypedValue,
+	EmberValue,
+	NumberedTreeNode,
+	QualifiedElement,
+	Root,
+	RootElement,
+	RootType,
+	TreeElement,
+} from '../../types/types.js'
+import { assertQualifiedEmberNode, getPath, insertCommand, isEmptyNode, updateProps } from '../Lib/util.js'
+import { S101Client } from '../Socket/index.js'
+import { ConnectionStatus } from './ConnectionStatus.js'
+import { StreamManager } from './StreamManager.js'
 
-export { ConnectionStatus } from './ConnectionStatus'
+export { ConnectionStatus } from './ConnectionStatus.js'
 
 export type RequestPromise<T> = Promise<RequestPromiseArguments<T>>
 export interface RequestPromiseArguments<T> {
@@ -161,7 +162,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		if (host) this.host = host
 		if (port) this.port = port
 
-		if (!this.host) return Promise.reject('No host specified')
+		if (!this.host) return Promise.reject(new Error('No host specified'))
 
 		this._client.address = this.host
 		this._client.port = this.port
@@ -380,7 +381,9 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		let curEmberNode
 		while ((curEmberNode = emberNodes.shift())) {
 			if (curEmberNode.children) {
-				emberNodes.push(...Object.values<NumberedTreeNode<EmberElement>>(curEmberNode.children).filter(canBeExpanded))
+				emberNodes.push(
+					...Object.values<NumberedTreeNode<EmberElement>>(curEmberNode.children).filter(canBeExpanded)
+				)
 			} else {
 				const req = await this.getDirectory(curEmberNode)
 				if (!req.response) continue
@@ -462,7 +465,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 			while (current) {
 				numbers.unshift(current.number)
 				if (current.parent && 'number' in current.parent) {
-					current = current.parent as NumberedTreeNode<EmberElement>
+					current = current.parent
 				} else {
 					current = undefined
 				}
@@ -639,7 +642,11 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 						} else {
 							const number = Number(rootElement.path)
 							// Insert node into root
-							this.tree[number] = new NumberedTreeNodeImpl(number, rootElement.contents, rootElement.children)
+							this.tree[number] = new NumberedTreeNodeImpl(
+								number,
+								rootElement.contents,
+								rootElement.children
+							)
 							changes.push({ path: undefined, node: this.tree[number] })
 							continue
 						}
@@ -752,7 +759,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		if (update.connections) {
 			if (matrix.connections) {
 				// matrix already has connections
-				for (const connection of Object.values<Connection>(update.connections as { [target: number]: Connection })) {
+				for (const connection of Object.values<Connection>(update.connections)) {
 					if (
 						!connection.disposition ||
 						!(

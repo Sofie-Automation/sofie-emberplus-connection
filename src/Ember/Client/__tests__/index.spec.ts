@@ -1,31 +1,36 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+// The vi.mock factory below returns this same module, so the test drives the instance the client uses
+// eslint-disable-next-line vitest/no-mocks-import
+import S101ClientMock from '../../../__mocks__/S101Client.js'
+import { DecodeResult } from '../../../encodings/ber/decoder/DecodeResult.js'
 import {
-	NumberedTreeNode,
 	EmberElement,
-	NumberedTreeNodeImpl,
 	EmberNodeImpl,
+	NumberedTreeNode,
+	NumberedTreeNodeImpl,
 	ParameterImpl,
 	ParameterType,
 	QualifiedElementImpl,
 	StreamFormat,
-} from '../../../model'
-import { Collection, EmberTypedValue, Root, RootElement } from '../../../types/types'
-import { EmberClient } from '../'
-import S101ClientMock from '../../../__mocks__/S101Client'
-import { DecodeResult } from '../../../encodings/ber/decoder/DecodeResult'
-import { StreamDescriptionImpl } from '../../../model/StreamDescription'
-import { StreamEntry, StreamEntryImpl } from '../../../model/StreamEntry'
+} from '../../../model/index.js'
+import { StreamDescriptionImpl } from '../../../model/StreamDescription.js'
+import { StreamEntry, StreamEntryImpl } from '../../../model/StreamEntry.js'
+import { Collection, EmberTypedValue, Root, RootElement } from '../../../types/types.js'
+import { EmberClient } from '../index.js'
+
 // import { EmberTreeNode, RootElement } from '../../../types/types'
 // import { ElementType, EmberElement } from '../../../model/EmberElement'
 // import { Parameter, ParameterType } from '../../../model/Parameter'
 
-jest.mock('../../Socket/S101Client', () => require('../../../__mocks__/S101Client'))
+vi.mock('../../Socket/S101Client.js', async () => import('../../../__mocks__/S101Client.js'))
 
 describe('client', () => {
-	const onSocketCreate = jest.fn()
-	const onConnection = jest.fn()
-	const onSocketClose = jest.fn()
-	const onSocketWrite = jest.fn()
-	const onConnectionChanged = jest.fn()
+	const onSocketCreate = vi.fn()
+	const onConnection = vi.fn()
+	const onSocketClose = vi.fn()
+	const onSocketWrite = vi.fn()
+	const onConnectionChanged = vi.fn()
 
 	function setupSocketMock() {
 		S101ClientMock.mockOnNextSocket((socket: any) => {
@@ -53,7 +58,7 @@ describe('client', () => {
 		onConnectionChanged.mockClear()
 
 		// Just a check to ensure that the unit tests cleaned up the socket after themselves:
-		// eslint-disable-next-line jest/no-standalone-expect
+		// eslint-disable-next-line vitest/no-standalone-expect
 		expect(sockets).toHaveLength(0)
 	})
 
@@ -161,7 +166,9 @@ describe('client', () => {
 
 			// Should have a response
 			const res = (await getRootDirReq.response) as NumberedTreeNodeImpl<EmberElement>
-			expect(res).toMatchObject(new NumberedTreeNodeImpl(1, new EmberNodeImpl('Ruby', undefined, undefined, true)))
+			expect(res).toMatchObject(
+				new NumberedTreeNodeImpl(1, new EmberNodeImpl('Ruby', undefined, undefined, true))
+			)
 		})
 	})
 
@@ -200,9 +207,16 @@ describe('client', () => {
 			expect(onSocketWrite).toHaveBeenCalledTimes(2)
 			socket.mockData({
 				value: {
-					1: new QualifiedElementImpl<EmberElement>('1.1', new EmberNodeImpl('Sums', undefined, undefined, false), {
-						1: new NumberedTreeNodeImpl(1, new ParameterImpl(ParameterType.Boolean, 'On', undefined, false)),
-					}) as Exclude<RootElement, NumberedTreeNode<EmberElement>>,
+					1: new QualifiedElementImpl<EmberElement>(
+						'1.1',
+						new EmberNodeImpl('Sums', undefined, undefined, false),
+						{
+							1: new NumberedTreeNodeImpl(
+								1,
+								new ParameterImpl(ParameterType.Boolean, 'On', undefined, false)
+							),
+						}
+					) as Exclude<RootElement, NumberedTreeNode<EmberElement>>,
 				},
 			})
 
@@ -284,7 +298,10 @@ describe('client', () => {
 			socket.mockData(
 				createQualifiedNodeResponse('1.1.1', new EmberNodeImpl('MAIN', undefined, undefined, false), {
 					1: new NumberedTreeNodeImpl(1, new ParameterImpl(ParameterType.Boolean, 'On', undefined, false)),
-					2: new NumberedTreeNodeImpl(2, new ParameterImpl(ParameterType.Boolean, 'Second', undefined, false)),
+					2: new NumberedTreeNodeImpl(
+						2,
+						new ParameterImpl(ParameterType.Boolean, 'Second', undefined, false)
+					),
 				})
 			)
 
@@ -385,9 +402,13 @@ describe('client', () => {
 			expect(onSocketWrite).toHaveBeenCalledTimes(2)
 			socket.mockData({
 				value: {
-					1: new QualifiedElementImpl<EmberElement>('1.1', new EmberNodeImpl('Sums', undefined, undefined, false), {
-						1: new NumberedTreeNodeImpl(1, new EmberNodeImpl('Empty', undefined, undefined, true)),
-					}) as Exclude<RootElement, NumberedTreeNode<EmberElement>>,
+					1: new QualifiedElementImpl<EmberElement>(
+						'1.1',
+						new EmberNodeImpl('Sums', undefined, undefined, false),
+						{
+							1: new NumberedTreeNodeImpl(1, new EmberNodeImpl('Empty', undefined, undefined, true)),
+						}
+					) as Exclude<RootElement, NumberedTreeNode<EmberElement>>,
 				},
 			})
 
@@ -423,8 +444,8 @@ describe('client', () => {
 	describe('Subscription behavior regressions', () => {
 		it('invokes all callbacks subscribed to the same path', async () => {
 			await runWithConnection(async (client, socket) => {
-				const cb1 = jest.fn()
-				const cb2 = jest.fn()
+				const cb1 = vi.fn()
+				const cb2 = vi.fn()
 
 				const parameter = new ParameterImpl(ParameterType.Integer, 'Level', undefined, 1)
 				const node = new NumberedTreeNodeImpl(1, parameter)
@@ -441,7 +462,11 @@ describe('client', () => {
 				await new Promise(setImmediate)
 
 				socket.mockData(
-					createQualifiedNodeResponse('1', new ParameterImpl(ParameterType.Integer, 'Level', undefined, 2), undefined)
+					createQualifiedNodeResponse(
+						'1',
+						new ParameterImpl(ParameterType.Integer, 'Level', undefined, 2),
+						undefined
+					)
 				)
 
 				await new Promise(setImmediate)
@@ -456,8 +481,8 @@ describe('client', () => {
 				const parameter = new ParameterImpl(ParameterType.Integer, 'Level', undefined, 1)
 				const node = new NumberedTreeNodeImpl(1, parameter)
 
-				await client.subscribe(node, jest.fn())
-				await client.subscribe(node, jest.fn())
+				await client.subscribe(node, vi.fn())
+				await client.subscribe(node, vi.fn())
 
 				//@ts-expect-error - private member
 				expect(client._subscriptions.filter((s) => s.path === '1')).toHaveLength(2)

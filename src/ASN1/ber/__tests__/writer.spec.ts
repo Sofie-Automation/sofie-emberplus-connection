@@ -1,6 +1,8 @@
+import { expect, test } from 'vitest'
+
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
-import { Writer } from '../writer'
+import { Writer } from '../writer.js'
 
 test('write byte', () => {
 	const writer = new Writer()
@@ -167,10 +169,9 @@ test('write buffer', () => {
 	const writer = new Writer()
 	// write some stuff to start with
 	writer.writeString('hello world')
-	let ber = writer.buffer
 	const buf = Buffer.from([0x04, 0x0b, 0x30, 0x09, 0x02, 0x01, 0x0f, 0x01, 0x01, 0xff, 0x01, 0x01, 0xff])
 	writer.writeBuffer(buf.slice(2, buf.length), 0x04)
-	ber = writer.buffer
+	const ber = writer.buffer
 
 	expect(ber).toBeInstanceOf(Buffer)
 	expect(ber.length).toEqual(26) // wrong length

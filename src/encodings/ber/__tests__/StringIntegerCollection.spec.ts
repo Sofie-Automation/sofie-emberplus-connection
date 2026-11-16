@@ -1,8 +1,10 @@
-import * as Ber from '../../../Ber'
-import { StringIntegerCollection } from '../../../types/types'
-import { encodeStringIntegerCollection } from '../encoder/StringIntegerCollection'
-import { decodeStringIntegerCollection } from '../decoder/StringIntegerCollection'
-import { guarded } from '../decoder/DecodeResult'
+import { describe, expect, test } from 'vitest'
+
+import * as Ber from '../../../Ber/index.js'
+import { StringIntegerCollection } from '../../../types/types.js'
+import { guarded } from '../decoder/DecodeResult.js'
+import { decodeStringIntegerCollection } from '../decoder/StringIntegerCollection.js'
+import { encodeStringIntegerCollection } from '../encoder/StringIntegerCollection.js'
 
 describe('encodings/ber/StringIntegerCollection', () => {
 	const sic: StringIntegerCollection = new Map<string, number>([

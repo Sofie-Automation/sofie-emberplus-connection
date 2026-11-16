@@ -1,4 +1,4 @@
-import { RelativeOID } from '../types/types'
+import { RelativeOID } from '../types/types.js'
 
 export { Label, LabelImpl }
 
@@ -11,5 +11,8 @@ interface Label {
 }
 
 class LabelImpl implements Label {
-	constructor(public basePath: string, public description: string) {}
+	constructor(
+		public basePath: string,
+		public description: string
+	) {}
 }

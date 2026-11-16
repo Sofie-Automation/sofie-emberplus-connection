@@ -1,10 +1,12 @@
 import net from 'net'
-import S101Socket from './S101Socket'
-import { ConnectionStatus } from '../Client/ConnectionStatus'
-import { normalizeError } from '../Lib/util'
-import { S101OversizedFrameError } from '../../Errors'
 
 import Debug from 'debug'
+
+import { S101OversizedFrameError } from '../../Errors.js'
+import { ConnectionStatus } from '../Client/ConnectionStatus.js'
+import { normalizeError } from '../Lib/util.js'
+import S101Socket from './S101Socket.js'
+
 const debug = Debug('emberplus-connection:S101Client')
 
 const DEFAULT_PORT = 9000
@@ -109,7 +111,10 @@ export default class S101Client extends S101Socket {
 
 			// sets timer to retry when needed
 			if (!this._connectionAttemptTimer) {
-				this._connectionAttemptTimer = setInterval(() => this._autoReconnectionAttempt(), this._autoReconnectDelay)
+				this._connectionAttemptTimer = setInterval(
+					() => this._autoReconnectionAttempt(),
+					this._autoReconnectDelay
+				)
 			}
 		})
 	}

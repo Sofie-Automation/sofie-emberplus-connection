@@ -1,4 +1,4 @@
-import { ParameterType } from './Parameter'
+import { ParameterType } from './Parameter.js'
 
 export { FunctionArgument, FunctionArgumentImpl }
 
@@ -14,5 +14,8 @@ interface FunctionArgument {
 }
 
 class FunctionArgumentImpl implements FunctionArgument {
-	constructor(public type: ParameterType, public name?: string) {}
+	constructor(
+		public type: ParameterType,
+		public name?: string
+	) {}
 }

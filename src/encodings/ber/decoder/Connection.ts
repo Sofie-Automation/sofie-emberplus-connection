@@ -1,17 +1,17 @@
-import * as Ber from '../../../Ber'
-import { Connection, ConnectionOperation, ConnectionDisposition, ConnectionImpl } from '../../../model/Connection'
-import { ConnectionBERID } from '../constants'
+import * as Ber from '../../../Ber/index.js'
+import { Connection, ConnectionDisposition, ConnectionImpl, ConnectionOperation } from '../../../model/Connection.js'
+import { ConnectionBERID } from '../constants.js'
 import {
-	DecodeOptions,
-	defaultDecode,
-	DecodeResult,
-	unknownContext,
-	check,
-	makeResult,
-	unexpected,
 	appendErrors,
+	check,
+	DecodeOptions,
+	DecodeResult,
+	defaultDecode,
+	makeResult,
 	skipNext,
-} from './DecodeResult'
+	unexpected,
+	unknownContext,
+} from './DecodeResult.js'
 
 export { decodeConnection }
 

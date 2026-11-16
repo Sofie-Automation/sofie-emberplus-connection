@@ -1,14 +1,14 @@
-import * as Ber from '../../../Ber'
-import { EmberElement, ElementType } from '../../../model/EmberElement'
-import { encodeTree } from './Tree'
-import { QualifiedElement } from '../../../types/types'
+import * as Ber from '../../../Ber/index.js'
+import { ElementType, EmberElement } from '../../../model/EmberElement.js'
+import { QualifiedElement } from '../../../types/types.js'
 import {
 	QualifiedFunctionBERID,
 	QualifiedMatrixBERID,
 	QualifiedNodeBERID,
 	QualifiedParameterBERID,
 	QualifiedTemplateBERID,
-} from '../constants'
+} from '../constants.js'
+import { encodeTree } from './Tree.js'
 
 // note, this no longer encodes a full element, only the start
 export function encodeQualifedElement(el: QualifiedElement<EmberElement>, writer: Ber.Writer): void {
