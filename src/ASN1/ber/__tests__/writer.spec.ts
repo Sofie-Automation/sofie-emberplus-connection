@@ -312,6 +312,26 @@ test.each([{ growthFactor: 0 }, { growthFactor: 0.5 }, { growthFactor: 1 }, { si
 	}
 )
 
+test.each([{ growthFactor: 1 }, { size: 0x10009 }])(
+	'grows before shifting a sequence into the 0x83 length form, options %j',
+	(options) => {
+		// 0x10000 content bytes need a 4-byte length, one more than startSequence reserves
+		const content = Buffer.alloc(0x10000, 0x61)
+		content[content.length - 1] = 0x7a
+		const writer = new Writer(options)
+		writer.startSequence(0x30)
+		writer.writeBuffer(content, 0x04)
+		writer.endSequence()
+
+		const ber = writer.buffer
+		const inner = 1 + 4 + content.length
+		expect(ber.length).toEqual(1 + 4 + inner)
+		expect(ber.slice(0, 5)).toEqual(Buffer.from([0x30, 0x83, inner >> 16, (inner >> 8) & 0xff, inner & 0xff]))
+		expect(ber.slice(5, 10)).toEqual(Buffer.from([0x04, 0x83, 0x01, 0x00, 0x00]))
+		expect(ber[ber.length - 1]).toEqual(0x7a)
+	}
+)
+
 test('write empty buffer', () => {
 	const writer = new Writer()
 	writer.writeBuffer(Buffer.alloc(0), 0x04)

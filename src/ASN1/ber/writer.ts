@@ -263,6 +263,9 @@ export class Writer {
 			this._buf[seq + 1] = len >> 8
 			this._buf[seq + 2] = len
 		} else if (len <= 0xffffff) {
+			// The 4-byte length needs one more byte than was reserved; the buffer
+			// can end exactly at _offset, and Buffer.copy silently truncates
+			this._ensure(1)
 			this._shift(start, len, 1)
 			this._buf[seq] = 0x83
 			this._buf[seq + 1] = len >> 16
