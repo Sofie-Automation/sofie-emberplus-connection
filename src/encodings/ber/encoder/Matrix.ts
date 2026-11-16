@@ -1,9 +1,9 @@
-import * as Ber from '../../../Ber'
-import { Matrix, MatrixType, MatrixAddressingMode } from '../../../model/Matrix'
-import { ElementType } from '../../../model/EmberElement'
-import { encodeLabel } from './Label'
-import { RelativeOID } from '../../../types/types'
-import { TargetBERID, SourceBERID } from '../constants'
+import * as Ber from '../../../Ber/index.js'
+import { Matrix, MatrixType, MatrixAddressingMode } from '../../../model/Matrix.js'
+import { ElementType } from '../../../model/EmberElement.js'
+import { encodeLabel } from './Label.js'
+import { RelativeOID } from '../../../types/types.js'
+import { TargetBERID, SourceBERID } from '../constants.js'
 
 export function encodeMatrix(matrix: Matrix, writer: Ber.Writer): void {
 	writer.startSequence(Ber.BERDataTypes.SET)

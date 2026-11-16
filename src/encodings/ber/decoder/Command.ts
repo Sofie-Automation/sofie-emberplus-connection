@@ -1,4 +1,4 @@
-import * as Ber from '../../../Ber'
+import * as Ber from '../../../Ber/index.js'
 import {
 	Command,
 	CommandType,
@@ -7,10 +7,10 @@ import {
 	UnsubscribeImpl,
 	GetDirectoryImpl,
 	InvokeImpl,
-} from '../../../model/Command'
-import { Invocation } from '../../../model/Invocation'
-import { decodeInvocation } from './Invocation'
-import { CommandBERID } from '../constants'
+} from '../../../model/Command.js'
+import { Invocation } from '../../../model/Invocation.js'
+import { decodeInvocation } from './Invocation.js'
+import { CommandBERID } from '../constants.js'
 import {
 	DecodeOptions,
 	defaultDecode,
@@ -21,7 +21,7 @@ import {
 	appendErrors,
 	unexpected,
 	skipNext,
-} from './DecodeResult'
+} from './DecodeResult.js'
 
 export { decodeCommand }
 

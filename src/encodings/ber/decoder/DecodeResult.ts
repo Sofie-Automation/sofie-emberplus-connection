@@ -1,5 +1,5 @@
-import { literal } from '../../../types/types'
-import * as Ber from '../../../Ber'
+import { literal } from '../../../types/types.js'
+import * as Ber from '../../../Ber/index.js'
 
 export {
 	DecodeOptions,

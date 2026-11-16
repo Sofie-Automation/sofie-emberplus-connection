@@ -1,4 +1,4 @@
-import { EmberTypedValue } from '../types/types'
+import { EmberTypedValue } from '../types/types.js'
 
 export { InvocationResult, InvocationResultImpl }
 

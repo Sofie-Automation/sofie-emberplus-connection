@@ -1,7 +1,7 @@
-import { EmberBaseElement, ElementType } from './EmberElement'
-import { Connection } from './Connection'
-import { Label } from './Label'
-import { RelativeOID } from '../types/types'
+import { EmberBaseElement, ElementType } from './EmberElement.js'
+import { Connection } from './Connection.js'
+import { Label } from './Label.js'
+import { RelativeOID } from '../types/types.js'
 
 export { Matrix, MatrixType, MatrixAddressingMode, Connections, MatrixImpl }
 

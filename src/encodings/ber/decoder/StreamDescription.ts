@@ -1,6 +1,6 @@
-import * as Ber from '../../../Ber'
-import { StreamDescription, StreamDescriptionImpl, StreamFormat } from '../../../model/StreamDescription'
-import { StreamDescriptionBERID } from '../constants'
+import * as Ber from '../../../Ber/index.js'
+import { StreamDescription, StreamDescriptionImpl, StreamFormat } from '../../../model/StreamDescription.js'
+import { StreamDescriptionBERID } from '../constants.js'
 import {
 	DecodeOptions,
 	defaultDecode,
@@ -11,7 +11,7 @@ import {
 	makeResult,
 	unexpected,
 	skipNext,
-} from './DecodeResult'
+} from './DecodeResult.js'
 
 export function decodeStreamDescription(
 	reader: Ber.Reader,

@@ -1,5 +1,5 @@
-import { ElementType, EmberBaseElement } from './EmberElement'
-import { Invocation } from './Invocation'
+import { ElementType, EmberBaseElement } from './EmberElement.js'
+import { Invocation } from './Invocation.js'
 
 export {
 	CommandType,

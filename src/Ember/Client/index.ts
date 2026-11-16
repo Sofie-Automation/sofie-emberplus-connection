@@ -8,10 +8,10 @@ import {
 	RootType,
 	Collection,
 	Root,
-} from '../../types/types'
-import { InvocationResult } from '../../model/InvocationResult'
-import { Matrix } from '../../model/Matrix'
-import { EmberElement, ElementType } from '../../model/EmberElement'
+} from '../../types/types.js'
+import { InvocationResult } from '../../model/InvocationResult.js'
+import { Matrix } from '../../model/Matrix.js'
+import { EmberElement, ElementType } from '../../model/EmberElement.js'
 import {
 	Command,
 	GetDirectoryImpl,
@@ -23,22 +23,22 @@ import {
 	FieldFlags,
 	Subscribe,
 	Invoke,
-} from '../../model/Command'
-import { Parameter } from '../../model/Parameter'
-import { Connection, ConnectionDisposition, ConnectionOperation } from '../../model/Connection'
-import { EmberNode } from '../../model/EmberNode'
+} from '../../model/Command.js'
+import { Parameter } from '../../model/Parameter.js'
+import { Connection, ConnectionDisposition, ConnectionOperation } from '../../model/Connection.js'
+import { EmberNode } from '../../model/EmberNode.js'
 import { EventEmitter } from 'eventemitter3'
-import { S101Client } from '../Socket'
-import { getPath, assertQualifiedEmberNode, insertCommand, updateProps, isEmptyNode } from '../Lib/util'
-import { berEncode } from '../../encodings/ber'
-import { NumberedTreeNodeImpl } from '../../model/Tree'
-import { EmberFunction } from '../../model/EmberFunction'
-import { DecodeResult } from '../../encodings/ber/decoder/DecodeResult'
-import { StreamEntry } from '../../model/StreamEntry'
-import { StreamManager } from './StreamManager'
-import { ConnectionStatus } from './ConnectionStatus'
+import { S101Client } from '../Socket/index.js'
+import { getPath, assertQualifiedEmberNode, insertCommand, updateProps, isEmptyNode } from '../Lib/util.js'
+import { berEncode } from '../../encodings/ber/index.js'
+import { NumberedTreeNodeImpl } from '../../model/Tree.js'
+import { EmberFunction } from '../../model/EmberFunction.js'
+import { DecodeResult } from '../../encodings/ber/decoder/DecodeResult.js'
+import { StreamEntry } from '../../model/StreamEntry.js'
+import { StreamManager } from './StreamManager.js'
+import { ConnectionStatus } from './ConnectionStatus.js'
 
-export { ConnectionStatus } from './ConnectionStatus'
+export { ConnectionStatus } from './ConnectionStatus.js'
 
 export type RequestPromise<T> = Promise<RequestPromiseArguments<T>>
 export interface RequestPromiseArguments<T> {

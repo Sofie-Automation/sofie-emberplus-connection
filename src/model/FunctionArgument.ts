@@ -1,4 +1,4 @@
-import { ParameterType } from './Parameter'
+import { ParameterType } from './Parameter.js'
 
 export { FunctionArgument, FunctionArgumentImpl }
 

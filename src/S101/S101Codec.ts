@@ -2,8 +2,8 @@ import { EventEmitter } from 'eventemitter3'
 import { SmartBuffer } from 'smart-buffer'
 import Debug from 'debug'
 import { format } from 'util'
-import { berDecode } from '../encodings/ber'
-import { S101OversizedFrameError } from '../Errors'
+import { berDecode } from '../encodings/ber/index.js'
+import { S101OversizedFrameError } from '../Errors.js'
 
 const debug = Debug('emberplus-connection:S101Codec')
 

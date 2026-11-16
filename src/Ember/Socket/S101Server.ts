@@ -1,6 +1,6 @@
 import { EventEmitter } from 'eventemitter3'
 import { Socket, createServer, Server } from 'net'
-import S101Socket from './S101Socket'
+import S101Socket from './S101Socket.js'
 
 export type S101ServerEvents = {
 	error: [Error]

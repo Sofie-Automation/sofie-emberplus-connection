@@ -1,9 +1,9 @@
-import * as Ber from '../../../Ber'
-import { Parameter, ParameterType, ParameterAccess } from '../../../model/Parameter'
-import { EmberValue } from '../../../types/types'
-import { encodeStringIntegerCollection } from './StringIntegerCollection'
-import { encodeStreamDescription } from './StreamDescription'
-// import { elementTypeToInt } from './Matrix'
+import * as Ber from '../../../Ber/index.js'
+import { Parameter, ParameterType, ParameterAccess } from '../../../model/Parameter.js'
+import { EmberValue } from '../../../types/types.js'
+import { encodeStringIntegerCollection } from './StringIntegerCollection.js'
+import { encodeStreamDescription } from './StreamDescription.js'
+// import { elementTypeToInt } from './Matrix.js'
 
 export function encodeParameter(parameter: Parameter, writer: Ber.Writer): void {
 	writer.startSequence(Ber.BERDataTypes.SET)

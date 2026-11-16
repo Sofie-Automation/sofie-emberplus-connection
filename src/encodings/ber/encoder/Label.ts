@@ -1,7 +1,7 @@
-import * as Ber from '../../../Ber'
-import { Label } from '../../../model/Label'
-import { InvalidEmberNode } from '../../../Errors'
-import { LabelBERID } from '../constants'
+import * as Ber from '../../../Ber/index.js'
+import { Label } from '../../../model/Label.js'
+import { InvalidEmberNode } from '../../../Errors.js'
+import { LabelBERID } from '../constants.js'
 
 export function encodeLabel(label: Label, writer: Ber.Writer): void {
 	writer.startSequence(LabelBERID)

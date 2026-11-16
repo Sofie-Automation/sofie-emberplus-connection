@@ -1,6 +1,6 @@
-import { Connection, ConnectionOperation, ConnectionDisposition } from '../../../model/Connection'
-import * as Ber from '../../../Ber'
-import { ConnectionBERID } from '../constants'
+import { Connection, ConnectionOperation, ConnectionDisposition } from '../../../model/Connection.js'
+import * as Ber from '../../../Ber/index.js'
+import { ConnectionBERID } from '../constants.js'
 
 export function encodeConnection(connection: Connection, writer: Ber.Writer): void {
 	writer.startSequence(ConnectionBERID)

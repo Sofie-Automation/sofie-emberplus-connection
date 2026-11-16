@@ -7,16 +7,16 @@ import {
 	ParameterType,
 	QualifiedElementImpl,
 	StreamFormat,
-} from '../../../model'
-import { Collection, EmberTypedValue, Root, RootElement } from '../../../types/types'
-import { EmberClient } from '../'
-import S101ClientMock from '../../../__mocks__/S101Client'
-import { DecodeResult } from '../../../encodings/ber/decoder/DecodeResult'
-import { StreamDescriptionImpl } from '../../../model/StreamDescription'
-import { StreamEntry, StreamEntryImpl } from '../../../model/StreamEntry'
-// import { EmberTreeNode, RootElement } from '../../../types/types'
-// import { ElementType, EmberElement } from '../../../model/EmberElement'
-// import { Parameter, ParameterType } from '../../../model/Parameter'
+} from '../../../model/index.js'
+import { Collection, EmberTypedValue, Root, RootElement } from '../../../types/types.js'
+import { EmberClient } from '../index.js'
+import S101ClientMock from '../../../__mocks__/S101Client.js'
+import { DecodeResult } from '../../../encodings/ber/decoder/DecodeResult.js'
+import { StreamDescriptionImpl } from '../../../model/StreamDescription.js'
+import { StreamEntry, StreamEntryImpl } from '../../../model/StreamEntry.js'
+// import { EmberTreeNode, RootElement } from '../../../types/types.js'
+// import { ElementType, EmberElement } from '../../../model/EmberElement.js'
+// import { Parameter, ParameterType } from '../../../model/Parameter.js'
 
 jest.mock('../../Socket/S101Client', () => require('../../../__mocks__/S101Client'))
 

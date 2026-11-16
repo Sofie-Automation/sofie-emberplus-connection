@@ -1,18 +1,18 @@
 /* eslint-disable jest/expect-expect */
-import * as Ber from '../../../Ber'
-import { Template, TemplateImpl } from '../../../model/Template'
-import { decodeTemplate } from '../decoder/Template'
+import * as Ber from '../../../Ber/index.js'
+import { Template, TemplateImpl } from '../../../model/Template.js'
+import { decodeTemplate } from '../decoder/Template.js'
 import {
 	NumberedTreeNodeImpl,
 	TreeElement,
 	NumberedTreeNode,
 	QualifiedElement,
 	QualifiedElementImpl,
-} from '../../../model/Tree'
-import { EmberNodeImpl } from '../../../model/EmberNode'
-import { encodeNumberedElement } from '../encoder/Tree'
-import { encodeQualifedElement } from '../encoder/Qualified'
-import { guarded } from '../decoder/DecodeResult'
+} from '../../../model/Tree.js'
+import { EmberNodeImpl } from '../../../model/EmberNode.js'
+import { encodeNumberedElement } from '../encoder/Tree.js'
+import { encodeQualifedElement } from '../encoder/Qualified.js'
+import { guarded } from '../decoder/DecodeResult.js'
 
 describe('encodings/ber/Template', () => {
 	function roundtripTemplate(tmpl: TreeElement<Template>, qualified = false): void {

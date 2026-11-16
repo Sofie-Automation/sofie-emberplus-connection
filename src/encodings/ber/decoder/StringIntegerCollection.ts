@@ -1,6 +1,6 @@
-import * as Ber from '../../../Ber'
-import { StringIntegerCollection } from '../../../types/types'
-import { StringIntegerCollectionBERID, StringIntegerPairBERID } from '../constants'
+import * as Ber from '../../../Ber/index.js'
+import { StringIntegerCollection } from '../../../types/types.js'
+import { StringIntegerCollectionBERID, StringIntegerPairBERID } from '../constants.js'
 import {
 	DecodeOptions,
 	defaultDecode,
@@ -10,7 +10,7 @@ import {
 	appendErrors,
 	check,
 	skipNext,
-} from './DecodeResult'
+} from './DecodeResult.js'
 
 export { decodeStringIntegerCollection }
 

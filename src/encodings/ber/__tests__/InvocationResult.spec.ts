@@ -1,10 +1,10 @@
-import * as Ber from '../../../Ber'
-import { InvocationResult } from '../../../model/InvocationResult'
-import { encodeInvocationResult } from '../encoder/InvocationResult'
-import { decodeInvocationResult } from '../decoder/InvocationResult'
-import { ParameterType } from '../../../model/Parameter'
-import { literal } from '../../../types/types'
-import { guarded } from '../decoder/DecodeResult'
+import * as Ber from '../../../Ber/index.js'
+import { InvocationResult } from '../../../model/InvocationResult.js'
+import { encodeInvocationResult } from '../encoder/InvocationResult.js'
+import { decodeInvocationResult } from '../decoder/InvocationResult.js'
+import { ParameterType } from '../../../model/Parameter.js'
+import { literal } from '../../../types/types.js'
+import { guarded } from '../decoder/DecodeResult.js'
 
 describe('encodings/ber/InvocationResult', () => {
 	const ir = literal<InvocationResult>({

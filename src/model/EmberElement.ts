@@ -1,9 +1,9 @@
-import { Parameter } from './Parameter'
-import { EmberFunction } from './EmberFunction'
-import { EmberNode } from './EmberNode'
-import { Matrix } from './Matrix'
-import { Command } from './Command'
-import { Template } from './Template'
+import { Parameter } from './Parameter.js'
+import { EmberFunction } from './EmberFunction.js'
+import { EmberNode } from './EmberNode.js'
+import { Matrix } from './Matrix.js'
+import { Command } from './Command.js'
+import { Template } from './Template.js'
 
 export { ElementType, EmberElement, EmberBaseElement, isEmberElement }
 

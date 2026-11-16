@@ -1,5 +1,5 @@
-import { EmberBaseElement, ElementType } from './EmberElement'
-import { RelativeOID } from '../types/types'
+import { EmberBaseElement, ElementType } from './EmberElement.js'
+import { RelativeOID } from '../types/types.js'
 
 export { EmberNode, EmberNodeImpl }
 

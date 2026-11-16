@@ -1,4 +1,4 @@
-import { ElementType, isEmberElement } from '../EmberElement'
+import { ElementType, isEmberElement } from '../EmberElement.js'
 
 describe('model/EmberElement', () => {
 	describe('isEmberElement()', () => {

@@ -1,4 +1,4 @@
-import { RelativeOID } from '../types/types'
+import { RelativeOID } from '../types/types.js'
 
 export { Label, LabelImpl }
 

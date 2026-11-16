@@ -1,7 +1,7 @@
-import * as Ber from '../../../Ber'
-import { StreamEntry, StreamEntryImpl } from '../../../model/StreamEntry'
-import { EmberTypedValue, literal } from '../../../types/types'
-import { StreamEntryBERID, StreamEntriesBERID } from '../constants'
+import * as Ber from '../../../Ber/index.js'
+import { StreamEntry, StreamEntryImpl } from '../../../model/StreamEntry.js'
+import { EmberTypedValue, literal } from '../../../types/types.js'
+import { StreamEntryBERID, StreamEntriesBERID } from '../constants.js'
 import {
 	DecodeResult,
 	makeResult,
@@ -11,8 +11,8 @@ import {
 	safeSet,
 	check,
 	skipNext,
-} from './DecodeResult'
-import { ParameterType } from '../../../model/Parameter'
+} from './DecodeResult.js'
+import { ParameterType } from '../../../model/Parameter.js'
 
 export { decodeStreamEntry, decodeStreamEntries }
 

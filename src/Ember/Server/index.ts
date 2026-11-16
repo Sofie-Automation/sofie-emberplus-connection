@@ -1,5 +1,5 @@
 import { EventEmitter } from 'eventemitter3'
-import { S101Server } from '../Socket/S101Server'
+import { S101Server } from '../Socket/S101Server.js'
 import {
 	EmberElement,
 	NumberedTreeNodeImpl,
@@ -12,7 +12,7 @@ import {
 	Matrix,
 	Connections,
 	EmberNodeImpl,
-} from '../../model'
+} from '../../model/index.js'
 import {
 	Collection,
 	RootElement,
@@ -21,14 +21,14 @@ import {
 	RootType,
 	TreeElement,
 	EmberValue,
-} from '../../types/types'
-import { DecodeResult } from '../../encodings/ber/decoder/DecodeResult'
-import { toQualifiedEmberNode } from '../Lib/util'
-import { berEncode } from '../../encodings/ber'
-import { Command, CommandType, FieldFlags, GetDirectory, Invoke } from '../../model/Command'
-import { Connection, ConnectionOperation, ConnectionImpl } from '../../model/Connection'
-import { InvocationResultImpl } from '../../model/InvocationResult'
-import S101Socket from '../Socket/S101Socket'
+} from '../../types/types.js'
+import { DecodeResult } from '../../encodings/ber/decoder/DecodeResult.js'
+import { toQualifiedEmberNode } from '../Lib/util.js'
+import { berEncode } from '../../encodings/ber/index.js'
+import { Command, CommandType, FieldFlags, GetDirectory, Invoke } from '../../model/Command.js'
+import { Connection, ConnectionOperation, ConnectionImpl } from '../../model/Connection.js'
+import { InvocationResultImpl } from '../../model/InvocationResult.js'
+import S101Socket from '../Socket/S101Socket.js'
 
 export type EmberServerEvents = {
 	error: [Error]

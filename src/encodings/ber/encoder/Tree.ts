@@ -1,13 +1,13 @@
-import { NumberedTreeNode, TreeElement, QualifiedElement } from '../../../types/types'
-import * as Ber from '../../../Ber'
-import { ElementType, EmberElement } from '../../../model/EmberElement'
-import { encodeEmberElement } from './EmberElement'
-import { encodeCommand } from './Command'
-import { encodeTemplate } from './Template'
-import { Template } from '../../../model/Template'
-import { Matrix } from '../../../model/Matrix'
-import { encodeConnection } from './Connection'
-import { encodeTarget, encodeSource } from './Matrix'
+import { NumberedTreeNode, TreeElement, QualifiedElement } from '../../../types/types.js'
+import * as Ber from '../../../Ber/index.js'
+import { ElementType, EmberElement } from '../../../model/EmberElement.js'
+import { encodeEmberElement } from './EmberElement.js'
+import { encodeCommand } from './Command.js'
+import { encodeTemplate } from './Template.js'
+import { Template } from '../../../model/Template.js'
+import { Matrix } from '../../../model/Matrix.js'
+import { encodeConnection } from './Connection.js'
+import { encodeTarget, encodeSource } from './Matrix.js'
 import {
 	MatrixBERID,
 	FunctionBERID,
@@ -15,8 +15,8 @@ import {
 	ParameterBERID,
 	TemplateBERID,
 	ElementCollectionBERID,
-} from '../constants'
-import { Connection } from '../../../model/Connection'
+} from '../constants.js'
+import { Connection } from '../../../model/Connection.js'
 
 export function encodeNumberedElement(el: NumberedTreeNode<EmberElement>, writer: Ber.Writer): void {
 	if (el.contents.type === ElementType.Command) {

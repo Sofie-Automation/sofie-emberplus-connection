@@ -1,6 +1,6 @@
-import { Invocation } from '../../../model/Invocation'
-import * as Ber from '../../../Ber'
-import { InvocationBERID } from '../constants'
+import { Invocation } from '../../../model/Invocation.js'
+import * as Ber from '../../../Ber/index.js'
+import { InvocationBERID } from '../constants.js'
 
 export function encodeInvocation(invocation: Invocation, writer: Ber.Writer): void {
 	writer.startSequence(InvocationBERID)

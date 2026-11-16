@@ -1,5 +1,5 @@
-import * as Ber from '../../../Ber'
-import { EmberNode } from '../../../model/EmberNode'
+import * as Ber from '../../../Ber/index.js'
+import { EmberNode } from '../../../model/EmberNode.js'
 
 export function encodeNode(node: EmberNode, writer: Ber.Writer): void {
 	writer.startSequence(Ber.BERDataTypes.SET)

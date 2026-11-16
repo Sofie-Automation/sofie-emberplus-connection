@@ -1,6 +1,6 @@
-import * as Ber from '../../../Ber'
-import { Template } from '../../../model/Template'
-import { encodeNumberedElement } from './Tree'
+import * as Ber from '../../../Ber/index.js'
+import { Template } from '../../../model/Template.js'
+import { encodeNumberedElement } from './Tree.js'
 
 export function encodeTemplate(template: Template, writer: Ber.Writer): void {
 	if (template.element != null) {

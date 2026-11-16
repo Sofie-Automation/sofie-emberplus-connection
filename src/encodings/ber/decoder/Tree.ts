@@ -1,10 +1,10 @@
-import * as Ber from '../../../Ber'
-import { EmberElement, ElementType } from '../../../model/EmberElement'
-import { NumberedTreeNode, TreeElement, QualifiedElementImpl, NumberedTreeNodeImpl } from '../../../model/Tree'
-import { decodeFunctionContent } from './EmberFunction'
-import { decodeNode } from './EmberNode'
-import { decodeParameter } from './Parameter'
-import { decodeTemplate } from './Template'
+import * as Ber from '../../../Ber/index.js'
+import { EmberElement, ElementType } from '../../../model/EmberElement.js'
+import { NumberedTreeNode, TreeElement, QualifiedElementImpl, NumberedTreeNodeImpl } from '../../../model/Tree.js'
+import { decodeFunctionContent } from './EmberFunction.js'
+import { decodeNode } from './EmberNode.js'
+import { decodeParameter } from './Parameter.js'
+import { decodeTemplate } from './Template.js'
 import {
 	QualifiedTemplateBERID,
 	QualifiedParameterBERID,
@@ -19,10 +19,10 @@ import {
 	TemplateBERID,
 	RootElementsBERID,
 	ElementCollectionBERID,
-} from '../constants'
-import { decodeMatrix } from './Matrix'
-import { decodeCommand } from './Command'
-import { RootElement, Collection } from '../../../types/types'
+} from '../constants.js'
+import { decodeMatrix } from './Matrix.js'
+import { decodeCommand } from './Command.js'
+import { RootElement, Collection } from '../../../types/types.js'
 import {
 	DecodeResult,
 	DecodeOptions,
@@ -35,10 +35,10 @@ import {
 	check,
 	unexpected,
 	skipNext,
-} from './DecodeResult'
-import { Command } from '../../../model/Command'
-import { EmberNodeImpl } from '../../../model/EmberNode'
-import { ParameterImpl, ParameterType, EmberFunctionImpl } from '../../../model'
+} from './DecodeResult.js'
+import { Command } from '../../../model/Command.js'
+import { EmberNodeImpl } from '../../../model/EmberNode.js'
+import { ParameterImpl, ParameterType, EmberFunctionImpl } from '../../../model/index.js'
 
 export function decodeChildren(
 	reader: Ber.Reader,

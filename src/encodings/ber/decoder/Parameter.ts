@@ -1,7 +1,7 @@
-import * as Ber from '../../../Ber'
-import { Parameter, ParameterType, ParameterImpl, ParameterAccess } from '../../../model/Parameter'
-import { decodeStreamDescription } from './StreamDescription'
-import { decodeStringIntegerCollection } from './StringIntegerCollection'
+import * as Ber from '../../../Ber/index.js'
+import { Parameter, ParameterType, ParameterImpl, ParameterAccess } from '../../../model/Parameter.js'
+import { decodeStreamDescription } from './StreamDescription.js'
+import { decodeStringIntegerCollection } from './StringIntegerCollection.js'
 import {
 	DecodeOptions,
 	defaultDecode,
@@ -12,9 +12,9 @@ import {
 	appendErrors,
 	unknownContext,
 	skipNext,
-} from './DecodeResult'
-import { EmberValue, StringIntegerCollection, RelativeOID } from '../../../types/types'
-import { StreamDescription } from '../../../model/StreamDescription'
+} from './DecodeResult.js'
+import { EmberValue, StringIntegerCollection, RelativeOID } from '../../../types/types.js'
+import { StreamDescription } from '../../../model/StreamDescription.js'
 
 export { decodeParameter, readParameterType }
 

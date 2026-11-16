@@ -1,6 +1,6 @@
-import * as Ber from '../../../Ber'
-import { StringIntegerCollection } from '../../../types/types'
-import { StringIntegerCollectionBERID, StringIntegerPairBERID } from '../constants'
+import * as Ber from '../../../Ber/index.js'
+import { StringIntegerCollection } from '../../../types/types.js'
+import { StringIntegerCollectionBERID, StringIntegerPairBERID } from '../constants.js'
 
 export function encodeStringIntegerCollection(collection: StringIntegerCollection, writer: Ber.Writer): void {
 	writer.startSequence(StringIntegerCollectionBERID)

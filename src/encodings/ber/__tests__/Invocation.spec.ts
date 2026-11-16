@@ -1,10 +1,10 @@
-import * as Ber from '../../../Ber'
-import { Invocation } from '../../../model/Invocation'
-import { encodeInvocation } from '../encoder/Invocation'
-import { decodeInvocation } from '../decoder/Invocation'
-import { ParameterType } from '../../../model/Parameter'
-import { literal } from '../../../types/types'
-import { guarded } from '../decoder/DecodeResult'
+import * as Ber from '../../../Ber/index.js'
+import { Invocation } from '../../../model/Invocation.js'
+import { encodeInvocation } from '../encoder/Invocation.js'
+import { decodeInvocation } from '../decoder/Invocation.js'
+import { ParameterType } from '../../../model/Parameter.js'
+import { literal } from '../../../types/types.js'
+import { guarded } from '../decoder/DecodeResult.js'
 
 describe('encodings/ber/Invocation', () => {
 	const iv = literal<Invocation>({

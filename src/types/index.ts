@@ -8,7 +8,7 @@ import {
 	StringIntegerCollection,
 	RootType,
 	RelativeOID,
-} from './types'
+} from './types.js'
 
 export {
 	EmberTreeNode,

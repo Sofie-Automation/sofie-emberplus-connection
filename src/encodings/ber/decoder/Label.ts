@@ -1,7 +1,7 @@
-import * as Ber from '../../../Ber'
-import { Label, LabelImpl } from '../../../model/Label'
-import { LabelBERID } from '../constants'
-import { DecodeOptions, defaultDecode, DecodeResult, unknownContext, check, makeResult, skipNext } from './DecodeResult'
+import * as Ber from '../../../Ber/index.js'
+import { Label, LabelImpl } from '../../../model/Label.js'
+import { LabelBERID } from '../constants.js'
+import { DecodeOptions, defaultDecode, DecodeResult, unknownContext, check, makeResult, skipNext } from './DecodeResult.js'
 
 export { decodeLabel }
 

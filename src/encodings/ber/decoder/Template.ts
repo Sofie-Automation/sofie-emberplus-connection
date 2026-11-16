@@ -1,13 +1,13 @@
-import * as Ber from '../../../Ber'
-import { Template, TemplateImpl } from '../../../model/Template'
-import { Parameter } from '../../../model/Parameter'
-import { Matrix } from '../../../model/Matrix'
-import { EmberFunction } from '../../../model/EmberFunction'
-import { EmberNode } from '../../../model/EmberNode'
-import { EmberTreeNode, TreeElement } from '../../../types/types'
-import { TemplateBERID, QualifiedTemplateBERID } from '../constants'
-import { decodeGenericElement } from './Tree'
-import { NumberedTreeNodeImpl, QualifiedElementImpl } from '../../../model/Tree'
+import * as Ber from '../../../Ber/index.js'
+import { Template, TemplateImpl } from '../../../model/Template.js'
+import { Parameter } from '../../../model/Parameter.js'
+import { Matrix } from '../../../model/Matrix.js'
+import { EmberFunction } from '../../../model/EmberFunction.js'
+import { EmberNode } from '../../../model/EmberNode.js'
+import { EmberTreeNode, TreeElement } from '../../../types/types.js'
+import { TemplateBERID, QualifiedTemplateBERID } from '../constants.js'
+import { decodeGenericElement } from './Tree.js'
+import { NumberedTreeNodeImpl, QualifiedElementImpl } from '../../../model/Tree.js'
 import {
 	DecodeOptions,
 	defaultDecode,
@@ -17,7 +17,7 @@ import {
 	check,
 	makeResult,
 	skipNext,
-} from './DecodeResult'
+} from './DecodeResult.js'
 
 export function decodeTemplate(
 	reader: Ber.Reader,

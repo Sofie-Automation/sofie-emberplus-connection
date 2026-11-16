@@ -1,6 +1,6 @@
-import * as Ber from '../../../Ber'
-import { StreamEntry } from '../../../model/StreamEntry'
-import { StreamEntryBERID } from '../constants'
+import * as Ber from '../../../Ber/index.js'
+import { StreamEntry } from '../../../model/StreamEntry.js'
+import { StreamEntryBERID } from '../constants.js'
 
 export function encodeStreamEntry(entry: StreamEntry, ber: Ber.Writer): void {
 	ber.startSequence(StreamEntryBERID)

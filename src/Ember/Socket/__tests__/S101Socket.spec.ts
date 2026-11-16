@@ -1,10 +1,10 @@
 // Import the package barrel first: S101Socket has a circular dependency on it
 // (for berDecode), so loading it directly first leaves the class undefined.
-import '../../..'
+import '../../../index.js'
 import { EventEmitter } from 'events'
 import type { Socket } from 'net'
-import S101Socket from '../S101Socket'
-import { ConnectionStatus } from '../../Client/ConnectionStatus'
+import S101Socket from '../S101Socket.js'
+import { ConnectionStatus } from '../../Client/ConnectionStatus.js'
 
 // Minimal stand-in for net.Socket: enough to drive the 'data' path and observe destroy().
 class FakeSocket extends EventEmitter {

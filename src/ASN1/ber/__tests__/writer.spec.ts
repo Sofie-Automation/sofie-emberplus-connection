@@ -1,6 +1,6 @@
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
-import { Writer } from '../writer'
+import { Writer } from '../writer.js'
 
 test('write byte', () => {
 	const writer = new Writer()

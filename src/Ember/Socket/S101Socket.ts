@@ -1,13 +1,13 @@
 import { EventEmitter } from 'eventemitter3'
 import { Socket } from 'net'
 
-import { S101Codec } from '../../S101'
-import { berDecode } from '../../encodings/ber'
-import { ConnectionStatus } from '../Client/ConnectionStatus'
-import { normalizeError } from '../Lib/util'
-import { S101OversizedFrameError } from '../../Errors'
-import { Root } from '../../types'
-import { DecodeResult } from '../../encodings/ber/decoder/DecodeResult'
+import { S101Codec } from '../../S101/index.js'
+import { berDecode } from '../../encodings/ber/index.js'
+import { ConnectionStatus } from '../Client/ConnectionStatus.js'
+import { normalizeError } from '../Lib/util.js'
+import { S101OversizedFrameError } from '../../Errors.js'
+import { Root } from '../../types/index.js'
+import { DecodeResult } from '../../encodings/ber/decoder/DecodeResult.js'
 
 export type Request = any
 

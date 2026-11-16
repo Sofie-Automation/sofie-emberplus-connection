@@ -1,5 +1,5 @@
-import { Writer } from '../Writer'
-import { BERDataTypes } from '../BERDataTypes'
+import { Writer } from '../Writer.js'
+import { BERDataTypes } from '../BERDataTypes.js'
 
 describe('BER', () => {
 	describe('Writer', () => {

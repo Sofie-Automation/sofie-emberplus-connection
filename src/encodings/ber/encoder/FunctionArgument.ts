@@ -1,8 +1,8 @@
-import { FunctionArgument } from '../../../model/FunctionArgument'
-import * as Ber from '../../../Ber'
-import { InvalidEmberNode } from '../../../Errors'
-import { ParameterType } from '../../../model/Parameter'
-import { FunctionArgumentBERID } from '../constants'
+import { FunctionArgument } from '../../../model/FunctionArgument.js'
+import * as Ber from '../../../Ber/index.js'
+import { InvalidEmberNode } from '../../../Errors.js'
+import { ParameterType } from '../../../model/Parameter.js'
+import { FunctionArgumentBERID } from '../constants.js'
 
 export function encodeFunctionArgument(arg: FunctionArgument, writer: Ber.Writer): void {
 	writer.startSequence(FunctionArgumentBERID)

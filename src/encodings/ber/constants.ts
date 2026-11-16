@@ -1,4 +1,4 @@
-import * as Ber from '../../Ber'
+import * as Ber from '../../Ber/index.js'
 
 export {
 	RootBERID,

@@ -1,6 +1,6 @@
-import { Reader } from './Reader'
-import { Writer } from './Writer'
-import { BERDataTypes } from './BERDataTypes'
-import { APPLICATION, CONTEXT, UNIVERSAL } from './functions'
+import { Reader } from './Reader.js'
+import { Writer } from './Writer.js'
+import { BERDataTypes } from './BERDataTypes.js'
+import { APPLICATION, CONTEXT, UNIVERSAL } from './functions.js'
 
 export { Reader, Writer, BERDataTypes, APPLICATION, CONTEXT, UNIVERSAL }

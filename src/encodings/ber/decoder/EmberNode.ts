@@ -1,7 +1,7 @@
-import * as Ber from '../../../Ber'
-import { EmberNode, EmberNodeImpl } from '../../../model/EmberNode'
-import { DecodeOptions, defaultDecode, DecodeResult, unknownContext, makeResult, skipNext } from './DecodeResult'
-import { RelativeOID } from '../../../types/types'
+import * as Ber from '../../../Ber/index.js'
+import { EmberNode, EmberNodeImpl } from '../../../model/EmberNode.js'
+import { DecodeOptions, defaultDecode, DecodeResult, unknownContext, makeResult, skipNext } from './DecodeResult.js'
+import { RelativeOID } from '../../../types/types.js'
 
 export { decodeNode }
 

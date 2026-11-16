@@ -1,11 +1,11 @@
-import { EmberClient, EmberClientEvents } from './Ember/Client/index'
-import { EmberLib } from './Ember/Lib/index'
-import { EmberServer, EmberServerEvents } from './Ember/Server/index'
-import { S101Codec } from './S101/index'
-import { S101Client } from './Ember/Socket/index'
-// import { EmberTreeNode, TreeElement } from './types/types'
-import { berEncode, berDecode } from './encodings/ber/index'
-// import { EmberElement } from './model/EmberElement'
+import { EmberClient, EmberClientEvents } from './Ember/Client/index.js'
+import { EmberLib } from './Ember/Lib/index.js'
+import { EmberServer, EmberServerEvents } from './Ember/Server/index.js'
+import { S101Codec } from './S101/index.js'
+import { S101Client } from './Ember/Socket/index.js'
+// import { EmberTreeNode, TreeElement } from './types/types.js'
+import { berEncode, berDecode } from './encodings/ber/index.js'
+// import { EmberElement } from './model/EmberElement.js'
 
 // import {
 // 	EmberTreeNode,
@@ -18,8 +18,8 @@ import { berEncode, berDecode } from './encodings/ber/index'
 // 	RootType,
 // 	RelativeOID,
 // }
-import * as Types from './types'
-import * as Model from './model'
+import * as Types from './types/index.js'
+import * as Model from './model/index.js'
 
 const Decoder = EmberLib.DecodeBuffer
 

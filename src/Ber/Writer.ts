@@ -1,10 +1,10 @@
 import Long from 'long'
-import { Writer, WriterOptions } from '../ASN1/ber/writer'
+import { Writer, WriterOptions } from '../ASN1/ber/writer.js'
 
-import { CONTEXT, UNIVERSAL } from './functions'
-import { BERDataTypes } from './BERDataTypes'
-import { Parameter, ParameterType, isParameter } from '../model/Parameter'
-import { EmberValue, EmberTypedValue } from '../types/types'
+import { CONTEXT, UNIVERSAL } from './functions.js'
+import { BERDataTypes } from './BERDataTypes.js'
+import { Parameter, ParameterType, isParameter } from '../model/Parameter.js'
+import { EmberValue, EmberTypedValue } from '../types/types.js'
 
 export { ExtendedWriter as Writer }
 

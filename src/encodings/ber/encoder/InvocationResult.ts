@@ -1,6 +1,6 @@
-import * as Ber from '../../../Ber'
-import { InvocationResult } from '../../../model/InvocationResult'
-import { InvocationResultBERID } from '../constants'
+import * as Ber from '../../../Ber/index.js'
+import { InvocationResult } from '../../../model/InvocationResult.js'
+import { InvocationResultBERID } from '../constants.js'
 
 export function encodeInvocationResult(result: InvocationResult, writer: Ber.Writer): void {
 	writer.startSequence(InvocationResultBERID)

@@ -1,4 +1,4 @@
-import { literal } from '../../../types/types'
+import { literal } from '../../../types/types.js'
 import {
 	DecodeResult,
 	whatever,
@@ -12,7 +12,7 @@ import {
 	unexpected,
 	DecodeOptions,
 	unknownApplication,
-} from '../decoder/DecodeResult'
+} from '../decoder/DecodeResult.js'
 
 describe('encodings/ver/DecodeResult - default settings', () => {
 	const goodResult = literal<DecodeResult<number>>({

@@ -1,10 +1,10 @@
-import { Reader } from '../ASN1/ber/reader'
+import { Reader } from '../ASN1/ber/reader.js'
 import Long from 'long'
-import { ASN1Error, UnimplementedEmberTypeError } from '../Errors'
-import { BERDataTypes } from './BERDataTypes'
-import { UNIVERSAL } from './functions'
-import { EmberTypedValue } from '../types/types'
-import { ParameterType } from '../model/Parameter'
+import { ASN1Error, UnimplementedEmberTypeError } from '../Errors.js'
+import { BERDataTypes } from './BERDataTypes.js'
+import { UNIVERSAL } from './functions.js'
+import { EmberTypedValue } from '../types/types.js'
+import { ParameterType } from '../model/Parameter.js'
 
 export { ExtendedReader as Reader }
 

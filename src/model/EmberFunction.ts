@@ -1,6 +1,6 @@
-import { EmberBaseElement, ElementType } from './EmberElement'
-import { FunctionArgument } from './FunctionArgument'
-import { RelativeOID } from '../types/types'
+import { EmberBaseElement, ElementType } from './EmberElement.js'
+import { FunctionArgument } from './FunctionArgument.js'
+import { RelativeOID } from '../types/types.js'
 
 export { EmberFunction, EmberFunctionImpl }
 

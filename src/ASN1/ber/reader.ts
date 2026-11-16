@@ -1,8 +1,8 @@
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
 import assert from 'assert'
-import { Types } from './types'
-import { newInvalidAsn1Error } from './errors'
+import { Types } from './types.js'
+import { newInvalidAsn1Error } from './errors.js'
 
 ///--- API
 

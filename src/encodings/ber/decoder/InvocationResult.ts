@@ -1,8 +1,8 @@
-import * as Ber from '../../../Ber'
-import { InvocationResult, InvocationResultImpl } from '../../../model/InvocationResult'
-import { EmberTypedValue } from '../../../types/types'
-import { InvocationResultBERID } from '../constants'
-import { DecodeOptions, defaultDecode, DecodeResult, makeResult, unknownContext, check, skipNext } from './DecodeResult'
+import * as Ber from '../../../Ber/index.js'
+import { InvocationResult, InvocationResultImpl } from '../../../model/InvocationResult.js'
+import { EmberTypedValue } from '../../../types/types.js'
+import { InvocationResultBERID } from '../constants.js'
+import { DecodeOptions, defaultDecode, DecodeResult, makeResult, unknownContext, check, skipNext } from './DecodeResult.js'
 
 export function decodeInvocationResult(
 	reader: Ber.Reader,
