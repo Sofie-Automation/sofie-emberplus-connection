@@ -1,10 +1,10 @@
-import { EmberElement, ElementType } from '../../../model/EmberElement.js'
 import { Writer } from '../../../Ber/index.js'
+import { ElementType, EmberElement } from '../../../model/EmberElement.js'
 import { encodeCommand } from './Command.js'
-import { encodeParameter } from './Parameter.js'
+import { encodeFunction } from './EmberFunction.js'
 import { encodeNode } from './EmberNode.js'
 import { encodeMatrix } from './Matrix.js'
-import { encodeFunction } from './EmberFunction.js'
+import { encodeParameter } from './Parameter.js'
 import { encodeTemplate } from './Template.js'
 
 export function encodeEmberElement(el: EmberElement, writer: Writer): void {

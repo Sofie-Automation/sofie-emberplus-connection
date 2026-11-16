@@ -1,9 +1,9 @@
+import { NumberedTreeNode } from '../types/types.js'
 import { ElementType, EmberBaseElement } from './EmberElement.js'
-import { Parameter } from './Parameter.js'
-import { Matrix } from './Matrix.js'
 import { EmberFunction } from './EmberFunction.js'
 import { EmberNode } from './EmberNode.js'
-import { NumberedTreeNode } from '../types/types.js'
+import { Matrix } from './Matrix.js'
+import { Parameter } from './Parameter.js'
 
 export { Template, TemplateImpl }
 

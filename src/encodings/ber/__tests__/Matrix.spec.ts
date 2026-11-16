@@ -1,12 +1,12 @@
 /* eslint-disable jest/expect-expect */
 import * as Ber from '../../../Ber/index.js'
-import { NumberedTreeNode, QualifiedElement, QualifiedElementImpl, NumberedTreeNodeImpl } from '../../../model/Tree.js'
-import { Matrix, MatrixImpl, MatrixType, MatrixAddressingMode } from '../../../model/Matrix.js'
-import { encodeNumberedElement } from '../encoder/Tree.js'
-import { encodeQualifedElement } from '../encoder/Qualified.js'
-import { decodeMatrix } from '../decoder/Matrix.js'
-import { ConnectionOperation, ConnectionDisposition } from '../../../model/Connection.js'
+import { ConnectionDisposition, ConnectionOperation } from '../../../model/Connection.js'
+import { Matrix, MatrixAddressingMode, MatrixImpl, MatrixType } from '../../../model/Matrix.js'
+import { NumberedTreeNode, NumberedTreeNodeImpl, QualifiedElement, QualifiedElementImpl } from '../../../model/Tree.js'
 import { guarded } from '../decoder/DecodeResult.js'
+import { decodeMatrix } from '../decoder/Matrix.js'
+import { encodeQualifedElement } from '../encoder/Qualified.js'
+import { encodeNumberedElement } from '../encoder/Tree.js'
 
 describe('encodings/ber/Matrix', () => {
 	function roundtripMatrix(matrix: Matrix, qualified = false): void {

@@ -1,9 +1,9 @@
 import * as Ber from '../../../Ber/index.js'
 import { Label } from '../../../model/Label.js'
-import { encodeLabel } from '../encoder/Label.js'
-import { decodeLabel } from '../decoder/Label.js'
 import { literal } from '../../../types/types.js'
 import { guarded } from '../decoder/DecodeResult.js'
+import { decodeLabel } from '../decoder/Label.js'
+import { encodeLabel } from '../encoder/Label.js'
 
 describe('encodings/ber/Label', () => {
 	const lbl = literal<Label>({

@@ -1,12 +1,12 @@
 import * as Ber from '../../../Ber/index.js'
-import { EmberNode } from '../../../model/EmberNode.js'
-import { encodeNode } from '../encoder/EmberNode.js'
-import { decodeNode } from '../decoder/EmberNode.js'
 import { ElementType } from '../../../model/EmberElement.js'
+import { EmberNode } from '../../../model/EmberNode.js'
 import { literal } from '../../../types/types.js'
 import { guarded } from '../decoder/DecodeResult.js'
-import { berDecode } from '../index.js'
+import { decodeNode } from '../decoder/EmberNode.js'
 import { decodeGenericElement } from '../decoder/Tree.js'
+import { encodeNode } from '../encoder/EmberNode.js'
+import { berDecode } from '../index.js'
 
 const indefiniteLength = Buffer.from([
 	0x60,

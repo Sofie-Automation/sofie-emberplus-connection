@@ -1,30 +1,30 @@
 import * as Ber from '../../../Ber/index.js'
-import { Matrix, MatrixImpl, Connections, MatrixType, MatrixAddressingMode } from '../../../model/Matrix.js'
-import { EmberTreeNode, RelativeOID, Collection } from '../../../types/types.js'
 import { EmberElement } from '../../../model/EmberElement.js'
-import { decodeChildren } from './Tree.js'
-import { decodeConnection } from './Connection.js'
-import { decodeLabel } from './Label.js'
-import { MatrixBERID, QualifiedMatrixBERID, TargetBERID, SourceBERID } from '../constants.js'
+import { Label } from '../../../model/Label.js'
+import { Connections, Matrix, MatrixAddressingMode, MatrixImpl, MatrixType } from '../../../model/Matrix.js'
 import {
-	QualifiedElementImpl,
-	NumberedTreeNodeImpl,
-	TreeElement,
-	QualifiedElement,
 	NumberedTreeNode,
+	NumberedTreeNodeImpl,
+	QualifiedElement,
+	QualifiedElementImpl,
+	TreeElement,
 } from '../../../model/Tree.js'
+import { Collection, EmberTreeNode, RelativeOID } from '../../../types/types.js'
+import { MatrixBERID, QualifiedMatrixBERID, SourceBERID, TargetBERID } from '../constants.js'
+import { decodeConnection } from './Connection.js'
 import {
-	DecodeOptions,
-	defaultDecode,
-	DecodeResult,
 	appendErrors,
+	check,
+	DecodeOptions,
+	DecodeResult,
+	defaultDecode,
 	makeResult,
+	skipNext,
 	unexpected,
 	unknownContext,
-	check,
-	skipNext,
 } from './DecodeResult.js'
-import { Label } from '../../../model/Label.js'
+import { decodeLabel } from './Label.js'
+import { decodeChildren } from './Tree.js'
 
 export { decodeMatrix }
 

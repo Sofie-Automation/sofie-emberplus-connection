@@ -1,19 +1,20 @@
+import S101ClientMock from '../../../__mocks__/S101Client.js'
+import { DecodeResult } from '../../../encodings/ber/decoder/DecodeResult.js'
 import {
-	NumberedTreeNode,
 	EmberElement,
-	NumberedTreeNodeImpl,
 	EmberNodeImpl,
+	NumberedTreeNode,
+	NumberedTreeNodeImpl,
 	ParameterImpl,
 	ParameterType,
 	QualifiedElementImpl,
 	StreamFormat,
 } from '../../../model/index.js'
-import { Collection, EmberTypedValue, Root, RootElement } from '../../../types/types.js'
-import { EmberClient } from '../index.js'
-import S101ClientMock from '../../../__mocks__/S101Client.js'
-import { DecodeResult } from '../../../encodings/ber/decoder/DecodeResult.js'
 import { StreamDescriptionImpl } from '../../../model/StreamDescription.js'
 import { StreamEntry, StreamEntryImpl } from '../../../model/StreamEntry.js'
+import { Collection, EmberTypedValue, Root, RootElement } from '../../../types/types.js'
+import { EmberClient } from '../index.js'
+
 // import { EmberTreeNode, RootElement } from '../../../types/types.js'
 // import { ElementType, EmberElement } from '../../../model/EmberElement.js'
 // import { Parameter, ParameterType } from '../../../model/Parameter.js'
@@ -161,7 +162,9 @@ describe('client', () => {
 
 			// Should have a response
 			const res = (await getRootDirReq.response) as NumberedTreeNodeImpl<EmberElement>
-			expect(res).toMatchObject(new NumberedTreeNodeImpl(1, new EmberNodeImpl('Ruby', undefined, undefined, true)))
+			expect(res).toMatchObject(
+				new NumberedTreeNodeImpl(1, new EmberNodeImpl('Ruby', undefined, undefined, true))
+			)
 		})
 	})
 
@@ -200,9 +203,16 @@ describe('client', () => {
 			expect(onSocketWrite).toHaveBeenCalledTimes(2)
 			socket.mockData({
 				value: {
-					1: new QualifiedElementImpl<EmberElement>('1.1', new EmberNodeImpl('Sums', undefined, undefined, false), {
-						1: new NumberedTreeNodeImpl(1, new ParameterImpl(ParameterType.Boolean, 'On', undefined, false)),
-					}) as Exclude<RootElement, NumberedTreeNode<EmberElement>>,
+					1: new QualifiedElementImpl<EmberElement>(
+						'1.1',
+						new EmberNodeImpl('Sums', undefined, undefined, false),
+						{
+							1: new NumberedTreeNodeImpl(
+								1,
+								new ParameterImpl(ParameterType.Boolean, 'On', undefined, false)
+							),
+						}
+					) as Exclude<RootElement, NumberedTreeNode<EmberElement>>,
 				},
 			})
 
@@ -284,7 +294,10 @@ describe('client', () => {
 			socket.mockData(
 				createQualifiedNodeResponse('1.1.1', new EmberNodeImpl('MAIN', undefined, undefined, false), {
 					1: new NumberedTreeNodeImpl(1, new ParameterImpl(ParameterType.Boolean, 'On', undefined, false)),
-					2: new NumberedTreeNodeImpl(2, new ParameterImpl(ParameterType.Boolean, 'Second', undefined, false)),
+					2: new NumberedTreeNodeImpl(
+						2,
+						new ParameterImpl(ParameterType.Boolean, 'Second', undefined, false)
+					),
 				})
 			)
 
@@ -385,9 +398,13 @@ describe('client', () => {
 			expect(onSocketWrite).toHaveBeenCalledTimes(2)
 			socket.mockData({
 				value: {
-					1: new QualifiedElementImpl<EmberElement>('1.1', new EmberNodeImpl('Sums', undefined, undefined, false), {
-						1: new NumberedTreeNodeImpl(1, new EmberNodeImpl('Empty', undefined, undefined, true)),
-					}) as Exclude<RootElement, NumberedTreeNode<EmberElement>>,
+					1: new QualifiedElementImpl<EmberElement>(
+						'1.1',
+						new EmberNodeImpl('Sums', undefined, undefined, false),
+						{
+							1: new NumberedTreeNodeImpl(1, new EmberNodeImpl('Empty', undefined, undefined, true)),
+						}
+					) as Exclude<RootElement, NumberedTreeNode<EmberElement>>,
 				},
 			})
 
@@ -441,7 +458,11 @@ describe('client', () => {
 				await new Promise(setImmediate)
 
 				socket.mockData(
-					createQualifiedNodeResponse('1', new ParameterImpl(ParameterType.Integer, 'Level', undefined, 2), undefined)
+					createQualifiedNodeResponse(
+						'1',
+						new ParameterImpl(ParameterType.Integer, 'Level', undefined, 2),
+						undefined
+					)
 				)
 
 				await new Promise(setImmediate)

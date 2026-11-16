@@ -1,33 +1,34 @@
 import { EventEmitter } from 'eventemitter3'
-import { S101Server } from '../Socket/S101Server.js'
-import {
-	EmberElement,
-	NumberedTreeNodeImpl,
-	ElementType,
-	EmberFunction,
-	InvocationResult,
-	EmberNode,
-	Parameter,
-	MatrixImpl,
-	Matrix,
-	Connections,
-	EmberNodeImpl,
-} from '../../model/index.js'
-import {
-	Collection,
-	RootElement,
-	NumberedTreeNode,
-	QualifiedElement,
-	RootType,
-	TreeElement,
-	EmberValue,
-} from '../../types/types.js'
+
 import { DecodeResult } from '../../encodings/ber/decoder/DecodeResult.js'
-import { toQualifiedEmberNode } from '../Lib/util.js'
 import { berEncode } from '../../encodings/ber/index.js'
 import { Command, CommandType, FieldFlags, GetDirectory, Invoke } from '../../model/Command.js'
-import { Connection, ConnectionOperation, ConnectionImpl } from '../../model/Connection.js'
+import { Connection, ConnectionImpl, ConnectionOperation } from '../../model/Connection.js'
+import {
+	Connections,
+	ElementType,
+	EmberElement,
+	EmberFunction,
+	EmberNode,
+	EmberNodeImpl,
+	InvocationResult,
+	Matrix,
+	MatrixImpl,
+	NumberedTreeNodeImpl,
+	Parameter,
+} from '../../model/index.js'
 import { InvocationResultImpl } from '../../model/InvocationResult.js'
+import {
+	Collection,
+	EmberValue,
+	NumberedTreeNode,
+	QualifiedElement,
+	RootElement,
+	RootType,
+	TreeElement,
+} from '../../types/types.js'
+import { toQualifiedEmberNode } from '../Lib/util.js'
+import { S101Server } from '../Socket/S101Server.js'
 import S101Socket from '../Socket/S101Socket.js'
 
 export type EmberServerEvents = {
@@ -61,7 +62,9 @@ export class EmberServer extends EventEmitter<EmberServerEvents> {
 		this._server.on('connection', (client: S101Socket) => {
 			this._clients.add(client)
 
-			client.on('emberTree', (tree) => this._handleIncoming(tree as DecodeResult<Collection<RootElement>>, client))
+			client.on('emberTree', (tree) =>
+				this._handleIncoming(tree as DecodeResult<Collection<RootElement>>, client)
+			)
 
 			client.on('error', (e) => {
 				this.emit('clientError', client, e)
@@ -203,7 +206,9 @@ export class EmberServer extends EventEmitter<EmberServerEvents> {
 		const children = Object.values<NumberedTreeNode<EmberElement>>(el.children || {})
 
 		if (children[0] && children[0].contents.type === ElementType.Command) {
-			this._handleCommand(path, children[0] as NumberedTreeNode<Command>, client).catch((e) => this.emit('error', e))
+			this._handleCommand(path, children[0] as NumberedTreeNode<Command>, client).catch((e) =>
+				this.emit('error', e)
+			)
 			return
 		} else if (el.contents.type === ElementType.Matrix && 'connections' in el.contents) {
 			this._handleMatrix(path, el as QualifiedElement<Matrix> | NumberedTreeNode<Matrix>).catch((e) =>
@@ -213,9 +218,11 @@ export class EmberServer extends EventEmitter<EmberServerEvents> {
 
 		if (!el.children) {
 			if (el.contents.type === ElementType.Parameter) {
-				this._handleSetValue(path, el as QualifiedElement<Parameter> | NumberedTreeNode<Parameter>, client).catch((e) =>
-					this.emit('error', e)
-				)
+				this._handleSetValue(
+					path,
+					el as QualifiedElement<Parameter> | NumberedTreeNode<Parameter>,
+					client
+				).catch((e) => this.emit('error', e))
 			}
 		} else {
 			for (const c of children) {
@@ -268,7 +275,10 @@ export class EmberServer extends EventEmitter<EmberServerEvents> {
 		} else if (el.contents.number === CommandType.Invoke) {
 			let result: InvocationResult
 			if (this.onInvocation) {
-				result = await this.onInvocation(tree as NumberedTreeNode<EmberFunction>, el as NumberedTreeNode<Invoke>)
+				result = await this.onInvocation(
+					tree as NumberedTreeNode<EmberFunction>,
+					el as NumberedTreeNode<Invoke>
+				)
 			} else {
 				result = new InvocationResultImpl((el as NumberedTreeNode<Invoke>).contents.invocation?.id || -1, false)
 			}
@@ -370,7 +380,10 @@ export class EmberServer extends EventEmitter<EmberServerEvents> {
 							)
 						)
 					} else {
-						qualified.children[i as unknown as number] = new NumberedTreeNodeImpl(child.number, child.contents)
+						qualified.children[i as unknown as number] = new NumberedTreeNodeImpl(
+							child.number,
+							child.contents
+						)
 					}
 				}
 			} else if (qualified.contents.type === ElementType.Node && !('children' in tree && tree.children)) {

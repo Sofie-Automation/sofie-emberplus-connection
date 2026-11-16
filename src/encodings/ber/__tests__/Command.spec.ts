@@ -1,10 +1,18 @@
 /* eslint-disable jest/expect-expect */
 import * as Ber from '../../../Ber/index.js'
-import { Command, CommandType, Subscribe, Unsubscribe, GetDirectory, FieldFlags, Invoke } from '../../../model/Command.js'
-import { encodeCommand } from '../encoder/Command.js'
-import { decodeCommand } from '../decoder/Command.js'
+import {
+	Command,
+	CommandType,
+	FieldFlags,
+	GetDirectory,
+	Invoke,
+	Subscribe,
+	Unsubscribe,
+} from '../../../model/Command.js'
 import { ElementType } from '../../../model/EmberElement.js'
+import { decodeCommand } from '../decoder/Command.js'
 import { guarded } from '../decoder/DecodeResult.js'
+import { encodeCommand } from '../encoder/Command.js'
 
 describe('encodings/ber/Command', () => {
 	function testCommand(command: Command): void {

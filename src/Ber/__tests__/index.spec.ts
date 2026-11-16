@@ -1,8 +1,8 @@
-import { Writer } from '../Writer.js'
+import { ElementType } from '../../model/EmberElement.js'
+import { Parameter, ParameterType } from '../../model/Parameter.js'
 import { BERDataTypes } from '../index.js'
 import { Reader } from '../Reader.js'
-import { Parameter, ParameterType } from '../../model/Parameter.js'
-import { ElementType } from '../../model/EmberElement.js'
+import { Writer } from '../Writer.js'
 
 function octetsParameter(value: Buffer): Parameter {
 	return {

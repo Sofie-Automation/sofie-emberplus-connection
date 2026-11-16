@@ -2,17 +2,17 @@ import * as Ber from '../../../Ber/index.js'
 import { FunctionArgument, FunctionArgumentImpl } from '../../../model/FunctionArgument.js'
 import { ParameterType } from '../../../model/Parameter.js'
 import { FunctionArgumentBERID } from '../constants.js'
-import { readParameterType } from './Parameter.js'
 import {
-	DecodeOptions,
-	defaultDecode,
-	DecodeResult,
-	makeResult,
-	unknownContext,
-	check,
 	appendErrors,
+	check,
+	DecodeOptions,
+	DecodeResult,
+	defaultDecode,
+	makeResult,
 	skipNext,
+	unknownContext,
 } from './DecodeResult.js'
+import { readParameterType } from './Parameter.js'
 
 export { decodeFunctionArgument }
 

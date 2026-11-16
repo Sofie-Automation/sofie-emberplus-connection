@@ -1,8 +1,8 @@
-import { QualifiedElement, NumberedTreeNode, RootElement } from '../../types/types.js'
-import { EmberElement, ElementType } from '../../model/EmberElement.js'
 import { Command } from '../../model/Command.js'
-import { QualifiedElementImpl, NumberedTreeNodeImpl, TreeElement } from '../../model/Tree.js'
+import { ElementType, EmberElement } from '../../model/EmberElement.js'
 import { EmberNode } from '../../model/index.js'
+import { NumberedTreeNodeImpl, QualifiedElementImpl, TreeElement } from '../../model/Tree.js'
+import { NumberedTreeNode, QualifiedElement, RootElement } from '../../types/types.js'
 
 export function assertQualifiedEmberNode(node: RootElement): Exclude<RootElement, NumberedTreeNode<EmberElement>> {
 	if ('path' in node) {

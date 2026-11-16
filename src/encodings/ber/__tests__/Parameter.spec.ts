@@ -1,12 +1,12 @@
 /* eslint-disable jest/expect-expect */
 import * as Ber from '../../../Ber/index.js'
-import { Parameter, ParameterType, ParameterAccess } from '../../../model/Parameter.js'
-import { encodeParameter } from '../encoder/Parameter.js'
-import { decodeParameter } from '../decoder/Parameter.js'
 import { ElementType } from '../../../model/EmberElement.js'
-import { StreamFormat, StreamDescriptionImpl } from '../../../model/StreamDescription.js'
+import { Parameter, ParameterAccess, ParameterType } from '../../../model/Parameter.js'
+import { StreamDescriptionImpl, StreamFormat } from '../../../model/StreamDescription.js'
 import { literal } from '../../../types/types.js'
 import { guarded } from '../decoder/DecodeResult.js'
+import { decodeParameter } from '../decoder/Parameter.js'
+import { encodeParameter } from '../encoder/Parameter.js'
 
 describe('encodings/ber/Parameter', () => {
 	const prm = literal<Parameter>({

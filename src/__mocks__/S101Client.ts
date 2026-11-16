@@ -1,9 +1,11 @@
-import { ConnectionStatus } from '../Ember/Client/ConnectionStatus.js'
-import type OrigS101Client from '../Ember/Socket/S101Client.js'
 import { EventEmitter } from 'eventemitter3'
+
+import { ConnectionStatus } from '../Ember/Client/ConnectionStatus.js'
 import { S101SocketEvents } from '../Ember/Socket/S101Socket.js'
 import { DecodeResult } from '../encodings/ber/decoder/DecodeResult.js'
 import { Root } from '../types/index.js'
+import type OrigS101Client from '../Ember/Socket/S101Client.js'
+
 const sockets: Array<S101Client> = []
 const onNextSocket: Array<(socket: S101Client) => void> = []
 

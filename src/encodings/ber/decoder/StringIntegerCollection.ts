@@ -2,14 +2,14 @@ import * as Ber from '../../../Ber/index.js'
 import { StringIntegerCollection } from '../../../types/types.js'
 import { StringIntegerCollectionBERID, StringIntegerPairBERID } from '../constants.js'
 import {
-	DecodeOptions,
-	defaultDecode,
-	DecodeResult,
-	makeResult,
-	unknownContext,
 	appendErrors,
 	check,
+	DecodeOptions,
+	DecodeResult,
+	defaultDecode,
+	makeResult,
 	skipNext,
+	unknownContext,
 } from './DecodeResult.js'
 
 export { decodeStringIntegerCollection }

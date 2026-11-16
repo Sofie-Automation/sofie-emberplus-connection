@@ -1,18 +1,18 @@
 import * as Ber from '../../../Ber/index.js'
+import { ParameterType } from '../../../model/Parameter.js'
 import { StreamEntry, StreamEntryImpl } from '../../../model/StreamEntry.js'
 import { EmberTypedValue, literal } from '../../../types/types.js'
-import { StreamEntryBERID, StreamEntriesBERID } from '../constants.js'
+import { StreamEntriesBERID, StreamEntryBERID } from '../constants.js'
 import {
-	DecodeResult,
-	makeResult,
-	unknownContext,
-	DecodeOptions,
-	defaultDecode,
-	safeSet,
 	check,
+	DecodeOptions,
+	DecodeResult,
+	defaultDecode,
+	makeResult,
+	safeSet,
 	skipNext,
+	unknownContext,
 } from './DecodeResult.js'
-import { ParameterType } from '../../../model/Parameter.js'
 
 export { decodeStreamEntry, decodeStreamEntries }
 

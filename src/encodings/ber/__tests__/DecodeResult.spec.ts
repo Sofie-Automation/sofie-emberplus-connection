@@ -1,17 +1,17 @@
 import { literal } from '../../../types/types.js'
 import {
+	appendErrors,
+	check,
+	DecodeOptions,
 	DecodeResult,
-	whatever,
+	defaultDecode,
 	guarded,
 	makeResult,
-	defaultDecode,
-	unknownContext,
 	safeSet,
-	check,
-	appendErrors,
 	unexpected,
-	DecodeOptions,
 	unknownApplication,
+	unknownContext,
+	whatever,
 } from '../decoder/DecodeResult.js'
 
 describe('encodings/ver/DecodeResult - default settings', () => {

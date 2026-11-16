@@ -1,5 +1,5 @@
-import { Invocation } from '../../../model/Invocation.js'
 import * as Ber from '../../../Ber/index.js'
+import { Invocation } from '../../../model/Invocation.js'
 import { InvocationBERID } from '../constants.js'
 
 export function encodeInvocation(invocation: Invocation, writer: Ber.Writer): void {

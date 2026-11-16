@@ -11,5 +11,8 @@ interface Label {
 }
 
 class LabelImpl implements Label {
-	constructor(public basePath: string, public description: string) {}
+	constructor(
+		public basePath: string,
+		public description: string
+	) {}
 }

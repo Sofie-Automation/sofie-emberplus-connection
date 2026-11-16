@@ -14,5 +14,8 @@ interface FunctionArgument {
 }
 
 class FunctionArgumentImpl implements FunctionArgument {
-	constructor(public type: ParameterType, public name?: string) {}
+	constructor(
+		public type: ParameterType,
+		public name?: string
+	) {}
 }

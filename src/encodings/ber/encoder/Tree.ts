@@ -1,22 +1,22 @@
-import { NumberedTreeNode, TreeElement, QualifiedElement } from '../../../types/types.js'
 import * as Ber from '../../../Ber/index.js'
+import { Connection } from '../../../model/Connection.js'
 import { ElementType, EmberElement } from '../../../model/EmberElement.js'
-import { encodeEmberElement } from './EmberElement.js'
-import { encodeCommand } from './Command.js'
-import { encodeTemplate } from './Template.js'
-import { Template } from '../../../model/Template.js'
 import { Matrix } from '../../../model/Matrix.js'
-import { encodeConnection } from './Connection.js'
-import { encodeTarget, encodeSource } from './Matrix.js'
+import { Template } from '../../../model/Template.js'
+import { NumberedTreeNode, QualifiedElement, TreeElement } from '../../../types/types.js'
 import {
-	MatrixBERID,
+	ElementCollectionBERID,
 	FunctionBERID,
+	MatrixBERID,
 	NodeBERID,
 	ParameterBERID,
 	TemplateBERID,
-	ElementCollectionBERID,
 } from '../constants.js'
-import { Connection } from '../../../model/Connection.js'
+import { encodeCommand } from './Command.js'
+import { encodeConnection } from './Connection.js'
+import { encodeEmberElement } from './EmberElement.js'
+import { encodeSource, encodeTarget } from './Matrix.js'
+import { encodeTemplate } from './Template.js'
 
 export function encodeNumberedElement(el: NumberedTreeNode<EmberElement>, writer: Ber.Writer): void {
 	if (el.contents.type === ElementType.Command) {
@@ -111,7 +111,9 @@ export function encodeTree(el: TreeElement<EmberElement>, writer: Ber.Writer): v
 			writer.startSequence(Ber.CONTEXT(5))
 			writer.startSequence(Ber.BERDataTypes.SEQUENCE)
 			// write connections collection
-			for (const connection of Object.values<Connection>(el.contents.connections as { [target: string]: Connection })) {
+			for (const connection of Object.values<Connection>(
+				el.contents.connections as { [target: string]: Connection }
+			)) {
 				writer.startSequence(Ber.CONTEXT(0))
 				encodeConnection(connection, writer)
 				writer.endSequence()

@@ -1,9 +1,9 @@
 import * as Ber from '../../../Ber/index.js'
 import { StreamDescription, StreamFormat } from '../../../model/StreamDescription.js'
-import { encodeStreamDescription } from '../encoder/StreamDescription.js'
-import { decodeStreamDescription } from '../decoder/StreamDescription.js'
 import { literal } from '../../../types/types.js'
 import { guarded } from '../decoder/DecodeResult.js'
+import { decodeStreamDescription } from '../decoder/StreamDescription.js'
+import { encodeStreamDescription } from '../encoder/StreamDescription.js'
 
 describe('encodings/ber/StreamDescription', () => {
 	const sd = literal<StreamDescription>({

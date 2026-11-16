@@ -2,7 +2,7 @@ import * as Ber from '../../../Ber/index.js'
 import { Invocation, InvocationImpl } from '../../../model/Invocation.js'
 import { EmberTypedValue } from '../../../types/types.js'
 import { InvocationBERID } from '../constants.js'
-import { DecodeOptions, defaultDecode, DecodeResult, unknownContext, makeResult, skipNext } from './DecodeResult.js'
+import { DecodeOptions, DecodeResult, defaultDecode, makeResult, skipNext, unknownContext } from './DecodeResult.js'
 
 export { decodeInvocation }
 

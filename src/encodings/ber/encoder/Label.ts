@@ -1,6 +1,6 @@
 import * as Ber from '../../../Ber/index.js'
-import { Label } from '../../../model/Label.js'
 import { InvalidEmberNode } from '../../../Errors.js'
+import { Label } from '../../../model/Label.js'
 import { LabelBERID } from '../constants.js'
 
 export function encodeLabel(label: Label, writer: Ber.Writer): void {

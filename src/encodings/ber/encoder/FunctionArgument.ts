@@ -1,6 +1,6 @@
-import { FunctionArgument } from '../../../model/FunctionArgument.js'
 import * as Ber from '../../../Ber/index.js'
 import { InvalidEmberNode } from '../../../Errors.js'
+import { FunctionArgument } from '../../../model/FunctionArgument.js'
 import { ParameterType } from '../../../model/Parameter.js'
 import { FunctionArgumentBERID } from '../constants.js'
 

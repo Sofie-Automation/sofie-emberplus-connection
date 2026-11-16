@@ -1,10 +1,10 @@
+import Debug from 'debug'
 import { EventEmitter } from 'eventemitter3'
+
+import { StreamEntry } from '../../model/index.js'
 import { Parameter, ParameterType } from '../../model/Parameter.js'
 import { EmberValue } from '../../types/index.js'
 import { Collection } from '../../types/types.js'
-import { StreamEntry } from '../../model/index.js'
-
-import Debug from 'debug'
 
 const debug = Debug('emberplus-connection:StreamManager')
 
@@ -113,7 +113,10 @@ export class StreamManager extends EventEmitter<StreamManagerEvents> {
 
 				if (streamEntry.value.type === ParameterType.Integer) {
 					this.updateStreamValue(path, streamEntry.value.value)
-				} else if (streamEntry.value.type === ParameterType.Octets && Buffer.isBuffer(streamEntry.value.value)) {
+				} else if (
+					streamEntry.value.type === ParameterType.Octets &&
+					Buffer.isBuffer(streamEntry.value.value)
+				) {
 					const buffer = streamEntry.value.value
 					if (buffer.length >= streamInfo.offset + 4) {
 						const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.length)

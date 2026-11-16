@@ -1,7 +1,7 @@
 import * as Ber from '../../../Ber/index.js'
-import { Command, CommandType, GetDirectory, FieldFlags, Invoke } from '../../../model/Command.js'
-import { encodeInvocation } from './Invocation.js'
+import { Command, CommandType, FieldFlags, GetDirectory, Invoke } from '../../../model/Command.js'
 import { CommandBERID } from '../constants.js'
+import { encodeInvocation } from './Invocation.js'
 
 export function encodeCommand(el: Command, writer: Ber.Writer): void {
 	writer.startSequence(CommandBERID)

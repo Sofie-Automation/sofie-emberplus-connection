@@ -1,12 +1,12 @@
 import { EmberElement } from '../model/EmberElement.js'
 import { EmberFunction } from '../model/EmberFunction.js'
-import { Parameter, ParameterType } from '../model/Parameter.js'
-import { Template } from '../model/Template.js'
-import { Matrix } from '../model/Matrix.js'
 import { EmberNode } from '../model/EmberNode.js'
-import { StreamEntry } from '../model/StreamEntry.js'
 import { InvocationResult } from '../model/InvocationResult.js'
-import { TreeElement, NumberedTreeNode, QualifiedElement } from '../model/Tree.js'
+import { Matrix } from '../model/Matrix.js'
+import { Parameter, ParameterType } from '../model/Parameter.js'
+import { StreamEntry } from '../model/StreamEntry.js'
+import { Template } from '../model/Template.js'
+import { NumberedTreeNode, QualifiedElement, TreeElement } from '../model/Tree.js'
 
 export {
 	TreeElement,

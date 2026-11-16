@@ -1,5 +1,5 @@
+import { Collection, RelativeOID, RootElement } from '../types/types.js'
 import { EmberElement } from './EmberElement.js'
-import { RelativeOID, RootElement, Collection } from '../types/types.js'
 
 export { TreeElement, NumberedTreeNode, QualifiedElement, NumberedTreeNodeImpl, QualifiedElementImpl }
 
@@ -40,7 +40,11 @@ class NumberedTreeNodeImpl<T extends EmberElement> extends TreeElementImpl<T> im
 class QualifiedElementImpl<T extends EmberElement> extends TreeElementImpl<T> implements QualifiedElement<T> {
 	parent = undefined
 
-	constructor(public path: RelativeOID, contents: T, children?: Collection<NumberedTreeNode<EmberElement>>) {
+	constructor(
+		public path: RelativeOID,
+		contents: T,
+		children?: Collection<NumberedTreeNode<EmberElement>>
+	) {
 		super(contents, children)
 	}
 }

@@ -1,13 +1,13 @@
 import {
 	EmberTreeNode,
-	EmberValue,
 	EmberTypedValue,
+	EmberValue,
+	MinMax,
+	RelativeOID,
 	Root,
 	RootElement,
-	MinMax,
-	StringIntegerCollection,
 	RootType,
-	RelativeOID,
+	StringIntegerCollection,
 } from './types.js'
 
 export {

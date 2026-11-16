@@ -1,7 +1,9 @@
+import { format } from 'util'
+
+import Debug from 'debug'
 import { EventEmitter } from 'eventemitter3'
 import { SmartBuffer } from 'smart-buffer'
-import Debug from 'debug'
-import { format } from 'util'
+
 import { berDecode } from '../encodings/ber/index.js'
 import { S101OversizedFrameError } from '../Errors.js'
 

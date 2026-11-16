@@ -1,20 +1,20 @@
 import * as Ber from '../../../Ber/index.js'
-import { Parameter, ParameterType, ParameterImpl, ParameterAccess } from '../../../model/Parameter.js'
+import { Parameter, ParameterAccess, ParameterImpl, ParameterType } from '../../../model/Parameter.js'
+import { StreamDescription } from '../../../model/StreamDescription.js'
+import { EmberValue, RelativeOID, StringIntegerCollection } from '../../../types/types.js'
+import {
+	appendErrors,
+	check,
+	DecodeOptions,
+	DecodeResult,
+	defaultDecode,
+	makeResult,
+	skipNext,
+	unexpected,
+	unknownContext,
+} from './DecodeResult.js'
 import { decodeStreamDescription } from './StreamDescription.js'
 import { decodeStringIntegerCollection } from './StringIntegerCollection.js'
-import {
-	DecodeOptions,
-	defaultDecode,
-	DecodeResult,
-	check,
-	makeResult,
-	unexpected,
-	appendErrors,
-	unknownContext,
-	skipNext,
-} from './DecodeResult.js'
-import { EmberValue, StringIntegerCollection, RelativeOID } from '../../../types/types.js'
-import { StreamDescription } from '../../../model/StreamDescription.js'
 
 export { decodeParameter, readParameterType }
 
@@ -119,10 +119,10 @@ function decodeParameter(reader: Ber.Reader, options: DecodeOptions = defaultDec
 		parameterType === ParameterType.Trigger
 			? ParameterType.Trigger
 			: !!enumMap || !!enumeration
-			? ParameterType.Enum
-			: valueType
-			? valueType
-			: parameterType
+				? ParameterType.Enum
+				: valueType
+					? valueType
+					: parameterType
 	parameterType = check(parameterType, 'decode parameter', 'parameterType', ParameterType.Null, errors, options)
 
 	return makeResult(
@@ -191,6 +191,12 @@ function readParameterType(value: number | null, options: DecodeOptions): Decode
 		case 7:
 			return makeResult(ParameterType.Octets)
 		default:
-			return unexpected([], 'read parameter type', `unexpected parameter type '${value}'`, ParameterType.Null, options)
+			return unexpected(
+				[],
+				'read parameter type',
+				`unexpected parameter type '${value}'`,
+				ParameterType.Null,
+				options
+			)
 	}
 }

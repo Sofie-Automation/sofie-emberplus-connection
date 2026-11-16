@@ -1,5 +1,5 @@
-import { EmberBaseElement, ElementType, isEmberElement } from './EmberElement.js'
-import { EmberValue, MinMax, StringIntegerCollection, RelativeOID } from '../types/types.js'
+import { EmberValue, MinMax, RelativeOID, StringIntegerCollection } from '../types/types.js'
+import { ElementType, EmberBaseElement, isEmberElement } from './EmberElement.js'
 import { StreamDescription } from './StreamDescription.js'
 
 export { Parameter, ParameterType, ParameterAccess, isParameter, ParameterImpl }
