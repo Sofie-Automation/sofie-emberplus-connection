@@ -1,6 +1,5 @@
 import { createServer, Server, Socket } from 'net'
-
-import { EventEmitter } from 'eventemitter3'
+import { EventEmitter } from 'node:events'
 
 import S101Socket from './S101Socket.js'
 

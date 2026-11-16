@@ -2182,7 +2182,6 @@ __metadata:
     "@types/node": "npm:^22"
     debug: "npm:^4.3.4"
     eslint: "npm:^10"
-    eventemitter3: "npm:^4.0.7"
     husky: "npm:^9"
     jest: "npm:^29.7.0"
     lint-staged: "npm:^17"
@@ -2510,13 +2509,6 @@ __metadata:
   version: 2.0.3
   resolution: "esutils@npm:2.0.3"
   checksum: 10/b23acd24791db11d8f65be5ea58fd9a6ce2df5120ae2da65c16cfc5331ff59d5ac4ef50af66cd4bde238881503ec839928a0135b99a036a9cdfa22d17fd56cdb
-  languageName: node
-  linkType: hard
-
-"eventemitter3@npm:^4.0.7":
-  version: 4.0.7
-  resolution: "eventemitter3@npm:4.0.7"
-  checksum: 10/8030029382404942c01d0037079f1b1bc8fed524b5849c237b80549b01e2fc49709e1d0c557fa65ca4498fc9e24cff1475ef7b855121fcc15f9d61f93e282346
   languageName: node
   linkType: hard
 

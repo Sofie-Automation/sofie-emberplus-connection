@@ -1,7 +1,7 @@
+import { EventEmitter } from 'node:events'
 import { format } from 'util'
 
 import Debug from 'debug'
-import { EventEmitter } from 'eventemitter3'
 import { SmartBuffer } from 'smart-buffer'
 
 import { berDecode } from '../encodings/ber/index.js'

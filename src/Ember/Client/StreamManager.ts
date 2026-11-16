@@ -1,5 +1,6 @@
+import { EventEmitter } from 'node:events'
+
 import Debug from 'debug'
-import { EventEmitter } from 'eventemitter3'
 
 import { StreamEntry } from '../../model/index.js'
 import { Parameter, ParameterType } from '../../model/Parameter.js'

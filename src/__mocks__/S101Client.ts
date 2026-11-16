@@ -1,4 +1,4 @@
-import { EventEmitter } from 'eventemitter3'
+import { EventEmitter } from 'node:events'
 
 import { ConnectionStatus } from '../Ember/Client/ConnectionStatus.js'
 import { S101SocketEvents } from '../Ember/Socket/S101Socket.js'
@@ -13,12 +13,7 @@ const orgSetImmediate = setImmediate
 
 export default class S101Client
 	extends EventEmitter<S101SocketEvents>
-	implements
-		Omit<
-			OrigS101Client,
-			// EventEmitter:
-			'on' | 'off' | 'once' | 'addListener' | 'removeListener' | 'removeAllListeners'
-		>
+	implements Omit<OrigS101Client, keyof EventEmitter>
 {
 	public onWrite?: (data: Buffer) => boolean
 	public onConnect?: () => void

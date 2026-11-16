@@ -1,6 +1,5 @@
 import { Socket } from 'net'
-
-import { EventEmitter } from 'eventemitter3'
+import { EventEmitter } from 'node:events'
 
 import { DecodeResult } from '../../encodings/ber/decoder/DecodeResult.js'
 import { berDecode } from '../../encodings/ber/index.js'
