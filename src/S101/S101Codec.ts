@@ -80,6 +80,13 @@ export default class S101Codec extends EventEmitter<S101CodecEvents> {
 	// chunks are only concatenated once an EOF actually arrives.
 	private pendingChunks: Buffer[] = []
 	private pendingLength = 0
+	// True when the pending partial frame is a length-prefixed (non-escaping, 0xF8)
+	// frame: those have no EOF terminator, so the EOF fast-path must not apply.
+	private pendingNonEscaped = false
+	// Total frame size of the pending non-escaping frame once its header has been
+	// seen (0 while unknown), so chunks accumulate without re-parsing until enough
+	// bytes have arrived.
+	private pendingNeeded = 0
 	escaped = false
 
 	private multiPacketBuffer?: SmartBuffer
@@ -88,47 +95,65 @@ export default class S101Codec extends EventEmitter<S101CodecEvents> {
 	private resetFramingState(): void {
 		this.pendingChunks = []
 		this.pendingLength = 0
+		this.pendingNonEscaped = false
+		this.pendingNeeded = 0
 		this.escaped = false
 	}
 
+	private stashPending(pending: Buffer, nonEscaped: boolean, neededLength = 0): void {
+		if (pending.length > MAX_FRAME_BUFFER_SIZE) {
+			this.resetFramingState()
+			this.resetMultiPacketBuffer()
+			throw new S101OversizedFrameError(
+				format('dropping oversized S101 frame: %d bytes buffered without frame end', pending.length)
+			)
+		}
+		this.pendingChunks = [pending]
+		this.pendingLength = pending.length
+		this.pendingNonEscaped = nonEscaped
+		this.pendingNeeded = neededLength
+	}
+
 	dataIn(buf: Buffer): void {
-		// If a previous partial frame is pending, keep accumulating cheaply until an
-		// EOF shows up; only then materialize the whole thing and parse it.
+		// If a previous partial frame is pending, keep accumulating cheaply until it
+		// can possibly be complete (an EOF for escaped frames, the known total
+		// length for non-escaping ones); only then materialize and parse.
 		if (this.pendingLength > 0) {
-			const hasEof = buf.indexOf(S101_EOF) !== -1
+			const completable = this.pendingNonEscaped
+				? this.pendingLength + buf.length >= this.pendingNeeded
+				: buf.indexOf(S101_EOF) !== -1
 			this.pendingChunks.push(buf)
 			this.pendingLength += buf.length
 			if (this.pendingLength > MAX_FRAME_BUFFER_SIZE) {
 				this.resetFramingState()
 				this.resetMultiPacketBuffer()
 				throw new S101OversizedFrameError(
-					format('dropping oversized S101 frame: %d bytes buffered without EOF', this.pendingLength)
+					format('dropping oversized S101 frame: %d bytes buffered without frame end', this.pendingLength)
 				)
 			}
-			if (!hasEof) return // still incomplete - do not concat yet
+			if (!completable) return // still incomplete - do not concat yet
 			buf = Buffer.concat(this.pendingChunks, this.pendingLength)
 			this.pendingChunks = []
 			this.pendingLength = 0
+			this.pendingNonEscaped = false
+			this.pendingNeeded = 0
 		}
 
 		let frameOffset = 0
 		while (frameOffset < buf.length) {
-			const frameStart = buf.indexOf(S101_BOF, frameOffset)
+			const frameStart = this.findFrameStart(buf, frameOffset)
 			if (frameStart === -1) break
+
+			if (buf[frameStart] === S101_INV) {
+				frameOffset = this.handleNonEscapedFrame(buf, frameStart)
+				if (frameOffset === -1) break // incomplete - stashed as pending
+				continue
+			}
 
 			const frameEnd = buf.indexOf(S101_EOF, frameStart + 1)
 			if (frameEnd === -1) {
 				// Genuinely incomplete frame - stash the tail and wait for more data.
-				const pending = buf.subarray(frameStart)
-				if (pending.length > MAX_FRAME_BUFFER_SIZE) {
-					this.resetFramingState()
-					this.resetMultiPacketBuffer()
-					throw new S101OversizedFrameError(
-						format('dropping oversized S101 frame: %d bytes buffered without EOF', pending.length)
-					)
-				}
-				this.pendingChunks = [pending]
-				this.pendingLength = pending.length
+				this.stashPending(buf.subarray(frameStart), false)
 				break
 			}
 			if (frameEnd - frameStart < 4) {
@@ -184,6 +209,64 @@ export default class S101Codec extends EventEmitter<S101CodecEvents> {
 		}
 	}
 
+	/** Index of the next frame start (escaped 0xFE or length-prefixed 0xF8) at or
+	 *  after `offset`. Only valid at frame boundaries - inside a non-escaping
+	 *  frame any byte value may occur, but those bytes are consumed wholesale by
+	 *  handleNonEscapedFrame so the scan never sees them. */
+	private findFrameStart(buf: Buffer, offset: number): number {
+		for (let i = offset; i < buf.length; i++) {
+			if (buf[i] === S101_BOF || buf[i] === S101_INV) return i
+		}
+		return -1
+	}
+
+	/** Parses one length-prefixed (non-escaping) frame starting at `start`:
+	 *  0xF8, one length-of-length byte (low 3 bits), that many big-endian length
+	 *  bytes, then the message with no escaping, CRC or EOF. Returns the offset
+	 *  after the frame, or -1 if the frame is incomplete (stashed as pending). */
+	private handleNonEscapedFrame(buf: Buffer, start: number): number {
+		if (buf.length - start < 2) {
+			this.stashPending(buf.subarray(start), true)
+			return -1
+		}
+
+		const lengthLength = buf[start + 1] & 0x07
+		if (lengthLength === 0 || lengthLength > 4) {
+			// Not a plausible frame header - skip the marker byte and resync
+			return start + 1
+		}
+		const headerLength = 2 + lengthLength
+		if (buf.length - start < headerLength) {
+			this.stashPending(buf.subarray(start), true)
+			return -1
+		}
+
+		let payloadLength = 0
+		for (let i = 0; i < lengthLength; i++) {
+			payloadLength = payloadLength * 0x100 + buf[start + 1 + 1 + i]
+		}
+		if (payloadLength > MAX_FRAME_BUFFER_SIZE) {
+			this.resetFramingState()
+			this.resetMultiPacketBuffer()
+			throw new S101OversizedFrameError(
+				format('dropping oversized non-escaped S101 frame: %d byte payload', payloadLength)
+			)
+		}
+		const frameEnd = start + headerLength + payloadLength
+		if (buf.length < frameEnd) {
+			this.stashPending(buf.subarray(start), true, frameEnd - start)
+			return -1
+		}
+
+		try {
+			this.handleFrame(SmartBuffer.fromBuffer(buf.subarray(start + headerLength, frameEnd)), false)
+		} catch (e) {
+			if (e instanceof S101OversizedFrameError) throw e
+			debug('dropping malformed S101 frame: %s', e instanceof Error ? e.message : String(e))
+		}
+		return frameEnd
+	}
+
 	private isEmberStreamPacket(buffer: Buffer): boolean {
 		// Fast skip if not minimum stream structure
 		if (buffer.length < 3) return false
@@ -207,8 +290,9 @@ export default class S101Codec extends EventEmitter<S101CodecEvents> {
 		return false
 	}
 
-	handleFrame(frame: SmartBuffer): void {
-		if (!this.validateFrame(frame.toBuffer())) {
+	handleFrame(frame: SmartBuffer, hasCrc = true): void {
+		// Non-escaping (0xF8) frames are length-delimited and carry no CRC
+		if (hasCrc && !this.validateFrame(frame.toBuffer())) {
 			throw new Error(format('dropping frame of length %d with invalid CRC', frame.length))
 		}
 
@@ -230,13 +314,13 @@ export default class S101Codec extends EventEmitter<S101CodecEvents> {
 		} else if (command === CMD_EMBER) {
 			const remainingData = frame.readBuffer()
 			const emberFrame = SmartBuffer.fromBuffer(remainingData)
-			this.handleEmberFrame(emberFrame)
+			this.handleEmberFrame(emberFrame, hasCrc)
 		} else {
 			throw new Error(format('dropping frame of length %d with unknown command %d', frame.length, command))
 		}
 	}
 
-	handleEmberFrame(frame: SmartBuffer): void {
+	handleEmberFrame(frame: SmartBuffer, hasCrc = true): void {
 		const version = frame.readUInt8()
 		const flags = frame.readUInt8()
 		const dtd = frame.readUInt8()
@@ -265,15 +349,21 @@ export default class S101Codec extends EventEmitter<S101CodecEvents> {
 		}
 
 		let payload = frame.readBuffer()
-		payload = payload.slice(0, payload.length - 2) // Remove CRC
+		if (hasCrc) {
+			payload = payload.slice(0, payload.length - 2) // Remove CRC
+		}
 
 		if ((flags & FLAG_SINGLE_PACKET) === FLAG_SINGLE_PACKET) {
 			if ((flags & FLAG_EMPTY_PACKET) === 0) {
+				// `payload` is a view into a reused buffer (the unescape buffer, or the
+				// caller's input for non-escaped frames): emitting it directly would let
+				// the next frame silently overwrite a packet the consumer still holds.
+				const packet = Buffer.from(payload)
 				// Check if this is a metering packet
-				if (this.isEmberStreamPacket(payload)) {
-					this.handleEmberStreamPacket(payload)
+				if (this.isEmberStreamPacket(packet)) {
+					this.handleEmberStreamPacket(packet)
 				} else {
-					this.handleEmberPacket(payload)
+					this.handleEmberPacket(packet)
 				}
 			}
 		} else {

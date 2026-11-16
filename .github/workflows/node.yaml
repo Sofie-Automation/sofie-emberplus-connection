@@ -67,6 +67,43 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         if: matrix.node-version == '18.x'
 
+  e2e-differential:
+    name: E2E differential tests (libember)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Use Node.js 26.x
+        uses: actions/setup-node@v6
+        with:
+          # Exact pin: the suite depends on the experimental node:ffi API,
+          # which may change between Node releases. Bump deliberately.
+          node-version: 26.7.0
+      - name: Cache native shim build
+        uses: actions/cache@v4
+        with:
+          path: e2e/native/build
+          key: e2e-native-${{ runner.os }}-${{ hashFiles('e2e/native/CMakeLists.txt', 'e2e/native/shim.cpp') }}
+      - name: Prepare Environment
+        run: |
+          yarn install
+        env:
+          CI: true
+      - name: Build native shim
+        run: |
+          yarn e2e:build
+        env:
+          CI: true
+      - name: Run e2e differential tests
+        run: |
+          yarn e2e
+        env:
+          CI: true
+
   validate-dependencies:
     name: Validate production dependencies
     runs-on: ubuntu-latest

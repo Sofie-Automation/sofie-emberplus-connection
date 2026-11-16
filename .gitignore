@@ -8,6 +8,7 @@ yarn-error.log
 /lib
 /dist
 /scratch
+/e2e/native/build
 
 .pnp.*
 .yarn/*

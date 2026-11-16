@@ -22,6 +22,12 @@ class ExtendedWriter extends Writer {
 
 		switch (value) {
 			case 0:
+				if (Object.is(value, -0)) {
+					// X.690 special value for minus zero (also what libember emits)
+					this.writeLength(1)
+					this.writeByte(0x43)
+					return
+				}
 				this.writeLength(0)
 				return
 			case Infinity:
@@ -70,7 +76,10 @@ class ExtendedWriter extends Writer {
 
 		this.writeLength(1 + shortExp.size + shortSig.size)
 
-		const preamble = value < 0 ? 0x80 | 0x40 : 0x80 // in what case will 0x80|0x40 be anything but 0xC0?
+		// Preamble per X.690 8.5.7: binary encoding (0x80), sign bit (0x40), and
+		// the exponent length in bits 0-1 (0 = 1 byte, 1 = 2 bytes, ...). Doubles
+		// with |unbiased exponent| >= 128 (e.g. 1e300) need the 2-byte form.
+		const preamble = (value < 0 ? 0x80 | 0x40 : 0x80) | (shortExp.size - 1)
 		this.writeByte(preamble)
 
 		for (let i = 0; i < shortExp.size; i++) {
@@ -96,11 +105,9 @@ class ExtendedWriter extends Writer {
 			value = arg1 as EmberValue
 		}
 
-		if (tag === BERDataTypes.NULL && (value === null || value === undefined)) {
-			this.writeNull()
-			return
-		}
-		if (value === null || value === undefined) {
+		// A NULL-tagged value has no content whatever the caller passed alongside -
+		// this also covers trigger-typed values, which carry no data on the wire
+		if (tag === BERDataTypes.NULL || value === null || value === undefined) {
 			this.writeNull()
 			return
 		}
@@ -217,7 +224,8 @@ function parameterTypetoBERTAG(parameterType: ParameterType): number {
 		case ParameterType.Boolean:
 			return BERDataTypes.BOOLEAN
 		case ParameterType.Trigger:
-			return BERDataTypes.STRING // TODO: this is a guess
+			// Trigger parameters carry no value; NULL is the only value-less encoding
+			return BERDataTypes.NULL
 		case ParameterType.Enum:
 			return BERDataTypes.ENUMERATED
 		case ParameterType.Octets:
