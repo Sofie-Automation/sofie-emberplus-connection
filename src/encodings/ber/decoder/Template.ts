@@ -50,7 +50,7 @@ export function decodeTemplate(
 				)
 				break
 			case Ber.CONTEXT(2):
-				description = reader.readString(Ber.BERDataTypes.STRING)
+				description = reader.readString(Ber.BERDataTypes.STRING) ?? description
 				break
 			case 0:
 				break // indefinite length

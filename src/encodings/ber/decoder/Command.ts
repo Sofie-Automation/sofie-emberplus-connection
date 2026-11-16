@@ -37,7 +37,10 @@ function readDirFieldMask(reader: Ber.Reader): FieldFlags | undefined {
 		[5]: FieldFlags.Connections,
 	}
 
-	return intToMask[reader.readInt()]
+	const int = reader.readInt()
+	if (typeof int !== 'number') return undefined
+
+	return intToMask[int]
 }
 
 function decodeCommand(reader: Ber.Reader, options: DecodeOptions = defaultDecode): DecodeResult<Command> {

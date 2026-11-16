@@ -44,7 +44,7 @@ export function decodeStreamDescription(
 	return makeResult(new StreamDescriptionImpl(format, offset), errors)
 }
 
-function readStreamFormat(value: number, options: DecodeOptions = defaultDecode): DecodeResult<StreamFormat> {
+function readStreamFormat(value: number | null, options: DecodeOptions = defaultDecode): DecodeResult<StreamFormat> {
 	switch (value) {
 		case 0:
 			return makeResult(StreamFormat.UInt8)

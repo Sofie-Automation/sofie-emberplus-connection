@@ -17,7 +17,7 @@ function decodeInvocation(reader: Ber.Reader, options: DecodeOptions = defaultDe
 		const tag = reader.readSequence()
 		switch (tag) {
 			case Ber.CONTEXT(0):
-				id = reader.readInt()
+				id = reader.readInt() ?? id
 				break
 			case Ber.CONTEXT(1):
 				reader.readSequence(Ber.BERDataTypes.SEQUENCE)

@@ -34,10 +34,10 @@ function decodeFunctionContent(
 		const tag = reader.readSequence()
 		switch (tag) {
 			case Ber.CONTEXT(0):
-				identifier = reader.readString(Ber.BERDataTypes.STRING)
+				identifier = reader.readString(Ber.BERDataTypes.STRING) ?? identifier
 				break
 			case Ber.CONTEXT(1):
-				description = reader.readString(Ber.BERDataTypes.STRING)
+				description = reader.readString(Ber.BERDataTypes.STRING) ?? description
 				break
 			case Ber.CONTEXT(2):
 				args = []
@@ -72,7 +72,7 @@ function decodeFunctionContent(
 				}
 				break
 			case Ber.CONTEXT(4):
-				templateReference = reader.readRelativeOID(Ber.BERDataTypes.RELATIVE_OID)
+				templateReference = reader.readRelativeOID(Ber.BERDataTypes.RELATIVE_OID) ?? templateReference
 				break
 			case 0:
 				break // Idefinite length

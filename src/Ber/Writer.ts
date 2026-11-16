@@ -1,5 +1,5 @@
 import Long from 'long'
-import { Writer, WriterOptions } from 'asn1'
+import { Writer, WriterOptions } from '../ASN1/ber/writer'
 
 import { CONTEXT, UNIVERSAL } from './functions'
 import { BERDataTypes } from './BERDataTypes'
@@ -130,12 +130,7 @@ class ExtendedWriter extends Writer {
 		}
 
 		if (Buffer.isBuffer(value) && tag) {
-			if (value.length === 0) {
-				this.writeByte(tag)
-				this.writeLength(0)
-			} else {
-				this.writeBuffer(value, tag)
-			}
+			this.writeBuffer(value, tag)
 			return
 		}
 
@@ -161,12 +156,7 @@ class ExtendedWriter extends Writer {
 					if (!Buffer.isBuffer(value.value)) {
 						value.value = Buffer.from(`${value.value}`)
 					}
-					if (value.value.length) {
-						this.writeByte(BERDataTypes.OCTETSTRING)
-						this.writeLength(0)
-					} else {
-						this.writeBuffer(value.value, BERDataTypes.OCTETSTRING)
-					}
+					this.writeBuffer(value.value, BERDataTypes.OCTETSTRING)
 					break
 				case ParameterType.Null:
 					this.writeNull()

@@ -22,7 +22,7 @@ export function decodeInvocationResult(
 				id = reader.readInt()
 				break
 			case Ber.CONTEXT(1):
-				success = reader.readBoolean()
+				success = reader.readBoolean() ?? success
 				break
 			case Ber.CONTEXT(2):
 				result = []

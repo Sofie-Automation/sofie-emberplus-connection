@@ -32,7 +32,7 @@ function decodeFunctionArgument(
 				type = appendErrors(readParameterType(reader.readInt(), options), errors)
 				break
 			case Ber.CONTEXT(1):
-				name = reader.readString(Ber.BERDataTypes.STRING)
+				name = reader.readString(Ber.BERDataTypes.STRING) ?? name
 				break
 			case 0:
 				break // indefinite length

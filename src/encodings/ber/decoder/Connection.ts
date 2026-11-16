@@ -21,7 +21,7 @@ function decodeConnection(reader: Ber.Reader, options: DecodeOptions = defaultDe
 	let sources: Array<number> | undefined = undefined
 	let operation: ConnectionOperation | undefined = undefined
 	let disposition: ConnectionDisposition | undefined = undefined
-	let encodedSources: string
+	let encodedSources: string | undefined = undefined
 	const errors: Array<Error> = []
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
@@ -31,8 +31,8 @@ function decodeConnection(reader: Ber.Reader, options: DecodeOptions = defaultDe
 				target = reader.readInt()
 				break
 			case Ber.CONTEXT(1):
-				encodedSources = reader.readRelativeOID(Ber.BERDataTypes.RELATIVE_OID)
-				if (encodedSources.length === 0) {
+				encodedSources = reader.readRelativeOID(Ber.BERDataTypes.RELATIVE_OID) ?? encodedSources
+				if (!encodedSources) {
 					sources = []
 				} else {
 					sources = encodedSources.split('.').map((i) => Number(i))
@@ -57,7 +57,7 @@ function decodeConnection(reader: Ber.Reader, options: DecodeOptions = defaultDe
 }
 
 function readConnectionOperation(
-	value: number,
+	value: number | null,
 	options: DecodeOptions = defaultDecode
 ): DecodeResult<ConnectionOperation> {
 	switch (value) {
@@ -79,7 +79,7 @@ function readConnectionOperation(
 }
 
 function readConnectionDisposition(
-	value: number,
+	value: number | null,
 	options: DecodeOptions = defaultDecode
 ): DecodeResult<ConnectionDisposition> {
 	switch (value) {

@@ -276,6 +276,6 @@ function unexpected<T>(
 function skipNext(reader: Ber.Reader): void {
 	const skipTag = reader.peek()
 	if (skipTag) {
-		reader.readString(skipTag, true)
+		reader.readStringAsBuffer(skipTag)
 	}
 }

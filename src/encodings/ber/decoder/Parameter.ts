@@ -48,10 +48,10 @@ function decodeParameter(reader: Ber.Reader, options: DecodeOptions = defaultDec
 		const tag = reader.readSequence()
 		switch (tag) {
 			case Ber.CONTEXT(0):
-				identifier = reader.readString(Ber.BERDataTypes.STRING)
+				identifier = reader.readString(Ber.BERDataTypes.STRING) ?? identifier
 				break
 			case Ber.CONTEXT(1):
-				description = reader.readString(Ber.BERDataTypes.STRING)
+				description = reader.readString(Ber.BERDataTypes.STRING) ?? description
 				break
 			case Ber.CONTEXT(2): {
 				const decodedValue = reader.readValue()
@@ -69,22 +69,22 @@ function decodeParameter(reader: Ber.Reader, options: DecodeOptions = defaultDec
 				access = appendErrors(readParameterAccess(reader.readInt(), options), errors)
 				break
 			case Ber.CONTEXT(6):
-				format = reader.readString(Ber.BERDataTypes.STRING)
+				format = reader.readString(Ber.BERDataTypes.STRING) ?? format
 				break
 			case Ber.CONTEXT(7):
-				enumeration = reader.readString(Ber.BERDataTypes.STRING)
+				enumeration = reader.readString(Ber.BERDataTypes.STRING) ?? enumeration
 				break
 			case Ber.CONTEXT(8):
-				factor = reader.readInt()
+				factor = reader.readInt() ?? factor
 				break
 			case Ber.CONTEXT(9):
-				isOnline = reader.readBoolean()
+				isOnline = reader.readBoolean() ?? isOnline
 				break
 			case Ber.CONTEXT(10):
-				formula = reader.readString(Ber.BERDataTypes.STRING)
+				formula = reader.readString(Ber.BERDataTypes.STRING) ?? formula
 				break
 			case Ber.CONTEXT(11):
-				step = reader.readInt()
+				step = reader.readInt() ?? step
 				break
 			case Ber.CONTEXT(12):
 				defaultValue = reader.readValue().value // Write value uses type
@@ -93,7 +93,7 @@ function decodeParameter(reader: Ber.Reader, options: DecodeOptions = defaultDec
 				parameterType = appendErrors(readParameterType(reader.readInt(), options), errors)
 				break
 			case Ber.CONTEXT(14):
-				streamIdentifier = reader.readInt()
+				streamIdentifier = reader.readInt() ?? streamIdentifier
 				break
 			case Ber.CONTEXT(15):
 				enumMap = appendErrors(decodeStringIntegerCollection(reader, options), errors)
@@ -102,10 +102,10 @@ function decodeParameter(reader: Ber.Reader, options: DecodeOptions = defaultDec
 				streamDescriptor = appendErrors(decodeStreamDescription(reader, options), errors)
 				break
 			case Ber.CONTEXT(17):
-				schemaIdentifiers = reader.readString(Ber.BERDataTypes.STRING)
+				schemaIdentifiers = reader.readString(Ber.BERDataTypes.STRING) ?? schemaIdentifiers
 				break
 			case Ber.CONTEXT(18):
-				templateReference = reader.readString(Ber.BERDataTypes.STRING)
+				templateReference = reader.readString(Ber.BERDataTypes.STRING) ?? templateReference
 				break
 			case 0:
 				break // indefinite length
@@ -151,7 +151,7 @@ function decodeParameter(reader: Ber.Reader, options: DecodeOptions = defaultDec
 	)
 }
 
-function readParameterAccess(value: number, options: DecodeOptions): DecodeResult<ParameterAccess> {
+function readParameterAccess(value: number | null, options: DecodeOptions): DecodeResult<ParameterAccess> {
 	switch (value) {
 		case 0:
 			return makeResult(ParameterAccess.None)
@@ -172,7 +172,7 @@ function readParameterAccess(value: number, options: DecodeOptions): DecodeResul
 	}
 }
 
-function readParameterType(value: number, options: DecodeOptions): DecodeResult<ParameterType> {
+function readParameterType(value: number | null, options: DecodeOptions): DecodeResult<ParameterType> {
 	switch (value) {
 		case 0:
 			return makeResult(ParameterType.Null)
