@@ -22,6 +22,7 @@ jobs:
           node-version: 22.x
       - name: Prepare Environment
         run: |
+          corepack enable
           yarn install
           yarn build
         env:
@@ -53,6 +54,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: Prepare Environment
         run: |
+          command -v corepack >/dev/null || npm install -g corepack
+          corepack enable
           yarn install
         env:
           CI: true
@@ -81,6 +84,7 @@ jobs:
           node-version: 22.x
       - name: Prepare Environment
         run: |
+          corepack enable
           yarn install
         env:
           CI: true
@@ -108,6 +112,7 @@ jobs:
           node-version: 22.x
       - name: Prepare Environment
         run: |
+          corepack enable
           yarn install
         env:
           CI: true
