@@ -635,13 +635,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^7.0.4":
-  version: 7.10.14
-  resolution: "@types/node@npm:7.10.14"
-  checksum: 10/a01e642368c5ed2db0ef09f0ad1f6fff6bdb70ee83083b61f03ae29cc009a22128fe8e1621f03eacb78518c4244ade12e17495a81c484072089b76d803401683
-  languageName: node
-  linkType: hard
-
 "@types/normalize-package-data@npm:^2.4.4":
   version: 2.4.4
   resolution: "@types/normalize-package-data@npm:2.4.4"
@@ -1154,7 +1147,7 @@ __metadata:
     lint-staged: "npm:^17"
     prettier: "npm:^3"
     rimraf: "npm:^6.1.4"
-    smart-buffer: "npm:^3.0.3"
+    smart-buffer: "npm:^4.2.0"
     typescript: "npm:~6.0"
     vite: "npm:^8"
     vitest: "npm:^5.1.0"
@@ -2647,12 +2640,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"smart-buffer@npm:^3.0.3":
-  version: 3.0.3
-  resolution: "smart-buffer@npm:3.0.3"
-  dependencies:
-    "@types/node": "npm:^7.0.4"
-  checksum: 10/159da67e7e75e0ab6473e20c486f6f8e313df0971d251563dd074382eb55b11f26911883d106ccd4d268eb9ad3f31ff05efaeb330892acdc4b6f1b37b25dc3d7
+"smart-buffer@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "smart-buffer@npm:4.2.0"
+  checksum: 10/927484aa0b1640fd9473cee3e0a0bcad6fce93fd7bbc18bac9ad0c33686f5d2e2c422fba24b5899c184524af01e11dd2bd051c2bf2b07e47aff8ca72cbfc60d2
   languageName: node
   linkType: hard
 

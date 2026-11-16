@@ -54,7 +54,7 @@
 	"license": "MIT",
 	"dependencies": {
 		"debug": "^4.3.4",
-		"smart-buffer": "^3.0.3"
+		"smart-buffer": "^4.2.0"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
