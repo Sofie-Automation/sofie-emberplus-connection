@@ -1,3 +1,5 @@
+import { describe, expect, test } from 'vitest'
+
 import * as Ber from '../../../Ber/index.js'
 import { StringIntegerCollection } from '../../../types/types.js'
 import { guarded } from '../decoder/DecodeResult.js'

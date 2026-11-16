@@ -1,4 +1,6 @@
-/* eslint-disable jest/expect-expect */
+import { describe, expect, test } from 'vitest'
+
+/* eslint-disable vitest/expect-expect */
 import * as Ber from '../../../Ber/index.js'
 import { ElementType } from '../../../model/EmberElement.js'
 import { Parameter, ParameterAccess, ParameterType } from '../../../model/Parameter.js'

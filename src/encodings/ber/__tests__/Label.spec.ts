@@ -1,3 +1,5 @@
+import { describe, expect, test } from 'vitest'
+
 import * as Ber from '../../../Ber/index.js'
 import { Label } from '../../../model/Label.js'
 import { literal } from '../../../types/types.js'

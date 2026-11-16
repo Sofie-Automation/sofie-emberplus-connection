@@ -1,3 +1,5 @@
+import { describe, expect, test } from 'vitest'
+
 import * as Ber from '../../../Ber/index.js'
 import { ElementType } from '../../../model/EmberElement.js'
 import { EmberNode } from '../../../model/EmberNode.js'

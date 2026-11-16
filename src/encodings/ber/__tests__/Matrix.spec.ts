@@ -1,4 +1,6 @@
-/* eslint-disable jest/expect-expect */
+import { describe, expect, test } from 'vitest'
+
+/* eslint-disable vitest/expect-expect */
 import * as Ber from '../../../Ber/index.js'
 import { ConnectionDisposition, ConnectionOperation } from '../../../model/Connection.js'
 import { Matrix, MatrixAddressingMode, MatrixImpl, MatrixType } from '../../../model/Matrix.js'

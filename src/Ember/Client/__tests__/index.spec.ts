@@ -1,3 +1,7 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+// The vi.mock factory below returns this same module, so the test drives the instance the client uses
+// eslint-disable-next-line vitest/no-mocks-import
 import S101ClientMock from '../../../__mocks__/S101Client.js'
 import { DecodeResult } from '../../../encodings/ber/decoder/DecodeResult.js'
 import {
@@ -19,14 +23,14 @@ import { EmberClient } from '../index.js'
 // import { ElementType, EmberElement } from '../../../model/EmberElement'
 // import { Parameter, ParameterType } from '../../../model/Parameter'
 
-jest.mock('../../Socket/S101Client', () => jest.requireActual('../../../__mocks__/S101Client'))
+vi.mock('../../Socket/S101Client.js', async () => import('../../../__mocks__/S101Client.js'))
 
 describe('client', () => {
-	const onSocketCreate = jest.fn()
-	const onConnection = jest.fn()
-	const onSocketClose = jest.fn()
-	const onSocketWrite = jest.fn()
-	const onConnectionChanged = jest.fn()
+	const onSocketCreate = vi.fn()
+	const onConnection = vi.fn()
+	const onSocketClose = vi.fn()
+	const onSocketWrite = vi.fn()
+	const onConnectionChanged = vi.fn()
 
 	function setupSocketMock() {
 		S101ClientMock.mockOnNextSocket((socket: any) => {
@@ -54,7 +58,7 @@ describe('client', () => {
 		onConnectionChanged.mockClear()
 
 		// Just a check to ensure that the unit tests cleaned up the socket after themselves:
-		// eslint-disable-next-line jest/no-standalone-expect
+		// eslint-disable-next-line vitest/no-standalone-expect
 		expect(sockets).toHaveLength(0)
 	})
 
@@ -440,8 +444,8 @@ describe('client', () => {
 	describe('Subscription behavior regressions', () => {
 		it('invokes all callbacks subscribed to the same path', async () => {
 			await runWithConnection(async (client, socket) => {
-				const cb1 = jest.fn()
-				const cb2 = jest.fn()
+				const cb1 = vi.fn()
+				const cb2 = vi.fn()
 
 				const parameter = new ParameterImpl(ParameterType.Integer, 'Level', undefined, 1)
 				const node = new NumberedTreeNodeImpl(1, parameter)
@@ -477,8 +481,8 @@ describe('client', () => {
 				const parameter = new ParameterImpl(ParameterType.Integer, 'Level', undefined, 1)
 				const node = new NumberedTreeNodeImpl(1, parameter)
 
-				await client.subscribe(node, jest.fn())
-				await client.subscribe(node, jest.fn())
+				await client.subscribe(node, vi.fn())
+				await client.subscribe(node, vi.fn())
 
 				//@ts-expect-error - private member
 				expect(client._subscriptions.filter((s) => s.path === '1')).toHaveLength(2)

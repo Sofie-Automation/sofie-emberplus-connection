@@ -1,3 +1,5 @@
+import { describe, expect, test } from 'vitest'
+
 import * as Ber from '../../../Ber/index.js'
 import { FunctionArgument } from '../../../model/FunctionArgument.js'
 import { ParameterType } from '../../../model/Parameter.js'

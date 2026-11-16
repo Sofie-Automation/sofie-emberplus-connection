@@ -1,3 +1,5 @@
+import { describe, expect, it, test, vi } from 'vitest'
+
 // Import the package barrel first: S101Socket has a circular dependency on it
 // (for berDecode), so loading it directly first leaves the class undefined.
 import '../../../index.js'
@@ -68,7 +70,7 @@ describe('S101Socket lifecycle', () => {
 	it('sets disconnected status on socket close', () => {
 		const socket = new FakeSocket()
 		const s101Socket = new S101Socket(socket as any)
-		const onDisconnected = jest.fn()
+		const onDisconnected = vi.fn()
 
 		s101Socket.on('disconnected', onDisconnected)
 		expect(s101Socket.status).toBe(ConnectionStatus.Connected)
@@ -112,7 +114,7 @@ describe('S101Socket lifecycle', () => {
 	it('handleClose tears down socket and marks disconnected', () => {
 		const socket = new FakeSocket()
 		const s101Socket = new S101Socket(socket as any)
-		const onDisconnected = jest.fn()
+		const onDisconnected = vi.fn()
 
 		s101Socket.on('disconnected', onDisconnected)
 		;(s101Socket as any).keepaliveIntervalTimer = setInterval(() => null, 1000)

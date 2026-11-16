@@ -1,3 +1,5 @@
+import { expect, test } from 'vitest'
+
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
 import { Writer } from '../writer.js'

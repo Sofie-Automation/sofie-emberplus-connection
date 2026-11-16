@@ -1,4 +1,5 @@
 import { SmartBuffer } from 'smart-buffer'
+import { describe, expect, test } from 'vitest'
 
 import S101Codec from '../S101Codec.js'
 

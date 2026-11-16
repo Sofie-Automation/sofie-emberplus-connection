@@ -30,6 +30,7 @@ jobs:
       - name: Run typecheck and linter
         run: |
           yarn lint
+          yarn check-types
         env:
           CI: true
 

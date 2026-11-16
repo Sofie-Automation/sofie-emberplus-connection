@@ -1,3 +1,5 @@
+import { describe, expect, test } from 'vitest'
+
 import { BERDataTypes } from '../BERDataTypes.js'
 import { Writer } from '../Writer.js'
 

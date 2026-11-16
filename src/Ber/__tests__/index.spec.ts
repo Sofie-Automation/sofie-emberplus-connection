@@ -1,3 +1,5 @@
+import { describe, expect, test } from 'vitest'
+
 import { ElementType } from '../../model/EmberElement.js'
 import { Parameter, ParameterType } from '../../model/Parameter.js'
 import { BERDataTypes } from '../index.js'

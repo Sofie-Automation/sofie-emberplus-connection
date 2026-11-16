@@ -1,3 +1,5 @@
+import { describe, expect, test } from 'vitest'
+
 import * as Ber from '../../../Ber/index.js'
 import { Invocation } from '../../../model/Invocation.js'
 import { ParameterType } from '../../../model/Parameter.js'

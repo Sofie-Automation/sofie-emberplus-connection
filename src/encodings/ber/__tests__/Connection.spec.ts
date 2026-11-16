@@ -1,3 +1,5 @@
+import { describe, expect, test } from 'vitest'
+
 import * as Ber from '../../../Ber/index.js'
 import { Connection, ConnectionDisposition, ConnectionOperation } from '../../../model/Connection.js'
 import { literal } from '../../../types/types.js'
