@@ -32,6 +32,7 @@ function decodeFunctionContent(
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
 		const tag = reader.readSequence()
+		if (tag === null) break // truncated/malformed - cannot make progress
 		switch (tag) {
 			case Ber.CONTEXT(0):
 				identifier = reader.readString(Ber.BERDataTypes.STRING) ?? identifier
@@ -45,6 +46,7 @@ function decodeFunctionContent(
 				seqOffset = reader.offset + reader.length
 				while (reader.offset < seqOffset) {
 					const argTag = reader.readSequence()
+					if (argTag === null) break // truncated/malformed - cannot make progress
 					if (argTag === 0) continue // indefinite length
 					if (argTag !== Ber.CONTEXT(0)) {
 						unknownContext(errors, 'decode function content: arguments', argTag, options)
@@ -61,6 +63,7 @@ function decodeFunctionContent(
 				resOffset = reader.offset + reader.length
 				while (reader.offset < resOffset) {
 					const resTag = reader.readSequence()
+					if (resTag === null) break // truncated/malformed - cannot make progress
 					if (resTag === 0) continue // indefinite length
 					if (resTag !== Ber.CONTEXT(0)) {
 						unknownContext(errors, 'decode function content: result', resTag, options)

@@ -15,6 +15,7 @@ function decodeInvocation(reader: Ber.Reader, options: DecodeOptions = defaultDe
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
 		const tag = reader.readSequence()
+		if (tag === null) break // truncated/malformed - cannot make progress
 		switch (tag) {
 			case Ber.CONTEXT(0):
 				id = reader.readInt() ?? id
@@ -24,6 +25,7 @@ function decodeInvocation(reader: Ber.Reader, options: DecodeOptions = defaultDe
 				seqOffset = reader.offset + reader.length
 				while (reader.offset < seqOffset) {
 					const tag = reader.readSequence()
+					if (tag === null) break // truncated/malformed - cannot make progress
 					if (tag === Ber.CONTEXT(0)) {
 						args.push(reader.readValue())
 					} else {

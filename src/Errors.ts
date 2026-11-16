@@ -20,6 +20,7 @@ export {
 	InvalidStringPair,
 	PathDiscoveryFailure,
 	S101OversizedFrameError,
+	S101SendBufferFullError,
 }
 
 class UnimplementedEmberTypeError extends Error {
@@ -54,6 +55,17 @@ class S101SocketError extends Error {
  * The socket layer recognises this type to drop the connection.
  */
 class S101OversizedFrameError extends Error {
+	constructor(message: string) {
+		super(message)
+		this.name = this.constructor.name
+	}
+}
+
+/**
+ * Emitted by an S101 socket just before it closes the connection because more data is queued for the peer than
+ * `maxSendBufferSize` allows, meaning the peer isn't reading what is sent to it.
+ */
+class S101SendBufferFullError extends Error {
 	constructor(message: string) {
 		super(message)
 		this.name = this.constructor.name

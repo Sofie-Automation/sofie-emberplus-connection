@@ -6,6 +6,14 @@ import { newInvalidAsn1Error } from './errors'
 
 ///--- API
 
+// Guards against a hostile peer nesting indefinite-length BER blocks to exhaust
+// the JS call stack (each level costs only 2 bytes on the wire). Each Ember+ tree
+// level costs ~4 BER levels (element, children, ElementCollection, item), and
+// devices exist that use the indefinite form for every container, so this must
+// stay well above 4x the decoder's tree depth limit (MAX_TREE_DEPTH) while still
+// being far below the call stack limit.
+const MAX_BLOCK_DEPTH = 512
+
 export class Reader {
 	private _buf: Buffer
 	private _size: number
@@ -90,6 +98,9 @@ export class Reader {
 				lenB &= 0x7f
 
 				if (lenB == 0) {
+					if (this._blocklevel >= MAX_BLOCK_DEPTH) {
+						throw newInvalidAsn1Error('indefinite-length nesting too deep')
+					}
 					this._blocklevel++
 					lenB = this.readBlock(currOffset)
 					this._blocklevel--
@@ -149,12 +160,21 @@ export class Reader {
 				if (this._size - offset < lenB) return null
 
 				this._len = 0
-				for (let i = 0; i < lenB; i++) this._len = (this._len << 8) + (this._buf[offset++] & 0xff)
+				// Assemble unsigned: `<< 8` operates on a signed 32-bit int, so a 4-byte
+				// length with the top bit set would produce a NEGATIVE length. Downstream
+				// bounds checks are all `len > remaining`, which a negative length passes,
+				// letting the cursor run backwards and read past element boundaries.
+				for (let i = 0; i < lenB; i++) this._len = this._len * 0x100 + (this._buf[offset++] & 0xff)
 			}
 		} else {
 			// Wasn't a variable length
 			this._len = lenB
 		}
+
+		// A definite length must not claim more bytes than remain in the buffer. This
+		// single check makes every caller reject truncated/over-long elements instead
+		// of trusting an attacker-supplied length.
+		if (this._len > this._size - offset) return null
 
 		return offset
 	}
@@ -296,17 +316,19 @@ export class Reader {
 		if (this.length > this._size - o) return null
 		this._offset = o
 
-		const fb = this._buf[this._offset]
+		// Decode as two's-complement using Number arithmetic rather than 32-bit bitwise
+		// ops. The old code used `<<`/`>>`, which silently produced wrong values for any
+		// INTEGER longer than 4 bytes (e.g. a 5-byte 0x0100000000 decoded to 0). This is
+		// exact up to 2^53; beyond that Number cannot represent the value precisely, but
+		// it is never arbitrary garbage.
+		const negative = this.length > 0 && (this._buf[this._offset] & 0x80) === 0x80
 		let value = 0
-
-		let i: number
-		for (i = 0; i < this.length; i++) {
-			value <<= 8
-			value |= this._buf[this._offset++] & 0xff
+		for (let i = 0; i < this.length; i++) {
+			value = value * 0x100 + (this._buf[this._offset++] & 0xff)
 		}
 
-		if ((fb & 0x80) === 0x80 && i !== 4) value -= 1 << (i * 8)
+		if (negative) value -= 2 ** (this.length * 8)
 
-		return value >> 0
+		return value
 	}
 }

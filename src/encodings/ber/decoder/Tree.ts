@@ -40,9 +40,14 @@ import { Command } from '../../../model/Command'
 import { EmberNodeImpl } from '../../../model/EmberNode'
 import { ParameterImpl, ParameterType, EmberFunctionImpl } from '../../../model'
 
+// Bounds tree-decode recursion so a deeply nested message from a hostile peer cannot
+// exhaust the JS call stack. Real Ember+ trees are only a handful of levels deep.
+const MAX_TREE_DEPTH = 64
+
 export function decodeChildren(
 	reader: Ber.Reader,
-	options: DecodeOptions = defaultDecode
+	options: DecodeOptions = defaultDecode,
+	depth = 0
 ): DecodeResult<Collection<NumberedTreeNode<EmberElement>>> {
 	reader.readSequence(ElementCollectionBERID)
 	const kids = makeResult<Collection<NumberedTreeNode<EmberElement>>>({} as Collection<NumberedTreeNode<EmberElement>>)
@@ -50,10 +55,18 @@ export function decodeChildren(
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
 		const tag = reader.readSequence()
+		if (tag === null) break // truncated/malformed - cannot make progress
 		if (tag === 0) continue
-		const kidEl = decodeGenericElement(reader, options) as DecodeResult<NumberedTreeNode<EmberElement>>
+		const kidEl = decodeGenericElement(reader, options, depth + 1) as DecodeResult<NumberedTreeNode<EmberElement>>
 		safeSet(kidEl, kids, (x, y) => {
-			y[x.number] = x
+			const num = (x as { number?: number }).number
+			if (num !== undefined) {
+				y[num] = x
+			} else {
+				// A qualified element inside an ElementCollection has no number; keep it at
+				// a fresh index rather than collapsing every such child onto key "undefined".
+				y[Object.keys(y).length] = x
+			}
 			return y
 		})
 	}
@@ -63,13 +76,18 @@ export function decodeChildren(
 
 export function decodeGenericElement(
 	reader: Ber.Reader,
-	options: DecodeOptions = defaultDecode
+	options: DecodeOptions = defaultDecode,
+	depth = 0
 ): DecodeResult<TreeElement<EmberElement>> {
 	const tag = reader.peek()
 	const errors = new Array<Error>()
 
-	if (tag === null) {
-		unknownApplication(errors, 'decode generic element', tag, options)
+	if (tag === null || depth > MAX_TREE_DEPTH) {
+		if (depth > MAX_TREE_DEPTH) {
+			errors.push(new Error('decode generic element: tree nesting too deep'))
+		} else {
+			unknownApplication(errors, 'decode generic element', tag, options)
+		}
 		skipNext(reader)
 		return makeResult(new NumberedTreeNodeImpl(-1, new EmberNodeImpl()), errors)
 	}
@@ -77,10 +95,10 @@ export function decodeGenericElement(
 	const type = appendErrors(tagToElType(tag, options), errors)
 
 	if (tag === MatrixBERID || tag === QualifiedMatrixBERID) {
-		return decodeMatrix(reader, isQualified)
+		return decodeMatrix(reader, isQualified, options, depth)
 	}
 	if (tag === TemplateBERID || tag === QualifiedTemplateBERID) {
-		return decodeTemplate(reader, isQualified)
+		return decodeTemplate(reader, isQualified, options, depth)
 	} else if (tag === CommandBERID) {
 		const commandResult: DecodeResult<Command> = decodeCommand(reader, options)
 		return makeResult(new NumberedTreeNodeImpl(commandResult.value.number, commandResult.value), commandResult.errors)
@@ -95,6 +113,7 @@ export function decodeGenericElement(
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
 		const tag = reader.readSequence()
+		if (tag === null) break // truncated/malformed - cannot make progress
 		switch (tag) {
 			case Ber.CONTEXT(0):
 				if (isQualified) {
@@ -138,7 +157,7 @@ export function decodeGenericElement(
 				}
 				break
 			case Ber.CONTEXT(2):
-				children = appendErrors(decodeChildren(reader, options), errors)
+				children = appendErrors(decodeChildren(reader, options, depth), errors)
 				break
 			case 0:
 				break // indefinite length
@@ -195,6 +214,7 @@ export function decodeRootElements(
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
 		const tag = reader.readSequence()
+		if (tag === null) break // truncated/malformed - cannot make progress
 		if (tag === 0) continue
 		if (tag !== Ber.CONTEXT(0)) {
 			unknownContext(rootEls, 'decode root elements', tag, options)
@@ -203,8 +223,11 @@ export function decodeRootElements(
 		}
 		const rootEl = decodeGenericElement(reader, options) as DecodeResult<NumberedTreeNode<EmberElement>>
 		safeSet(rootEl, rootEls, (x, y) => {
-			if (x.number) {
-				y[x.number] = x
+			const num = (x as { number?: number }).number
+			// `!== undefined`, not a truthiness test: element number 0 is valid and must
+			// not be filed at a fallback index (which would collide with real elements).
+			if (num !== undefined) {
+				y[num] = x
 			} else {
 				y[Object.values<RootElement>(y).length] = x
 			}

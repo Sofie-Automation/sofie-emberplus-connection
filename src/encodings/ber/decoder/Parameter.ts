@@ -46,6 +46,7 @@ function decodeParameter(reader: Ber.Reader, options: DecodeOptions = defaultDec
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
 		const tag = reader.readSequence()
+		if (tag === null) break // truncated/malformed - cannot make progress
 		switch (tag) {
 			case Ber.CONTEXT(0):
 				identifier = reader.readString(Ber.BERDataTypes.STRING) ?? identifier
@@ -105,7 +106,9 @@ function decodeParameter(reader: Ber.Reader, options: DecodeOptions = defaultDec
 				schemaIdentifiers = reader.readString(Ber.BERDataTypes.STRING) ?? schemaIdentifiers
 				break
 			case Ber.CONTEXT(18):
-				templateReference = reader.readString(Ber.BERDataTypes.STRING) ?? templateReference
+				// templateReference is a RELATIVE_OID per the Glow schema (matching every
+				// other element type), not a STRING.
+				templateReference = reader.readRelativeOID(Ber.BERDataTypes.RELATIVE_OID) ?? templateReference
 				break
 			case 0:
 				break // indefinite length

@@ -31,7 +31,8 @@ export { decodeMatrix }
 function decodeMatrix(
 	reader: Ber.Reader,
 	isQualified = false,
-	options: DecodeOptions = defaultDecode
+	options: DecodeOptions = defaultDecode,
+	depth = 0
 ): DecodeResult<TreeElement<Matrix>> {
 	reader.readSequence(isQualified ? QualifiedMatrixBERID : MatrixBERID)
 	let number: number | null = null
@@ -45,6 +46,7 @@ function decodeMatrix(
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
 		const tag = reader.readSequence()
+		if (tag === null) break // truncated/malformed - cannot make progress
 		switch (tag) {
 			case Ber.CONTEXT(0):
 				if (isQualified) {
@@ -57,7 +59,7 @@ function decodeMatrix(
 				contents = appendErrors(decodeMatrixContents(reader, options), errors)
 				break
 			case Ber.CONTEXT(2):
-				kids = appendErrors(decodeChildren(reader, options), errors)
+				kids = appendErrors(decodeChildren(reader, options, depth), errors)
 				break
 			case Ber.CONTEXT(3):
 				targets = appendErrors(decodeTargets(reader, options), errors)
@@ -120,6 +122,7 @@ function decodeMatrixContents(reader: Ber.Reader, options: DecodeOptions = defau
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
 		const tag = reader.readSequence()
+		if (tag === null) break // truncated/malformed - cannot make progress
 		switch (tag) {
 			case Ber.CONTEXT(0):
 				identifier = reader.readString(Ber.BERDataTypes.STRING) ?? identifier
@@ -161,7 +164,7 @@ function decodeMatrixContents(reader: Ber.Reader, options: DecodeOptions = defau
 				reader.readSequence(Ber.BERDataTypes.SEQUENCE)
 				seqOffset = reader.offset + reader.length
 				while (reader.offset < seqOffset) {
-					reader.readSequence(Ber.CONTEXT(0))
+					if (reader.readSequence(Ber.CONTEXT(0)) === null) break // truncated/malformed
 					const lvVal = appendErrors(decodeLabel(reader, options), errors)
 					labels.push(lvVal)
 				}
@@ -213,7 +216,7 @@ function decodeTargets(
 	reader.readSequence(Ber.BERDataTypes.SEQUENCE)
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
-		reader.readSequence(Ber.CONTEXT(0))
+		if (reader.readSequence(Ber.CONTEXT(0)) === null) break // truncated/malformed
 		reader.readSequence(TargetBERID)
 		reader.readSequence(Ber.CONTEXT(0))
 		const target = reader.readInt()
@@ -235,7 +238,7 @@ function decodeSources(
 	reader.readSequence(Ber.BERDataTypes.SEQUENCE)
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
-		reader.readSequence(Ber.CONTEXT(0))
+		if (reader.readSequence(Ber.CONTEXT(0)) === null) break // truncated/malformed
 		reader.readSequence(SourceBERID)
 		reader.readSequence(Ber.CONTEXT(0))
 		const source = reader.readInt()
@@ -254,6 +257,7 @@ function decodeConnections(reader: Ber.Reader, options: DecodeOptions = defaultD
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
 		const tag = reader.readSequence()
+		if (tag === null) break // truncated/malformed - cannot make progress
 		if (tag === Ber.CONTEXT(0)) {
 			const connection = appendErrors(decodeConnection(reader, options), connections)
 			connections.value[connection.target] = connection

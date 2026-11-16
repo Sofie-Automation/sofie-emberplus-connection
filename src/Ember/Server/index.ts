@@ -23,17 +23,22 @@ import {
 	EmberValue,
 } from '../../types/types'
 import { DecodeResult } from '../../encodings/ber/decoder/DecodeResult'
-import { toQualifiedEmberNode } from '../Lib/util'
+import { getPath, toQualifiedEmberNode } from '../Lib/util'
 import { berEncode } from '../../encodings/ber'
 import { Command, CommandType, FieldFlags, GetDirectory, Invoke } from '../../model/Command'
 import { Connection, ConnectionOperation, ConnectionImpl } from '../../model/Connection'
 import { InvocationResultImpl } from '../../model/InvocationResult'
-import S101Socket from '../Socket/S101Socket'
+import S101Socket, { S101SocketOptions } from '../Socket/S101Socket'
 
 export type EmberServerEvents = {
 	error: [Error]
 	clientError: [client: S101Socket, error: Error]
 }
+
+export type EmberServerOptions = S101SocketOptions
+
+// Upper bound on simultaneous consumer connections.
+const MAX_CLIENTS = 1024
 
 export class EmberServer extends EventEmitter<EmberServerEvents> {
 	address: string | undefined
@@ -51,15 +56,25 @@ export class EmberServer extends EventEmitter<EmberServerEvents> {
 	private _clients: Set<S101Socket> = new Set()
 	private _subscriptions: { [path: string]: Array<S101Socket> } = {}
 
-	constructor(port: number, address?: string) {
+	constructor(port: number, address?: string, options?: EmberServerOptions) {
 		super()
 
 		this.address = address
 		this.port = port
-		this._server = new S101Server(port, address)
+		this._server = new S101Server(port, address, options)
 
 		this._server.on('connection', (client: S101Socket) => {
+			// Cap concurrent connections so a peer opening sockets endlessly cannot grow
+			// _clients/_subscriptions without bound.
+			if (this._clients.size >= MAX_CLIENTS) {
+				client.disconnect().catch(() => null)
+				return
+			}
 			this._clients.add(client)
+
+			// Start keepalive so half-open connections (peer vanished without a FIN) are
+			// detected and torn down instead of lingering forever.
+			client.startKeepAlive()
 
 			client.on('emberTree', (tree) => this._handleIncoming(tree as DecodeResult<Collection<RootElement>>, client))
 
@@ -258,19 +273,32 @@ export class EmberServer extends EventEmitter<EmberServerEvents> {
 		const tree = path ? this.getElementByPath(path) : this.tree
 		if (!tree) return
 
+		// Key subscriptions by the canonical numeric path (not the raw request string,
+		// which may use identifiers/aliases or non-canonical numbers like "01"). This
+		// bounds the number of distinct keys and makes update() delivery actually reach
+		// consumers that subscribed via an identifier path.
+		const subPath = path ? getPath(tree as NumberedTreeNode<EmberElement>) : ''
+
 		if (el.contents.number === CommandType.Subscribe) {
-			this._subscribe(path, client)
+			this._subscribe(subPath, client)
 		} else if (el.contents.number === CommandType.Unsubscribe) {
-			this._unsubscribe(path, client)
+			this._unsubscribe(subPath, client)
 		} else if (el.contents.number === CommandType.GetDirectory) {
-			this._subscribe(path, client) // send updates to client
+			this._subscribe(subPath, client) // send updates to client
 			this._handleGetDirectory(tree, (el.contents as GetDirectory).dirFieldMask || FieldFlags.Default, client)
 		} else if (el.contents.number === CommandType.Invoke) {
 			let result: InvocationResult
-			if (this.onInvocation) {
+			const invokeId = (el as NumberedTreeNode<Invoke>).contents.invocation?.id ?? -1
+			// A consumer can point an Invoke at any path; only a Function is invocable.
+			// Reject anything else (including the root collection) instead of blindly
+			// casting a Parameter/Matrix/Node.
+			const target = tree as NumberedTreeNode<EmberElement>
+			if (!('contents' in target) || target.contents.type !== ElementType.Function) {
+				result = new InvocationResultImpl(invokeId, false)
+			} else if (this.onInvocation) {
 				result = await this.onInvocation(tree as NumberedTreeNode<EmberFunction>, el as NumberedTreeNode<Invoke>)
 			} else {
-				result = new InvocationResultImpl((el as NumberedTreeNode<Invoke>).contents.invocation?.id || -1, false)
+				result = new InvocationResultImpl(invokeId, false)
 			}
 			const encoded = berEncode(result, RootType.InvocationResult)
 			client.sendBER(encoded)
@@ -291,7 +319,7 @@ export class EmberServer extends EventEmitter<EmberServerEvents> {
 		const pathArr = path.split(delimiter)
 		const i = pathArr.shift()
 		let tree: NumberedTreeNode<EmberElement> | undefined = getNext(this.tree, i)
-		if (tree?.number) numberedPath.push(tree?.number)
+		if (tree?.number !== undefined) numberedPath.push(tree.number)
 
 		while (pathArr.length) {
 			const i = pathArr.shift()
@@ -304,23 +332,30 @@ export class EmberServer extends EventEmitter<EmberServerEvents> {
 			}
 			tree = next
 			if (!tree) return
-			if (tree?.number) numberedPath.push(tree?.number)
+			if (tree?.number !== undefined) numberedPath.push(tree.number)
 		}
 
 		return tree
 	}
 
 	private _subscribe(path: string, client: S101Socket) {
-		this._subscriptions[path] = [...(this._subscriptions[path] || []), client]
+		const list = this._subscriptions[path] ?? (this._subscriptions[path] = [])
+		// Dedup: a consumer issuing GetDirectory/Subscribe N times on the same path must
+		// not receive N copies of every update, nor accumulate N references.
+		if (!list.includes(client)) list.push(client)
 	}
 	private _unsubscribe(path: string, client: S101Socket) {
-		if (!this._subscriptions[path]) return
+		const list = this._subscriptions[path]
+		if (!list) return
 
-		this._subscriptions[path].forEach((c, i) => {
-			if (c === client) {
-				this._subscriptions[path].splice(i, 1)
-			}
-		})
+		// Filter (not splice-in-forEach, which skips entries) and drop empty keys so the
+		// map cannot grow unbounded and dead-socket references cannot survive.
+		const remaining = list.filter((c) => c !== client)
+		if (remaining.length > 0) {
+			this._subscriptions[path] = remaining
+		} else {
+			delete this._subscriptions[path]
+		}
 	}
 	private _clearSubscription(client: S101Socket) {
 		for (const path of Object.keys(this._subscriptions)) {

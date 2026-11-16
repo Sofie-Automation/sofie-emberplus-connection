@@ -29,6 +29,7 @@ import { Connection, ConnectionDisposition, ConnectionOperation } from '../../mo
 import { EmberNode } from '../../model/EmberNode'
 import { EventEmitter } from 'eventemitter3'
 import { S101Client } from '../Socket'
+import { S101SocketOptions } from '../Socket/S101Socket'
 import { getPath, assertQualifiedEmberNode, insertCommand, updateProps, isEmptyNode } from '../Lib/util'
 import { berEncode } from '../../encodings/ber'
 import { NumberedTreeNodeImpl } from '../../model/Tree'
@@ -39,6 +40,8 @@ import { StreamManager } from './StreamManager'
 import { ConnectionStatus } from './ConnectionStatus'
 
 export { ConnectionStatus } from './ConnectionStatus'
+
+export type EmberClientOptions = S101SocketOptions
 
 export type RequestPromise<T> = Promise<RequestPromiseArguments<T>>
 export interface RequestPromiseArguments<T> {
@@ -94,6 +97,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 
 	private _streamManager: StreamManager
 	private _requests = new Map<string, Request>()
+	private _nextReqId = 0
 	private _lastInvocation = 0
 	private _client: S101Client
 	private _subscriptions: Array<Subscription> = []
@@ -103,7 +107,14 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 	private _resends = false
 	private _timer: NodeJS.Timeout
 
-	constructor(host: string, port = 9000, timeout = 3000, enableResends = false, resendTimeout = 1000) {
+	constructor(
+		host: string,
+		port = 9000,
+		timeout = 3000,
+		enableResends = false,
+		resendTimeout = 1000,
+		options?: EmberClientOptions
+	) {
 		super()
 
 		this.host = host
@@ -128,9 +139,14 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 			}
 			return a
 		}
-		this._timer = setInterval(() => this._resendTimer(), findGcd(this._timeout, this._resendTimeout))
+		// Floor the period so a gcd of 0 or 1 (e.g. timeout=3000, resendTimeout=1001)
+		// cannot turn this into a 1ms/0ms busy loop over every pending request.
+		const resendPeriod = Math.max(50, findGcd(this._timeout, this._resendTimeout))
+		this._timer = setInterval(() => this._resendTimer(), resendPeriod)
+		// Don't let the sweeper keep the process alive on its own.
+		this._timer.unref?.()
 
-		this._client = new S101Client(this.host, this.port)
+		this._client = new S101Client(this.host, this.port, undefined, options)
 		this._client.on('emberTree', (tree: DecodeResult<Root>) => {
 			// Regular ember tree
 			this._handleIncoming(tree)
@@ -144,12 +160,17 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		this._client.on('error', (e) => this.emit('error', e))
 		this._client.on('connected', () => this.emit('connected'))
 		this._client.on('disconnected', () => {
-			this._requests.forEach((req) => {
-				req.reject(new Error('Socket was disconnected'))
-				this._requests.delete(req.reqId)
-			})
+			this._failAllRequests(new Error('Socket was disconnected'))
 			this.emit('disconnected')
 		})
+	}
+
+	/** Reject and drop every outstanding request. Safe to call more than once. */
+	private _failAllRequests(reason: Error): void {
+		for (const req of this._requests.values()) {
+			req.reject(reason)
+		}
+		this._requests.clear()
 	}
 
 	/**
@@ -161,7 +182,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		if (host) this.host = host
 		if (port) this.port = port
 
-		if (!this.host) return Promise.reject('No host specified')
+		if (!this.host) return Promise.reject(new Error('No host specified'))
 
 		this._client.address = this.host
 		this._client.port = this.port
@@ -173,6 +194,10 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 	 * Closes the s101 socket to the provider
 	 */
 	async disconnect(): Promise<void> {
+		// A clean disconnect() does not necessarily emit 'disconnected' (the status is
+		// already set), so fail pending requests here too - otherwise their promises
+		// never settle and callers await forever.
+		this._failAllRequests(new Error('Client disconnected'))
 		return this._client.disconnect()
 	}
 
@@ -186,10 +211,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		this._client.removeAllListeners()
 		// @ts-expect-error: after using this method, properties are no longer expected to always exist
 		delete this._client
-		this._requests.forEach((req) => {
-			req.reject(new Error('Socket was disconnected'))
-			this._requests.delete(req.reqId)
-		})
+		this._failAllRequests(new Error('Socket was disconnected'))
 		clearInterval(this._timer)
 	}
 
@@ -507,7 +529,10 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 	}
 
 	private async _sendRequest<T>(node: RootElement, expectResponse: ExpectResponse): RequestPromise<T> {
-		const reqId = Math.random().toString(24).substr(-4)
+		// Monotonic id, not Math.random().toString(24).substr(-4) (~few x10^5 values):
+		// a collision there silently overwrote an in-flight request in the map, so its
+		// promise never settled and never timed out (an await-forever leak).
+		const reqId = String(this._nextReqId++)
 		const requestPromise: RequestPromiseArguments<T> = {
 			reqId,
 			sentOk: false,
@@ -535,6 +560,11 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 				}
 			})
 			requestPromise.response = p
+			// The documented usage is `const { sentOk } = await client.getDirectory(...)`,
+			// which never reads `response`. Attach a no-op handler so a later timeout
+			// rejection cannot surface as an unhandled rejection (process exit on Node
+			// >=15). A caller that does await `response` still receives the rejection.
+			p.catch(() => undefined)
 		}
 
 		const sentOk = this._client.sendBER(message) // TODO - if sending multiple values to same path, should we do synchronous requests?
@@ -570,6 +600,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		// iterate over requests, check path, if Invocation check id
 		// resolve requests
 		for (const change of changes) {
+			if (!change.node) continue // nothing to resolve a request against
 			const reqs = Array.from(this._requests.values()).filter(
 				(s) => (!('path' in s.node) && !change.path) || ('path' in s.node && s.node.path === change.path)
 			)
@@ -796,7 +827,11 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 					if (sent) {
 						req.lastSent = Date.now()
 					} else {
+						// Send failed: reject and drop the request. Leaving it in the map
+						// (with a stale lastSent) made it retry on every subsequent tick.
 						req.reject(new Error('Request was not sent correctly'))
+						this._requests.delete(req.reqId)
+						return
 					}
 				}
 				if (sinceFirstSent >= this._timeout) {

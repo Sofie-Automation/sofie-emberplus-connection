@@ -24,6 +24,7 @@ function decodeStringIntegerCollection(
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
 		const tag = reader.readSequence()
+		if (tag === null) break // truncated/malformed - cannot make progress
 		if (tag === 0) continue
 		if (tag !== Ber.CONTEXT(0)) {
 			unknownContext(errors, 'decode string integer collection', tag, options)
@@ -47,6 +48,7 @@ function decodeStringIntegerPair(
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {
 		const tag = reader.readSequence()
+		if (tag === null) break // truncated/malformed - cannot make progress
 		switch (tag) {
 			case Ber.CONTEXT(0):
 				key = reader.readString(Ber.BERDataTypes.STRING)

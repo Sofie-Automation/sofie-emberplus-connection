@@ -244,6 +244,18 @@ const tree = {
 s.init(tree) // initiate the provider with the tree
 ```
 
+### Slow Connections
+
+If a consumer reads more slowly than the server sends to it, the unsent data is queued in memory. Once more than 8 MiB is waiting, the server closes that connection and emits a `clientError` with an `S101SendBufferFullError`, so a consumer that has stopped reading can't use up the server's memory. A consumer that is still running reconnects and fetches the tree again.
+
+If you send large bursts, such as thousands of updates at once, to consumers on slow links, raise the limit with the `maxSendBufferSize` option, in bytes. `Infinity` turns it off:
+
+```javascript
+const s = new EmberServer(9000, undefined, { maxSendBufferSize: 64 * 1024 * 1024 })
+```
+
+`EmberClient` takes the same option as its last argument and applies the same limit to what it sends to the provider; there the error is emitted as `error`.
+
 ---
 
 _The NRK logo is a registered trademark of Norsk rikskringkasting AS. The license does not grant any right to use, in any way, any trademarks, service marks or logos of Norsk rikskringkasting AS._
