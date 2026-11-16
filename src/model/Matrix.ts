@@ -33,7 +33,7 @@ enum MatrixAddressingMode {
 /**
  *  Dictionary or targets, indexed by element number.
  */
-interface Connections {
+type Connections = {
 	[target: number]: Connection
 }
 

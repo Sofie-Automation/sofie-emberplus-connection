@@ -204,10 +204,7 @@ function decodeMatrixContents(reader: Ber.Reader, options: DecodeOptions = defau
 	)
 }
 
-function decodeTargets(
-	reader: Ber.Reader,
-	_options: DecodeOptions = defaultDecode // eslint-disable-line @typescript-eslint/no-unused-vars
-): DecodeResult<Array<number>> {
+function decodeTargets(reader: Ber.Reader, _options: DecodeOptions = defaultDecode): DecodeResult<Array<number>> {
 	const targets: Array<number> = []
 	const errors: Array<Error> = []
 	reader.readSequence(Ber.BERDataTypes.SEQUENCE)
@@ -226,10 +223,7 @@ function decodeTargets(
 	return makeResult(targets, errors)
 }
 
-function decodeSources(
-	reader: Ber.Reader,
-	_options: DecodeOptions = defaultDecode // eslint-disable-line @typescript-eslint/no-unused-vars
-): DecodeResult<Array<number>> {
+function decodeSources(reader: Ber.Reader, _options: DecodeOptions = defaultDecode): DecodeResult<Array<number>> {
 	const sources: Array<number> = []
 	const errors: Array<Error> = []
 	reader.readSequence(Ber.BERDataTypes.SEQUENCE)

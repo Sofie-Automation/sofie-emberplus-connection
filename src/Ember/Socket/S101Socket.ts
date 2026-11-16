@@ -177,7 +177,7 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 					this.socket.write(frames[i])
 				}
 				return true
-			} catch (e) {
+			} catch {
 				this.handleClose()
 				return false
 			}
@@ -196,7 +196,7 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 				this.keepaliveResponseWindowTimer = setTimeout(() => {
 					this.handleClose()
 				}, this.keepaliveMaxResponseTime)
-			} catch (e) {
+			} catch {
 				this.handleClose()
 			}
 		}
@@ -209,7 +209,7 @@ export default class S101Socket extends EventEmitter<S101SocketEvents> {
 		if (this.isConnected() && this.socket) {
 			try {
 				this.socket.write(this.codec.keepAliveResponse())
-			} catch (e) {
+			} catch {
 				this.handleClose()
 			}
 		}

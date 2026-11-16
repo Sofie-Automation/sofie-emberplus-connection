@@ -26,7 +26,7 @@ class ExtendedReader extends Reader {
 			throw new Error('No tag available')
 		}
 
-		switch (tag) {
+		switch (tag as BERDataTypes) {
 			case BERDataTypes.STRING:
 				return { type: ParameterType.String, value: this.readString(BERDataTypes.STRING) }
 			case BERDataTypes.INTEGER:
@@ -48,11 +48,7 @@ class ExtendedReader extends Reader {
 		}
 	}
 
-	readReal(tag?: number): number | null {
-		if (tag !== null) {
-			tag = UNIVERSAL(9)
-		}
-
+	readReal(): number | null {
 		const b = this.peek()
 		if (b === null) {
 			return null

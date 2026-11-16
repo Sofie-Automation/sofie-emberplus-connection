@@ -45,9 +45,7 @@ export function decodeChildren(
 	options: DecodeOptions = defaultDecode
 ): DecodeResult<Collection<NumberedTreeNode<EmberElement>>> {
 	reader.readSequence(ElementCollectionBERID)
-	const kids = makeResult<Collection<NumberedTreeNode<EmberElement>>>(
-		{} as Collection<NumberedTreeNode<EmberElement>>
-	)
+	const kids = makeResult<Collection<NumberedTreeNode<EmberElement>>>({})
 
 	const endOffset = reader.offset + reader.length
 	while (reader.offset < endOffset) {

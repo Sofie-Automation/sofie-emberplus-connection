@@ -111,9 +111,7 @@ export class EmberServer extends EventEmitter<EmberServerEvents> {
 			const matrixUpdate: Partial<Matrix> = update as Partial<Matrix>
 
 			if (matrixUpdate.connections) {
-				for (const connection of Object.values<Connection>(
-					matrixUpdate.connections as { [target: number]: Connection }
-				)) {
+				for (const connection of Object.values<Connection>(matrixUpdate.connections)) {
 					this.updateMatrixConnection(matrix, connection)
 				}
 			}
@@ -391,7 +389,7 @@ export class EmberServer extends EventEmitter<EmberServerEvents> {
 				qualified.contents = new EmberNodeImpl()
 				qualified.children = undefined
 			}
-			const data = berEncode([qualified as RootElement], RootType.Elements)
+			const data = berEncode([qualified], RootType.Elements)
 			client.sendBER(data)
 		}
 	}

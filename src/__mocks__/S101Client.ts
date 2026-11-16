@@ -58,7 +58,7 @@ export default class S101Client
 			this.setConnected()
 		})
 	}
-	async disconnect(_timeout?: number | undefined): Promise<void> {
+	async disconnect(_timeout?: number): Promise<void> {
 		if (this.onConnect) this.onConnect()
 		orgSetImmediate(() => {
 			this.setDisconnected()

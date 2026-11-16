@@ -111,9 +111,7 @@ export function encodeTree(el: TreeElement<EmberElement>, writer: Ber.Writer): v
 			writer.startSequence(Ber.CONTEXT(5))
 			writer.startSequence(Ber.BERDataTypes.SEQUENCE)
 			// write connections collection
-			for (const connection of Object.values<Connection>(
-				el.contents.connections as { [target: string]: Connection }
-			)) {
+			for (const connection of Object.values<Connection>(el.contents.connections)) {
 				writer.startSequence(Ber.CONTEXT(0))
 				encodeConnection(connection, writer)
 				writer.endSequence()

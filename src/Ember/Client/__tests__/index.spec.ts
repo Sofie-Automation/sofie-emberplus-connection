@@ -15,11 +15,11 @@ import { StreamEntry, StreamEntryImpl } from '../../../model/StreamEntry.js'
 import { Collection, EmberTypedValue, Root, RootElement } from '../../../types/types.js'
 import { EmberClient } from '../index.js'
 
-// import { EmberTreeNode, RootElement } from '../../../types/types.js'
-// import { ElementType, EmberElement } from '../../../model/EmberElement.js'
-// import { Parameter, ParameterType } from '../../../model/Parameter.js'
+// import { EmberTreeNode, RootElement } from '../../../types/types'
+// import { ElementType, EmberElement } from '../../../model/EmberElement'
+// import { Parameter, ParameterType } from '../../../model/Parameter'
 
-jest.mock('../../Socket/S101Client', () => require('../../../__mocks__/S101Client'))
+jest.mock('../../Socket/S101Client', () => jest.requireActual('../../../__mocks__/S101Client'))
 
 describe('client', () => {
 	const onSocketCreate = jest.fn()

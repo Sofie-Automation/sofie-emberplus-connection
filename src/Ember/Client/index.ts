@@ -162,7 +162,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		if (host) this.host = host
 		if (port) this.port = port
 
-		if (!this.host) return Promise.reject('No host specified')
+		if (!this.host) return Promise.reject(new Error('No host specified'))
 
 		this._client.address = this.host
 		this._client.port = this.port
@@ -465,7 +465,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 			while (current) {
 				numbers.unshift(current.number)
 				if (current.parent && 'number' in current.parent) {
-					current = current.parent as NumberedTreeNode<EmberElement>
+					current = current.parent
 				} else {
 					current = undefined
 				}
@@ -759,9 +759,7 @@ export class EmberClient extends EventEmitter<EmberClientEvents> {
 		if (update.connections) {
 			if (matrix.connections) {
 				// matrix already has connections
-				for (const connection of Object.values<Connection>(
-					update.connections as { [target: number]: Connection }
-				)) {
+				for (const connection of Object.values<Connection>(update.connections)) {
 					if (
 						!connection.disposition ||
 						!(

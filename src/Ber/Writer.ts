@@ -93,7 +93,7 @@ class ExtendedWriter extends Writer {
 			value = arg1.value
 			tag = parameterTypetoBERTAG(arg1.type)
 		} else {
-			value = arg1 as EmberValue
+			value = arg1
 		}
 
 		if (tag === BERDataTypes.NULL && (value === null || value === undefined)) {

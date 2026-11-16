@@ -1,5 +1,5 @@
 import * as Ber from '../../../Ber/index.js'
-// import { EmberFunction, EmberFunctionImpl } from '../../../model/EmberFunction.js'
+// import { EmberFunction, EmberFunctionImpl } from '../../../model/EmberFunction'
 import { EmberFunction, EmberFunctionImpl } from '../../../model/EmberFunction.js'
 import { FunctionArgument } from '../../../model/FunctionArgument.js'
 import { RelativeOID } from '../../../types/types.js'
