@@ -107,6 +107,31 @@ client.on('streamUpdate', (internalNodePath, value) => {
 })
 ```
 
+### Connection and Reconnecting
+
+`connect()` resolves once connected. Normal connection failures resolve with an `Error`: the provider refuses the connection, or doesn't answer within 5 seconds. Either way the client retries indefinitely at roughly five-second intervals until it connects, and reconnects the same way whenever the connection drops, for as long as it is meant to be connected. `disconnect()` and `discard()` stop the retries, also while an attempt is in progress.
+
+Requests in flight when the connection drops are rejected, and requests made before a reconnect aren't repeated: ask for what you need again once connected.
+
+```javascript
+const client = new EmberClient(HOST, PORT)
+client.on('connected', async () => {
+	// Also fires after every reconnect
+	try {
+		await (
+			await client.getDirectory(client.tree)
+		).response
+	} catch (e) {
+		// e.g. the connection dropped again; the next 'connected' asks again
+		console.log('Could not get the tree:', e)
+	}
+})
+client.on('disconnected', () => {
+	console.log('Connection lost, reconnecting')
+})
+await client.connect()
+```
+
 ### Setting New Value
 
 ```javascript
