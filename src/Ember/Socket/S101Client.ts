@@ -113,7 +113,7 @@ export default class S101Client extends S101Socket {
 						`Could not connect to ${this.address}:${this.port} after a timeout of ${timeout} seconds`
 					)
 					resolve(reason)
-					if (!this._connectionAttemptTimer) this.connect().catch(() => null)
+					if (this._shouldBeConnected && !this._connectionAttemptTimer) this.connect().catch(() => null)
 				}
 
 				const timer = setTimeout(() => connectTimeoutListener(), timeout * 1000)
@@ -132,7 +132,16 @@ export default class S101Client extends S101Socket {
 	}
 
 	async disconnect(timeout?: number): Promise<void> {
+		// Stop reconnecting too, connected or not: otherwise the retry interval
+		// and an attempt in flight carry on (and may connect) after the client
+		// has been disconnected or discarded.
 		this._shouldBeConnected = false
+		this._clearConnectionAttemptTimer()
+		if (this.socket?.connecting) {
+			const pending = this.socket
+			delete this.socket
+			pending.destroy()
+		}
 		return super.disconnect(timeout)
 	}
 
